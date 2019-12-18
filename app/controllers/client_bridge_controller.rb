@@ -1,2 +1,0 @@
-class ClientBridgeController < ApplicationController
-end
