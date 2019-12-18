@@ -4,7 +4,7 @@ const OptimizeCssAssetsWebpackPlugin = require("optimize-css-assets-webpack-plug
 const TerserWebpackPlugin = require("terser-webpack-plugin"); // Compress JS.
 const HtmlWebpackPlugin = require("html-webpack-plugin"); // Render HTML.
 const CopyWebpackPlugin = require("copy-webpack-plugin"); // Copy static assets.
-const CleanWebpackPlugin = require("clean-webpack-plugin"); // Clean.
+const { CleanWebpackPlugin } = require("clean-webpack-plugin"); // Clean.
 
 module.exports = (env, argv) => {
     // Environment.
@@ -75,7 +75,9 @@ module.exports = (env, argv) => {
         },
 
         plugins: [
-            new CleanWebpackPlugin(),
+            new CleanWebpackPlugin( {
+                verbose: true,
+            } ),
             new MiniCssExtractPlugin( {
                 filename: filenameCSS,
             } ),
