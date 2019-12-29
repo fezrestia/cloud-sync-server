@@ -48,7 +48,7 @@ module.exports = (env, argv) => {
                         {
                             loader: "css-loader",
                             options: {
-                                url: false, // Ignore url() method in .scss
+                                url: true, // Not ignore url() method in .scss
 
                                 // 0 : No loader (default)
                                 // 1 : postcss-loader
@@ -84,6 +84,14 @@ module.exports = (env, argv) => {
             new HtmlWebpackPlugin( {
                 template: "src/entry.html",
                 filename: "entry.html",
+                files: {
+                    "js": [filenameJS],
+                    "css": [filenameCSS],
+                },
+            } ),
+            new HtmlWebpackPlugin( {
+                template: "src/architecture_map/html/top.html",
+                filename: "architecture_map.html",
                 files: {
                     "js": [filenameJS],
                     "css": [filenameCSS],
