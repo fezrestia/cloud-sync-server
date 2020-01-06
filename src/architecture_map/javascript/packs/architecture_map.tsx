@@ -16,25 +16,16 @@ function onArchitectureMapTopLoaded() {
     let totalWidth = 640;
     let totalHeight = 640;
 
-    let container = $(`#${ARCHITECTURE_MAP_ID}`);
-    let html = $(`#${HTML_ROOT_ID}`);
-    html.empty();
-    let svg_container = $(`#${SVG_ROOT_ID}`);
-    svg_container.empty();
 
-    let svg = d3.select(`#${SVG_ROOT_ID}`).append('svg');
 
-    container.css("width", totalWidth);
-    container.css("height", totalHeight);
+    let svg: d3.Selection<SVGSVGElement, any, HTMLElement, any> = d3.select(`#${SVG_ROOT_ID}`).append("svg");
     svg.attr("width", totalWidth);
     svg.attr("height", totalHeight);
+
+    let html = $(`#${HTML_ROOT_ID}`);
     html.css("width", totalWidth);
     html.css("height", totalHeight);
-
     html.css("display", "none");
-
-
-
 
 
 

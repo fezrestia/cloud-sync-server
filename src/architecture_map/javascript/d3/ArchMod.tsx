@@ -1,10 +1,14 @@
 import * as d3 from "d3";
 import * as $ from "jquery";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 import { ColorResolver } from "./resolver/ColorResolver.ts";
 import { Point } from "./Util.ts";
 import { TraceLog } from "../util/TraceLog.ts";
 import { Util } from "./Util.ts";
+import { ArchModContextMenu } from "../components/ArchModContextMenu.tsx";
+import { ArchModContextMenuCallback } from "../components/ArchModContextMenu.tsx";
 
 /**
  * Callback interface for ArchMod.
@@ -33,7 +37,10 @@ export class ArchMod {
      * @param svg SVG root object.
      * @param label Module ID.
      */
-    constructor(protected html: any, protected svg: any, public readonly label: string) {
+    constructor(
+            protected html: JQuery<HTMLElement>,
+            protected svg: d3.Selection<SVGSVGElement, any, HTMLElement, any>,
+            public readonly label: string) {
         // NOP.
     }
 
@@ -426,84 +433,68 @@ export class ArchMod {
 
     }
 
-    private readonly CONTEXT_MENU_ID = "context_menu";
-    private readonly CONTEXT_MENU_BACKGROUND_ID = "context_menu_background";
-    private readonly ROT_CW = "cw";
-    private readonly ROT_CCW = "ccw";
-    private readonly ROTATE_LABEL_CW_ID = "rotate_label_cw";
-    private readonly ROTATE_LABEL_CCW_ID = "rotate_label_ccw";
+    private ContextMenuCallbackImpl = class implements ArchModContextMenuCallback {
+        private target: ArchMod;
+
+        constructor(target: ArchMod) {
+            this.target = target;
+        }
+
+        onOutsideClicked() {
+            this.target.closeContextMenu();
+        }
+
+        onRotateLabel(direction: string) {
+            this.target.rotateLabel(direction);
+        }
+    }
 
     private openContextMenu(clickX: number, clickY: number) {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "openContextMenu()");
 
         this.html.css("display", "block");
 
-        let contextMenuBackHtml = `
-            <div id="${this.CONTEXT_MENU_BACKGROUND_ID}" >
-            </div>
-        `;
-        this.html.append(contextMenuBackHtml);
-        let contextMenuBack = $(`#${this.CONTEXT_MENU_BACKGROUND_ID}`);
-        contextMenuBack.on("click", () => {
-            if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "contextMenuBackground:onclick");
-            this.closeContextMenu()
-        } );
-
-        let contextMenuHtml = `
-            <div id="${this.CONTEXT_MENU_ID}" >
-              <table class="context-menu-contents" ><tbody>
-                <tr>
-                  <td nowrap >Module ID Label</td>
-                  <td nowrap >${this.label}</td>
-                </tr>
-                <tr>
-                  <td nowrap >Rotate Label</td>
-                  <td nowrap >
-                    <button id="${this.ROTATE_LABEL_CW_ID}" >CW</button>
-                    <button id="${this.ROTATE_LABEL_CCW_ID}" >CCW</button>
-                  </td>
-                </tr>
-              </tbody></table>
-            </div>
-        `;
-        this.html.append(contextMenuHtml);
-        let contextMenu = $(`#${this.CONTEXT_MENU_ID}`);
-        contextMenu.on("click", () => {
-            if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "contextMenu:onclick");
-            return true;
-        } );
-        $(`#${this.ROTATE_LABEL_CW_ID}`).on("click", () => {
-            this.rotateLabel(this.ROT_CW);
-        } );
-        $(`#${this.ROTATE_LABEL_CCW_ID}`).on("click", () => {
-            this.rotateLabel(this.ROT_CCW);
-        } );
-
         // Position.
-        let offsetX = this.html.offset().left;
-        let offsetY = this.html.offset().top;
-        contextMenu.css("left", clickX - offsetX);
-        contextMenu.css("top", clickY - offsetY);
+        let offsetX = 0;
+        let offsetY = 0;
+        let htmlOffset = this.html.offset();
+        if (htmlOffset != undefined) {
+            offsetX = htmlOffset.left;
+            offsetY = htmlOffset.top;
+        }
+        let leftPix: number = clickX - offsetX;
+        let topPix: number = clickY - offsetY;
 
+        ReactDOM.render(
+                <ArchModContextMenu
+                        idLabel={"Test Label"}
+                        callback={new this.ContextMenuCallbackImpl(this)}
+                        leftPix={leftPix}
+                        topPix={topPix}
+                />,
+                document.getElementById(this.html[0].id));
     }
 
     private closeContextMenu() {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "closeContextMenu()");
 
-        this.html.empty();
+        let container = document.getElementById(this.html[0].id);
+        if (container != null) {
+            ReactDOM.unmountComponentAtNode(container);
+        }
+
         this.html.css("display", "none");
     }
 
     private rotateLabel(direction: string) {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `rotateLabel() : ${direction}`);
 
+        switch (direction) {
+            case ArchModContextMenu.ROT_CW:
 
+            case ArchModContextMenu.ROT_CCW:
 
-
-
-
-
+        }
     }
-
 }
 
