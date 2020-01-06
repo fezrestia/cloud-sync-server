@@ -13,14 +13,15 @@ interface State {
 
 export interface ArchModContextMenuCallback {
     onOutsideClicked(): void;
-    onRotateLabel(direction: string): void;
+    onLabelRotDegChanged(rotDeg: number): void;
 
 }
 
 export class ArchModContextMenu extends React.Component<Props, State> {
   private readonly TAG = "ArchModContextMenu";
-  public static readonly ROT_CW = "cw";
-  public static readonly ROT_CCW = "ccw";
+
+  private static readonly DEG_HORIZONTAL = 0;
+  private static readonly DEG_VERTICAL = 270;
 
   constructor(props: Props) {
     super(props);
@@ -41,15 +42,9 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     e.stopPropagation();
   }
 
-  private onRotLabelCwClicked(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onRotLabelCwClicked()");
-    this.props.callback.onRotateLabel(ArchModContextMenu.ROT_CW);
-    e.stopPropagation();
-  }
-
-  private onRotLabelCcwClicked(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onRotLabelCcwClicked()");
-    this.props.callback.onRotateLabel(ArchModContextMenu.ROT_CCW);
+  private onLabelRotDegChanged(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, rotDeg: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onLabelRotDegChanged() : rotDeg=${rotDeg}`);
+    this.props.callback.onLabelRotDegChanged(rotDeg);
     e.stopPropagation();
   }
 
@@ -58,6 +53,13 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     let menuStyle = {
         left: this.props.leftPix,
         top: this.props.topPix,
+    };
+
+    let labelHorizontalCallback = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        this.onLabelRotDegChanged(e, ArchModContextMenu.DEG_HORIZONTAL);
+    };
+    let labelVerticalCallback = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        this.onLabelRotDegChanged(e, ArchModContextMenu.DEG_VERTICAL);
     };
 
     return (
@@ -81,10 +83,10 @@ export class ArchModContextMenu extends React.Component<Props, State> {
               <td className="no-wrap" >{this.props.idLabel}</td>
             </tr>
             <tr>
-              <td className="no-wrap" >Rotate Label</td>
+              <td className="no-wrap" >Label Direction</td>
               <td className="no-wrap" >
-                <button onClick={ (e) => this.onRotLabelCwClicked(e) } >CW</button>
-                <button onClick={ (e) => this.onRotLabelCcwClicked(e) } >CCW</button>
+                <button onClick={ labelHorizontalCallback } >Horizontal</button>
+                <button onClick={ labelVerticalCallback } >Vertical</button>
               </td>
             </tr>
           </tbody></table>

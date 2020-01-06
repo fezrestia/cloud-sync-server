@@ -55,6 +55,7 @@ export class ArchMod {
     protected y: number = 0;
     protected width: number = 0;
     protected height: number = 0;
+    protected labelRotDeg: number = 0;
 
     // Position diff by dragging.
     protected dx: number = 0;
@@ -171,7 +172,8 @@ export class ArchMod {
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "central")
             .attr("font-size", this.fontSize)
-            .attr("fill", this.colorResolver.text);
+            .attr("fill", this.colorResolver.text)
+            .attr("pointer-events", "none");
         text.text(this.label);
         this.text = text;
 
@@ -409,8 +411,11 @@ export class ArchMod {
         this.rect.attr("width", this.width);
         this.rect.attr("height", this.height);
 
-        this.text.attr("x", this.x + this.width / 2);
-        this.text.attr("y", this.y + this.height /2);
+        let labelX: number = this.x + this.width / 2;
+        let labelY: number = this.y + this.height / 2;
+        this.text.attr("x", labelX);
+        this.text.attr("y", labelY);
+        this.text.attr("transform", `rotate(${this.labelRotDeg},${labelX},${labelY})`);
 
         if (this.editView != null) {
             let ltGrip = this.editView.select(`#${this.GRIP_ID_LEFT_TOP}`);
@@ -444,8 +449,8 @@ export class ArchMod {
             this.target.closeContextMenu();
         }
 
-        onRotateLabel(direction: string) {
-            this.target.rotateLabel(direction);
+        onLabelRotDegChanged(rotDeg: number) {
+            this.target.rotateLabel(rotDeg);
         }
     }
 
@@ -486,15 +491,10 @@ export class ArchMod {
         this.html.css("display", "none");
     }
 
-    private rotateLabel(direction: string) {
-        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `rotateLabel() : ${direction}`);
-
-        switch (direction) {
-            case ArchModContextMenu.ROT_CW:
-
-            case ArchModContextMenu.ROT_CCW:
-
-        }
+    private rotateLabel(rotDeg: number) {
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `rotateLabel() : rotDeg=${rotDeg}`);
+        this.labelRotDeg = rotDeg;
+        this.relayout();
     }
 }
 
