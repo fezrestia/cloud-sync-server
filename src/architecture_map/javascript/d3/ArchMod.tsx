@@ -17,6 +17,8 @@ import { ColorSet } from "../Def.ts";
  * Callback interface for ArchMod.
  */
 export interface ArchModCallback {
+  onSelected(selected: ArchMod): void;
+  onDeselected(deselected: ArchMod): void;
 
 }
 
@@ -78,19 +80,24 @@ export class ArchMod {
     private isEditable: boolean = true;
 
     // Dynamic flags.
-    private _isSelected:boolean = false;
-        get isSelected(): boolean {
+    private _isSelected: boolean = false;
+        private get isSelected(): boolean {
             return this._isSelected;
         }
-        set isSelected(selected: boolean) {
+        private set isSelected(selected: boolean) {
+            let isChanged = this._isSelected != selected;
             this._isSelected = selected;
             this.setHighlight(selected);
+
+            if (this.callback != null && isChanged) {
+              selected ? this.callback.onSelected(this) : this.callback.onDeselected(this);
+            }
         }
     private _isEditing: boolean = false;
-        get isEditing(): boolean {
+        private get isEditing(): boolean {
             return this._isEditing;
         }
-        set isEditing(editing: boolean) {
+        private set isEditing(editing: boolean) {
             if (editing) {
                 this.enableEditMode();
             } else {
@@ -99,12 +106,12 @@ export class ArchMod {
             this._isEditing = editing;
         }
     private _isContextMenuOpened: boolean = false;
-        get isContextMenuOpened(): boolean {
+        private get isContextMenuOpened(): boolean {
             return this.html.css("display") != "none";
         }
 
     // Color resolver functions.
-    private colorResolver: ColorResolver = ColorSet.NONE;
+    private colorResolver: ColorResolver = ColorSet.GRAY;
 
     // Callback.
     private callback: ArchModCallback|null = null;
@@ -157,6 +164,14 @@ export class ArchMod {
      */
     public setCallback(callback: ArchModCallback) {
         this.callback = callback;
+    }
+
+    /**
+     * Reset selected or editing state to default.
+     */
+    public resetState() {
+        this.isEditing = false;
+        this.isSelected = false;
     }
 
     /**
@@ -249,6 +264,7 @@ export class ArchMod {
                     }
                 } else {
                     // Change to edit view.
+                    this.isSelected = true;
                     this.isEditing = true;
                 }
 
@@ -284,7 +300,7 @@ export class ArchMod {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "enableEditMode()");
         if (this.editView != null) return;
 
-        this.isSelected = false;
+        this.setHighlight(false);
 
         this.editView = this.rootView.append("g");
 

@@ -18,10 +18,10 @@ interface State {
 }
 
 export interface ArchModContextMenuCallback {
-    onOutsideClicked(): void;
-    onLabelRotDegChanged(rotDeg: number): void;
-    onClipAreaChanged(clipArea: ClipArea): void;
-    onColorSetChanged(colorResolver: ColorResolver): void;
+  onOutsideClicked(): void;
+  onLabelRotDegChanged(rotDeg: number): void;
+  onClipAreaChanged(clipArea: ClipArea): void;
+  onColorSetChanged(colorResolver: ColorResolver): void;
 
 }
 
@@ -130,7 +130,6 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
-                {this.genClickButton("White",   () => { this.onColorSetChanged(ColorSet.WHITE) })}
                 {this.genClickButton("Gray",    () => { this.onColorSetChanged(ColorSet.GRAY) })}
                 {this.genClickButton("Orange",  () => { this.onColorSetChanged(ColorSet.ORANGE) })}
                 {this.genClickButton("Green",   () => { this.onColorSetChanged(ColorSet.GREEN) })}
