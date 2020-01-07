@@ -1,5 +1,9 @@
 import * as React from "react";
+
 import { TraceLog } from "../util/TraceLog.ts";
+import { ReactMouseEvent } from "../TypeDef.ts";
+import { Def } from "../Def.ts";
+import { ClipArea } from "../Def.ts";
 
 interface Props {
   idLabel: string,
@@ -14,14 +18,12 @@ interface State {
 export interface ArchModContextMenuCallback {
     onOutsideClicked(): void;
     onLabelRotDegChanged(rotDeg: number): void;
+    onClipAreaChanged(clipArea: ClipArea): void;
 
 }
 
 export class ArchModContextMenu extends React.Component<Props, State> {
   private readonly TAG = "ArchModContextMenu";
-
-  private static readonly DEG_HORIZONTAL = 0;
-  private static readonly DEG_VERTICAL = 270;
 
   constructor(props: Props) {
     super(props);
@@ -30,22 +32,37 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     };
   }
 
-  private onBackgroundClicked(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+  private onBackgroundClicked() {
     if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onBackgroundClicked()");
     this.props.callback.onOutsideClicked();
-    e.stopPropagation();
   }
 
-  private onContextMenuClicked(e: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+  private onContextMenuClicked() {
     if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onContextMenuClicked()");
     // NOP.
-    e.stopPropagation();
   }
 
-  private onLabelRotDegChanged(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, rotDeg: number) {
+  private onLabelRotDegChanged(rotDeg: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onLabelRotDegChanged() : rotDeg=${rotDeg}`);
     this.props.callback.onLabelRotDegChanged(rotDeg);
-    e.stopPropagation();
+  }
+
+  private onClipAreaChanged(clipArea: ClipArea) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onClipAreaChanged() : ${clipArea}`);
+    this.props.callback.onClipAreaChanged(clipArea);
+  }
+
+  private genClickButton(label: string, callback: () => void ) {
+    return (
+      <button
+          onClick={ (e: ReactMouseEvent) => {
+            callback();
+            e.stopPropagation();
+          } }
+      >
+        {label}
+      </button>
+    );
   }
 
   render() {
@@ -55,11 +72,14 @@ export class ArchModContextMenu extends React.Component<Props, State> {
         top: this.props.topPix,
     };
 
-    let labelHorizontalCallback = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        this.onLabelRotDegChanged(e, ArchModContextMenu.DEG_HORIZONTAL);
+    let handleBackgroundClick = (e: ReactMouseEvent) => {
+        this.onBackgroundClicked();
+        e.stopPropagation();
     };
-    let labelVerticalCallback = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        this.onLabelRotDegChanged(e, ArchModContextMenu.DEG_VERTICAL);
+
+    let handleContextMenuClick = (e: ReactMouseEvent) => {
+        this.onContextMenuClicked();
+        e.stopPropagation();
     };
 
     return (
@@ -67,7 +87,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
         {/* Background layer. */}
         <div
             className="layer-child match-parent"
-            onClick={ (e) => this.onBackgroundClicked(e) }
+            onClick={ handleBackgroundClick }
         >
         </div>
 
@@ -75,7 +95,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
         <div
             className="layer-child background-gray"
             style={menuStyle}
-            onClick={ (e) => this.onContextMenuClicked(e) }
+            onClick={ handleContextMenuClick }
         >
           <table className="context-menu-contents" ><tbody>
             <tr>
@@ -85,8 +105,18 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Label Direction</td>
               <td className="no-wrap" >
-                <button onClick={ labelHorizontalCallback } >Horizontal</button>
-                <button onClick={ labelVerticalCallback } >Vertical</button>
+                {this.genClickButton("Horizontal", () => { this.onLabelRotDegChanged(Def.DEG_HORIZONTAL) })}
+                {this.genClickButton("Vertical", () => { this.onLabelRotDegChanged(Def.DEG_VERTICAL) })}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Clip Area</td>
+              <td className="no-wrap" >
+                {this.genClickButton("None", () => { this.onClipAreaChanged(ClipArea.NONE) })}
+                {this.genClickButton("Left-Top", () => { this.onClipAreaChanged(ClipArea.LEFT_TOP) })}
+                {this.genClickButton("Right-Top", () => { this.onClipAreaChanged(ClipArea.RIGHT_TOP) })}
+                {this.genClickButton("Left-Bottom", () => { this.onClipAreaChanged(ClipArea.LEFT_BOTTOM) })}
+                {this.genClickButton("Right-Bottom", () => { this.onClipAreaChanged(ClipArea.RIGHT_BOTTOM) })}
               </td>
             </tr>
           </tbody></table>
