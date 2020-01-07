@@ -276,20 +276,26 @@ export class ArchMod {
                     d3.drag()
                         .on("start", (d: any) => {
                             if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:start");
-                            let archMod = d as ArchMod;
-                            archMod.setHighlight(true);
+                            if (this.isEditing) {
+                              let archMod = d as ArchMod;
+                              archMod.setHighlight(true);
+                            }
                         } )
                         .on("drag", (d: any) => {
                             if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:drag");
-                            let archMod = d as ArchMod;
-                            archMod.dx += d3.event.dx;
-                            archMod.dy += d3.event.dy;
-                            archMod.rootView.attr("transform", `translate(${archMod.dx},${archMod.dy})`);
+                            if (this.isEditing) {
+                              let archMod = d as ArchMod;
+                              archMod.dx += d3.event.dx;
+                              archMod.dy += d3.event.dy;
+                              archMod.rootView.attr("transform", `translate(${archMod.dx},${archMod.dy})`);
+                            }
                         } )
                         .on("end", (d: any) => {
                             if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:end");
-                            let archMod = d as ArchMod;
-                            archMod.setHighlight(false);
+                            if (this.isEditing) {
+                              let archMod = d as ArchMod;
+                              archMod.setHighlight(false);
+                            }
                         } )
                 );
             }
