@@ -4,6 +4,8 @@ import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
+import { ColorSet } from "../Def.ts";
+import { ColorResolver } from "../d3/resolver/ColorResolver.ts";
 
 interface Props {
   idLabel: string,
@@ -19,6 +21,7 @@ export interface ArchModContextMenuCallback {
     onOutsideClicked(): void;
     onLabelRotDegChanged(rotDeg: number): void;
     onClipAreaChanged(clipArea: ClipArea): void;
+    onColorSetChanged(colorResolver: ColorResolver): void;
 
 }
 
@@ -50,6 +53,11 @@ export class ArchModContextMenu extends React.Component<Props, State> {
   private onClipAreaChanged(clipArea: ClipArea) {
     if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onClipAreaChanged() : ${clipArea}`);
     this.props.callback.onClipAreaChanged(clipArea);
+  }
+
+  private onColorSetChanged(colorResolver: ColorResolver) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onColorSetChanged() : ${colorResolver}`);
+    this.props.callback.onColorSetChanged(colorResolver);
   }
 
   private genClickButton(label: string, callback: () => void ) {
@@ -105,18 +113,29 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Label Direction</td>
               <td className="no-wrap" >
-                {this.genClickButton("Horizontal", () => { this.onLabelRotDegChanged(Def.DEG_HORIZONTAL) })}
-                {this.genClickButton("Vertical", () => { this.onLabelRotDegChanged(Def.DEG_VERTICAL) })}
+                {this.genClickButton("Horizontal",  () => { this.onLabelRotDegChanged(Def.DEG_HORIZONTAL) })}
+                {this.genClickButton("Vertical",    () => { this.onLabelRotDegChanged(Def.DEG_VERTICAL) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Clip Area</td>
               <td className="no-wrap" >
-                {this.genClickButton("None", () => { this.onClipAreaChanged(ClipArea.NONE) })}
-                {this.genClickButton("Left-Top", () => { this.onClipAreaChanged(ClipArea.LEFT_TOP) })}
-                {this.genClickButton("Right-Top", () => { this.onClipAreaChanged(ClipArea.RIGHT_TOP) })}
-                {this.genClickButton("Left-Bottom", () => { this.onClipAreaChanged(ClipArea.LEFT_BOTTOM) })}
-                {this.genClickButton("Right-Bottom", () => { this.onClipAreaChanged(ClipArea.RIGHT_BOTTOM) })}
+                {this.genClickButton("None",          () => { this.onClipAreaChanged(ClipArea.NONE) })}
+                {this.genClickButton("Left-Top",      () => { this.onClipAreaChanged(ClipArea.LEFT_TOP) })}
+                {this.genClickButton("Right-Top",     () => { this.onClipAreaChanged(ClipArea.RIGHT_TOP) })}
+                {this.genClickButton("Left-Bottom",   () => { this.onClipAreaChanged(ClipArea.LEFT_BOTTOM) })}
+                {this.genClickButton("Right-Bottom",  () => { this.onClipAreaChanged(ClipArea.RIGHT_BOTTOM) })}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Color Set</td>
+              <td className="no-wrap" >
+                {this.genClickButton("White",   () => { this.onColorSetChanged(ColorSet.WHITE) })}
+                {this.genClickButton("Gray",    () => { this.onColorSetChanged(ColorSet.GRAY) })}
+                {this.genClickButton("Orange",  () => { this.onColorSetChanged(ColorSet.ORANGE) })}
+                {this.genClickButton("Green",   () => { this.onColorSetChanged(ColorSet.GREEN) })}
+                {this.genClickButton("Blue",    () => { this.onColorSetChanged(ColorSet.BLUE) })}
+                {this.genClickButton("Yellow",  () => { this.onColorSetChanged(ColorSet.YELLOW) })}
               </td>
             </tr>
           </tbody></table>

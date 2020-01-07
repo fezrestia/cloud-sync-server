@@ -11,6 +11,7 @@ import { ArchModContextMenu } from "../components/ArchModContextMenu.tsx";
 import { ArchModContextMenuCallback } from "../components/ArchModContextMenu.tsx";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
+import { ColorSet } from "../Def.ts";
 
 /**
  * Callback interface for ArchMod.
@@ -103,7 +104,7 @@ export class ArchMod {
         }
 
     // Color resolver functions.
-    private colorResolver: ColorResolver = new ColorResolver("none", "none", "none");
+    private colorResolver: ColorResolver = ColorSet.NONE;
 
     // Callback.
     private callback: ArchModCallback|null = null;
@@ -160,9 +161,8 @@ export class ArchMod {
 
     /**
      * Render.
-     * @return
      */
-    public render(): any {
+    public render() {
         this.rootView = this.svg.append("g")
             .attr("id", `ArchMod_${this.label}`)
             .datum(this);
@@ -170,8 +170,6 @@ export class ArchMod {
         // Polygon, normally Rect.
         this.polygon = this.rootView.append("polygon")
             .attr("id", Util.getElementId("polygon", this.label))
-            .attr("stroke", this.colorResolver.stroke)
-            .attr("fill", this.colorResolver.bg)
             .attr("stroke-width", 2);
 
         // Text.
@@ -180,16 +178,14 @@ export class ArchMod {
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "central")
             .attr("font-size", this.fontSize)
-            .attr("fill", this.colorResolver.text)
             .attr("pointer-events", "none")
             .text(this.label);
 
         this.relayout();
+        this.recolor();
 
         // Callbacks.
         this.registerCallbacks();
-
-        return this;
     }
 
     /**
@@ -638,6 +634,14 @@ export class ArchMod {
 
     }
 
+    private recolor() {
+        this.polygon.attr("stroke", this.colorResolver.stroke);
+        this.polygon.attr("fill", this.colorResolver.bg)
+
+        this.text.attr("fill", this.colorResolver.text);
+
+    }
+
     private ContextMenuCallbackImpl = class implements ArchModContextMenuCallback {
         private target: ArchMod;
 
@@ -655,6 +659,15 @@ export class ArchMod {
 
         onClipAreaChanged(clipArea: ClipArea) {
             this.target.changeClipArea(clipArea);
+        }
+
+        onColorSetChanged(colorResolver: ColorResolver) {
+            this.target.setColorResolver(colorResolver);
+
+            // Re-construction and re-color.
+            this.target.disableEditMode();
+            this.target.enableEditMode();
+            this.target.recolor();
         }
     }
 

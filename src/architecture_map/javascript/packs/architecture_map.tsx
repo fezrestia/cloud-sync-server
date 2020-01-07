@@ -2,8 +2,8 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 
 import { ArchMod } from "../d3/ArchMod";
-import { ColorResolver } from "../d3/resolver/ColorResolver";
 import { TraceLog } from "../util/TraceLog.ts";
+import { ColorSet } from "../Def.ts";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
@@ -32,7 +32,7 @@ function onArchitectureMapTopLoaded() {
 
 
     let archMod = new ArchMod(html, svg, "Test Label");
-    archMod.setColorResolver(new ColorResolver("lightskyblue", "royalblue", "dodgerblue"));
+    archMod.setColorResolver(ColorSet.ORANGE);
     archMod.setXYWH(30, 60, 100, 200);
     archMod.render();
 
