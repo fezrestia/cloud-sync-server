@@ -18,9 +18,13 @@ const DEFAULT_SIZE = 120;
 // Current interaction context.
 class Context {
 
-  public root: JQueryNode|null = null;
-  public svg: D3Node.SVG|null = null;
-  public html: JQueryNode|null = null;
+  constructor() {
+    // NOP.
+  }
+
+  public root!: JQueryNode;
+  public svg!: D3Node.SVG;
+  public html!: JQueryNode;
 
   public isAddNewArchModMode: boolean = false;
 
@@ -36,8 +40,20 @@ class Context {
         this._selectedArchMod = selected;
       }
 
-  public readonly allArchMods: ArchMod[] = [];
+  private readonly allArchMods: ArchMod[] = [];
 
+  public addArchMod(archMod: ArchMod) {
+    this.allArchMods.push(archMod);
+  }
+
+  public removeArchMod(archMod: ArchMod) {
+    let index = this.allArchMods.indexOf(archMod);
+    if (index < 0) {
+      TraceLog.e(TAG, `## ArchMod=${archMod.label} is NOT existing.`);
+      return;
+    }
+    this.allArchMods.splice(index, 1);
+  }
 
   public resetSelectedState() {
     if (this.selectedArchMod != null) {
@@ -51,6 +67,17 @@ class Context {
     } );
   }
 
+  public enableSnapDrag() {
+    if (this.selectedArchMod != null) {
+      this.selectedArchMod.isSnapDragEnabled = true;
+    }
+  }
+
+  public disableSnapDrag() {
+    if (this.selectedArchMod != null) {
+      this.selectedArchMod.isSnapDragEnabled = false;
+    }
+  }
 }
 const CONTEXT = new Context();
 
@@ -68,77 +95,99 @@ class ArchModCallbackImpl implements ArchModCallback {
 
 }
 
-function onArchitectureMapTopLoaded() {
+(window as any).onArchitectureMapTopLoaded = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onArchitectureMapTopLoaded()");
 
   let totalWidth = 640;
   let totalHeight = 640;
 
-  let root = $(`#${ROOT_ID}`);
+  let root: JQueryNode = $(`#${ROOT_ID}`);
   root.css("width", totalWidth);
   root.css("height", totalHeight);
   CONTEXT.root = root;
 
-  let svg: d3.Selection<SVGSVGElement, any, HTMLElement, any> = d3.select(`#${SVG_ROOT_ID}`);
-  svg.attr("width", "100%");
-  svg.attr("height", "100%");
+  let svg: D3Node.SVG = d3.select(`#${SVG_ROOT_ID}`);
   CONTEXT.svg = svg;
 
-  let html = $(`#${HTML_ROOT_ID}`);
-  html.css("width", "100%");
-  html.css("height", "100%");
+  let html: JQueryNode = $(`#${HTML_ROOT_ID}`);
   html.css("display", "none");
   CONTEXT.html = html;
 
-
-
-
-
-
-
-
-  svg.on("click", () => {
-      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
-      CONTEXT.resetSelectedState();
-      d3.event.stopPropagation();
-  });
-
+  registerGlobalCallbacks();
 }
-eval(`window["onArchitectureMapTopLoaded"] = onArchitectureMapTopLoaded;`);
 
-function onAddNewArchModClicked() {
+function registerGlobalCallbacks() {
+  window.onkeydown = (event: KeyboardEvent) => {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeydown() : key=${event.key}`);
+    event.stopPropagation();
+
+    switch (event.key) {
+      case "Alt":
+        CONTEXT.enableSnapDrag();
+        break;
+
+      case "d":
+        if (TraceLog.IS_DEBUG) {
+          TraceLog.d(TAG, "#### DEBUG LOG ####");
+
+          TraceLog.d(TAG, "CONTEXT =");
+          console.log(CONTEXT);
+
+          TraceLog.d(TAG, "###################");
+        }
+        break;
+    }
+
+    return true;
+  };
+
+  window.onkeyup = (event: KeyboardEvent) => {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeyup() : key=${event.key}`);
+    event.stopPropagation();
+
+    switch (event.key) {
+      case "Alt":
+        CONTEXT.disableSnapDrag();
+        break;
+    }
+
+    return true;
+  };
+
+  CONTEXT.svg.on("click", () => {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
+    CONTEXT.resetSelectedState();
+    d3.event.stopPropagation();
+  });
+}
+
+(window as any).onAddNewArchModClicked = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewArchModClicked()");
-
-  let html = CONTEXT.html;
-  if (html == null) return;
 
   if (CONTEXT.isAddNewArchModMode) {
     // Finish add mode.
 
-    html.css("display", "none");
-    html.css("background-color", "");
-    html.off("click");
-
+    resetHtmlRoot();
     CONTEXT.isAddNewArchModMode = false;
+
   } else {
     // Prepare add mode.
 
     CONTEXT.resetAllState();
 
-    html.css("display", "block");
-    html.css("background-color", "#AAAAAAAA");
-    html.on("click", (e: JQuery.Event) => {
-      let html = CONTEXT.html;
-      let svg = CONTEXT.svg;
-      if (html == null || svg == null) return;
+    CONTEXT.html.css("display", "block");
+    CONTEXT.html.css("background-color", "#AAAAAAAA");
 
+    CONTEXT.html.on("click", (e: JQuery.Event) => {
       let posX: number = e.offsetX || 0;
       let posY: number = e.offsetY || 0;
 
-      let archMod = new ArchMod(html, svg, "Test Label");
+      let archMod = new ArchMod(CONTEXT.html, CONTEXT.svg, "Test Label");
       archMod.setCallback(new ArchModCallbackImpl());
       archMod.setXYWH(posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
       archMod.render();
+
+      CONTEXT.addArchMod(archMod);
 
       if (TraceLog.IS_DEBUG) {
         let {x: x, y: y, width: w, height: h} = archMod.getXYWH();
@@ -146,11 +195,18 @@ function onAddNewArchModClicked() {
       }
 
       // Finish add mode.
-      onAddNewArchModClicked();
+      resetHtmlRoot();
+      CONTEXT.isAddNewArchModMode = false;
+
     } );
 
     CONTEXT.isAddNewArchModMode = true;
   }
 }
-eval(`window["onAddNewArchModClicked"] = onAddNewArchModClicked;`);
+
+function resetHtmlRoot() {
+  CONTEXT.html.css("display", "none");
+  CONTEXT.html.css("background-color", "");
+  CONTEXT.html.off("click");
+}
 

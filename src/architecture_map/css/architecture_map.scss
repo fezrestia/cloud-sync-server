@@ -26,6 +26,16 @@ div#root {
   border-color: #AAAAAA;
 }
 
+svg#svg_root {
+  width: 100%;
+  height: 100%;
+}
+
+div#html_root {
+  width: 100%;
+  height: 100%;
+}
+
 .layer-parent {
   position: relative;
 }

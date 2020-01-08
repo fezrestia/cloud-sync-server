@@ -69,10 +69,6 @@ export class ArchMod {
 
     private clipArea = ClipArea.NONE;
 
-    // Position diff by dragging.
-    private dx: number = 0;
-    private dy: number = 0;
-
     // Font.
     private fontSize: number = 12;
 
@@ -112,6 +108,14 @@ export class ArchMod {
             return this.html.css("display") != "none";
         }
 
+    private _isSnapDragEnabled: boolean = false;
+        public get isSnapDragEnabled(): boolean {
+            return this._isSnapDragEnabled;
+        }
+        public set isSnapDragEnabled(isEnabled: boolean) {
+            this._isSnapDragEnabled = isEnabled;
+        }
+
     // Color resolver functions.
     private colorResolver: ColorResolver = ColorSet.GRAY;
 
@@ -139,9 +143,7 @@ export class ArchMod {
      * @return {x, y, width, height}
      */
     public getXYWH(): {x: number, y: number, width: number, height:number} {
-        let actX = this.x + this.dx;
-        let actY = this.y + this.dy;
-        return {x: actX, y: actY, width: this.width, height: this.height};
+        return {x: this.x, y: this.y, width: this.width, height: this.height};
     }
 
     /**
@@ -174,6 +176,7 @@ export class ArchMod {
     public resetState() {
         this.isEditing = false;
         this.isSelected = false;
+        this.isSnapDragEnabled = false;
     }
 
     /**
@@ -276,27 +279,54 @@ export class ArchMod {
             if (this.isDraggable) {
                 this.root.call(
                     d3.drag<SVGGElement, any, any>()
-                        .on("start", (d: any) => {
+                        .on("start", () => {
                             if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:start");
                             if (this.isEditing) {
-                              let archMod = d as ArchMod;
-                              archMod.setHighlight(true);
+                              this.setHighlight(true);
+
+                              d3.event.target.origX = this.x;
+                              d3.event.target.origY = this.y;
+                              d3.event.target.origPinX = this.pinX;
+                              d3.event.target.origPinY = this.pinY;
+                              d3.event.target.startX = d3.event.x;
+                              d3.event.target.startY = d3.event.y;
                             }
                         } )
-                        .on("drag", (d: any) => {
+                        .on("drag", () => {
                             if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:drag");
                             if (this.isEditing) {
-                              let archMod = d as ArchMod;
-                              archMod.dx += d3.event.dx;
-                              archMod.dy += d3.event.dy;
-                              archMod.root.attr("transform", `translate(${archMod.dx},${archMod.dy})`);
+                              let dx = d3.event.x - d3.event.target.startX;
+                              let dy = d3.event.y - d3.event.target.startY;
+
+                              this.x = d3.event.target.origX + dx;
+                              this.y = d3.event.target.origY + dy;
+                              this.pinX = d3.event.target.origPinX + dx;
+                              this.pinY = d3.event.target.origPinY + dy;
+
+                              // Position snapping.
+                              if (this.isSnapDragEnabled) {
+                                  let snapX = this.x % Def.SNAP_STEP_PIX;
+                                  this.x -= snapX;
+                                  this.pinX -= snapX;
+                                  let snapY = this.y % Def.SNAP_STEP_PIX;
+                                  this.y -= snapY;
+                                  this.pinY -= snapY;
+                              }
+
+                              this.relayout();
                             }
                         } )
-                        .on("end", (d: any) => {
+                        .on("end", () => {
                             if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:end");
                             if (this.isEditing) {
-                              let archMod = d as ArchMod;
-                              archMod.setHighlight(false);
+                              this.setHighlight(false);
+
+                              d3.event.target.origX = 0;
+                              d3.event.target.origY = 0;
+                              d3.event.target.origPinX = 0;
+                              d3.event.target.origPinY = 0;
+                              d3.event.target.startX = 0;
+                              d3.event.target.startY = 0;
                             }
                         } )
                 );
@@ -384,15 +414,27 @@ export class ArchMod {
                             if (origWidth - dx < this.MIN_SIZE_PIX) dx = origWidth - this.MIN_SIZE_PIX;
                             if (origHeight - dy < this.MIN_SIZE_PIX) dy = origHeight - this.MIN_SIZE_PIX;
 
+                            // Edge position.
                             this.x = origX + dx;
                             this.width = origWidth - dx;
                             this.y = origY + dy;
                             this.height = origHeight - dy;
 
+                            // Pin position.
                             let minPinX = this.x + this.MIN_SIZE_PIX / 2;
                             let minPinY = this.y + this.MIN_SIZE_PIX / 2;
                             if (this.pinX < minPinX) this.pinX = minPinX;
                             if (this.pinY < minPinY) this.pinY = minPinY;
+
+                            // Snapping.
+                            if (this.isSnapDragEnabled) {
+                                let snapX = this.x % Def.SNAP_STEP_PIX;
+                                this.x -= snapX;
+                                this.width += snapX;
+                                let snapY = this.y % Def.SNAP_STEP_PIX;
+                                this.y -= snapY;
+                                this.height += snapY;
+                            }
                         }
                         break;
 
@@ -400,14 +442,25 @@ export class ArchMod {
                             if (origWidth + dx < this.MIN_SIZE_PIX) dx = this.MIN_SIZE_PIX - origWidth;
                             if (origHeight - dy < this.MIN_SIZE_PIX) dy = origHeight - this.MIN_SIZE_PIX;
 
+                            // Edge position.
                             this.width = origWidth + dx;
                             this.y = origY + dy;
                             this.height = origHeight - dy;
 
+                            // Pin position.
                             let maxPinX = this.x + this.width - this.MIN_SIZE_PIX / 2;
                             let minPinY = this.y + this.MIN_SIZE_PIX / 2;
                             if (this.pinX > maxPinX) this.pinX = maxPinX;
                             if (this.pinY < minPinY) this.pinY = minPinY;
+
+                            // Snapping.
+                            if (this.isSnapDragEnabled) {
+                                let snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
+                                this.width -= snapX;
+                                let snapY = this.y % Def.SNAP_STEP_PIX;
+                                this.y -= snapY;
+                                this.height += snapY;
+                            }
                         }
                         break;
 
@@ -415,14 +468,25 @@ export class ArchMod {
                             if (origWidth - dx < this.MIN_SIZE_PIX) dx = origWidth - this.MIN_SIZE_PIX;
                             if (origHeight + dy < this.MIN_SIZE_PIX) dy = this.MIN_SIZE_PIX - origHeight;
 
+                            // Edge position.
                             this.x = origX + dx;
                             this.width = origWidth - dx;
                             this.height = origHeight + dy;
 
+                            // Pin position.
                             let minPinX = this.x + this.MIN_SIZE_PIX / 2;
                             let maxPinY = this.y + this.height - this.MIN_SIZE_PIX / 2;
                             if (this.pinX < minPinX) this.pinX = minPinX;
                             if (this.pinY > maxPinY) this.pinY = maxPinY;
+
+                            // Snapping.
+                            if (this.isSnapDragEnabled) {
+                                let snapX = this.x % Def.SNAP_STEP_PIX;
+                                this.x -= snapX;
+                                this.width += snapX;
+                                let snapY = (this.y + this.height) % Def.SNAP_STEP_PIX;
+                                this.height -= snapY;
+                            }
                         }
                         break;
 
@@ -430,31 +494,48 @@ export class ArchMod {
                             if (origWidth + dx < this.MIN_SIZE_PIX) dx = this.MIN_SIZE_PIX - origWidth;
                             if (origHeight + dy < this.MIN_SIZE_PIX) dy = this.MIN_SIZE_PIX - origHeight;
 
+                            // Edge position.
                             this.width = origWidth + dx;
                             this.height = origHeight + dy;
 
+                            // Pin position.
                             let maxPinX = this.x + this.width - this.MIN_SIZE_PIX / 2;
                             let maxPinY = this.y + this.height - this.MIN_SIZE_PIX / 2;
                             if (this.pinX > maxPinX) this.pinX = maxPinX;
                             if (this.pinY > maxPinY) this.pinY = maxPinY;
+
+                            // Snapping.
+                            if (this.isSnapDragEnabled) {
+                                let snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
+                                this.width -= snapX;
+                                let snapY = (this.y + this.height) % Def.SNAP_STEP_PIX;
+                                this.height -= snapY;
+                            }
                         }
                         break;
 
                         case this.GRIP_ID_PIN: {
                             let newPinX = origPinX + dx;
                             let newPinY = origPinY + dy;
+
+                            // Snapping.
+                            if (this.isSnapDragEnabled) {
+                                newPinX = Math.floor(newPinX / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
+                                newPinY = Math.floor(newPinY / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
+                            }
+
                             let minX = this.x + this.MIN_SIZE_PIX / 2;
                             let maxX = this.x + this.width - this.MIN_SIZE_PIX / 2;
                             let minY = this.y + this.MIN_SIZE_PIX / 2;
                             let maxY = this.y + this.height - this.MIN_SIZE_PIX / 2;
 
-                            if (newPinX < minX) dx = minX - origPinX;
-                            if (newPinX > maxX) dx = maxX - origPinX;
-                            if (newPinY < minY) dy = minY - origPinY;
-                            if (newPinY > maxY) dy = maxY - origPinY;
+                            if (newPinX < minX) newPinX = minX;
+                            if (newPinX > maxX) newPinX = maxX;
+                            if (newPinY < minY) newPinY = minY;
+                            if (newPinY > maxY) newPinY = maxY;
 
-                            this.pinX = origPinX + dx;
-                            this.pinY = origPinY + dy;
+                            this.pinX = newPinX;
+                            this.pinY = newPinY;
                         }
                         break;
                     }

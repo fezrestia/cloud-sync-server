@@ -4,6 +4,7 @@ export class Def {
   public static readonly DEG_HORIZONTAL = 0;
   public static readonly DEG_VERTICAL = 270;
 
+  public static readonly SNAP_STEP_PIX = 8;
 }
 
 /**
