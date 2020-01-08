@@ -5,6 +5,8 @@ import { ArchMod } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
 import { TraceLog } from "../util/TraceLog.ts";
 import { ColorSet } from "../Def.ts";
+import { D3Node } from "../TypeDef.ts";
+import { JQueryNode } from "../TypeDef.ts";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
@@ -16,9 +18,9 @@ const DEFAULT_SIZE = 120;
 // Current interaction context.
 class Context {
 
-  public root: JQuery<HTMLElement>|null = null;
-  public svg: d3.Selection<SVGSVGElement, any, HTMLElement, any>|null = null;
-  public html: JQuery<HTMLElement>|null = null;
+  public root: JQueryNode|null = null;
+  public svg: D3Node.SVG|null = null;
+  public html: JQueryNode|null = null;
 
   public isAddNewArchModMode: boolean = false;
 

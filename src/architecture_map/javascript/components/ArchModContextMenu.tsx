@@ -22,6 +22,8 @@ export interface ArchModContextMenuCallback {
   onLabelRotDegChanged(rotDeg: number): void;
   onClipAreaChanged(clipArea: ClipArea): void;
   onColorSetChanged(colorResolver: ColorResolver): void;
+  moveToFrontEnd(): void;
+  moveToBackEnd(): void;
 
 }
 
@@ -58,6 +60,16 @@ export class ArchModContextMenu extends React.Component<Props, State> {
   private onColorSetChanged(colorResolver: ColorResolver) {
     if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onColorSetChanged() : ${colorResolver}`);
     this.props.callback.onColorSetChanged(colorResolver);
+  }
+
+  private moveToFrontEnd() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToFrontEnd()`);
+    this.props.callback.moveToFrontEnd();
+  }
+
+  private moveToBackEnd() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
+    this.props.callback.moveToBackEnd();
   }
 
   private genClickButton(label: string, callback: () => void ) {
@@ -135,6 +147,13 @@ export class ArchModContextMenu extends React.Component<Props, State> {
                 {this.genClickButton("Green",   () => { this.onColorSetChanged(ColorSet.GREEN) })}
                 {this.genClickButton("Blue",    () => { this.onColorSetChanged(ColorSet.BLUE) })}
                 {this.genClickButton("Yellow",  () => { this.onColorSetChanged(ColorSet.YELLOW) })}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Z-Order</td>
+              <td className="no-wrap" >
+                {this.genClickButton("to Front End",  () => { this.moveToFrontEnd() })}
+                {this.genClickButton("to Back End",   () => { this.moveToBackEnd() })}
               </td>
             </tr>
           </tbody></table>

@@ -12,6 +12,8 @@ import { ArchModContextMenuCallback } from "../components/ArchModContextMenu.tsx
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
+import { D3Node } from "../TypeDef.ts";
+import { JQueryNode } from "../TypeDef.ts";
 
 /**
  * Callback interface for ArchMod.
@@ -44,17 +46,17 @@ export class ArchMod {
      * @param label Module ID.
      */
     constructor(
-            private html: JQuery<HTMLElement>,
-            private svg: d3.Selection<SVGSVGElement, any, HTMLElement, any>,
+            private html: JQueryNode,
+            private svg: D3Node.SVG,
             public readonly label: string) {
         // NOP.
     }
 
     // Elements.
-    private rootView: any;
-    private polygon: any;
-    private text: any;
-    private editView: any;
+    private root!: D3Node.G;
+    private polygon!: D3Node.Polygon;
+    private text!: D3Node.Text;
+    private editor: D3Node.G|null = null;
 
     // Position/Size.
     private x: number = 0;
@@ -178,17 +180,17 @@ export class ArchMod {
      * Render.
      */
     public render() {
-        this.rootView = this.svg.append("g")
+        this.root = this.svg.append("g")
             .attr("id", `ArchMod_${this.label}`)
             .datum(this);
 
         // Polygon, normally Rect.
-        this.polygon = this.rootView.append("polygon")
+        this.polygon = this.root.append("polygon")
             .attr("id", Util.getElementId("polygon", this.label))
             .attr("stroke-width", 2);
 
         // Text.
-        this.text = this.rootView.append("text")
+        this.text = this.root.append("text")
             .attr("id", Util.getElementId("text", this.label))
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "central")
@@ -272,8 +274,8 @@ export class ArchMod {
             });
 
             if (this.isDraggable) {
-                this.rootView.call(
-                    d3.drag()
+                this.root.call(
+                    d3.drag<SVGGElement, any, any>()
                         .on("start", (d: any) => {
                             if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:start");
                             if (this.isEditing) {
@@ -287,7 +289,7 @@ export class ArchMod {
                               let archMod = d as ArchMod;
                               archMod.dx += d3.event.dx;
                               archMod.dy += d3.event.dy;
-                              archMod.rootView.attr("transform", `translate(${archMod.dx},${archMod.dy})`);
+                              archMod.root.attr("transform", `translate(${archMod.dx},${archMod.dy})`);
                             }
                         } )
                         .on("end", (d: any) => {
@@ -304,29 +306,31 @@ export class ArchMod {
 
     private enableEditMode() {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "enableEditMode()");
-        if (this.editView != null) return;
+        if (this.editor != null) return;
 
         this.setHighlight(false);
 
-        this.editView = this.rootView.append("g");
+        this.editor = this.root.append("g");
 
-        this.addEditGripCircle(this.GRIP_ID_LEFT_TOP,       this.x,                 this.y);
-        this.addEditGripCircle(this.GRIP_ID_RIGHT_TOP,      this.x + this.width,    this.y);
-        this.addEditGripCircle(this.GRIP_ID_LEFT_BOTTOM,    this.x,                 this.y + this.height);
-        this.addEditGripCircle(this.GRIP_ID_RIGHT_BOTTOM,   this.x + this.width,    this.y + this.height);
+        this.addEditGrip(this.GRIP_ID_LEFT_TOP,       this.x,                 this.y);
+        this.addEditGrip(this.GRIP_ID_RIGHT_TOP,      this.x + this.width,    this.y);
+        this.addEditGrip(this.GRIP_ID_LEFT_BOTTOM,    this.x,                 this.y + this.height);
+        this.addEditGrip(this.GRIP_ID_RIGHT_BOTTOM,   this.x + this.width,    this.y + this.height);
 
         if (this.clipArea != ClipArea.NONE) {
-          this.addEditGripCircle(this.GRIP_ID_PIN, this.pinX, this.pinY);
+          this.addEditGrip(this.GRIP_ID_PIN, this.pinX, this.pinY);
         }
 
 
 
     }
 
-    private addEditGripCircle(id: string, cx: number, cy: number): any {
+    private addEditGrip(id: string, cx: number, cy: number): any {
+        if (this.editor == null) return;
+
         let TAG = "EditGrip";
 
-        let circle = this.editView.append("circle")
+        let circle = this.editor.append("circle")
             .attr("id", id)
             .attr("cx", cx)
             .attr("cy", cy)
@@ -347,7 +351,7 @@ export class ArchMod {
         });
 
         circle.call(
-            d3.drag()
+            d3.drag<SVGCircleElement, any, any>()
                 .on("start", () => {
                     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:start");
 
@@ -476,10 +480,10 @@ export class ArchMod {
 
     private disableEditMode() {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "disableEditMode()");
-        if (this.editView == null) return;
+        if (this.editor == null) return;
 
-        this.editView.remove();
-        this.editView = null;
+        this.editor.remove();
+        this.editor = null;
     }
 
     private relayout() {
@@ -629,25 +633,25 @@ export class ArchMod {
         this.text.attr("transform", `rotate(${this.labelRotDeg},${labelX},${labelY})`);
 
         // Grips.
-        if (this.editView != null) {
-            let ltGrip = this.editView.select(`#${this.GRIP_ID_LEFT_TOP}`);
+        if (this.editor != null) {
+            let ltGrip = this.editor.select(`#${this.GRIP_ID_LEFT_TOP}`);
             ltGrip.attr("cx", this.x);
             ltGrip.attr("cy", this.y);
 
-            let rtGrip = this.editView.select(`#${this.GRIP_ID_RIGHT_TOP}`);
+            let rtGrip = this.editor.select(`#${this.GRIP_ID_RIGHT_TOP}`);
             rtGrip.attr("cx", this.x + this.width);
             rtGrip.attr("cy", this.y);
 
-            let lbGrip = this.editView.select(`#${this.GRIP_ID_LEFT_BOTTOM}`);
+            let lbGrip = this.editor.select(`#${this.GRIP_ID_LEFT_BOTTOM}`);
             lbGrip.attr("cx", this.x);
             lbGrip.attr("cy", this.y + this.height);
 
-            let rbGrip = this.editView.select(`#${this.GRIP_ID_RIGHT_BOTTOM}`);
+            let rbGrip = this.editor.select(`#${this.GRIP_ID_RIGHT_BOTTOM}`);
             rbGrip.attr("cx", this.x + this.width);
             rbGrip.attr("cy", this.y + this.height);
 
             if (this.clipArea != ClipArea.NONE) {
-              let pinGrip = this.editView.select(`#${this.GRIP_ID_PIN}`);
+              let pinGrip = this.editor.select(`#${this.GRIP_ID_PIN}`);
               pinGrip.attr("cx", this.pinX);
               pinGrip.attr("cy", this.pinY);
             }
@@ -690,6 +694,14 @@ export class ArchMod {
             this.target.disableEditMode();
             this.target.enableEditMode();
             this.target.recolor();
+        }
+
+        moveToFrontEnd() {
+            this.target.moveToFrontEnd();
+        }
+
+        moveToBackEnd() {
+            this.target.moveToBackEnd();
         }
     }
 
@@ -749,5 +761,14 @@ export class ArchMod {
         }
     }
 
+    private moveToFrontEnd() {
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToFrontEnd()`);
+        this.root.raise();
+    }
+
+    private moveToBackEnd() {
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
+        this.root.lower();
+    }
 }
 
