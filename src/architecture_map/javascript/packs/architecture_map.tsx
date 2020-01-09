@@ -3,6 +3,8 @@ import * as $ from "jquery";
 
 import { ArchMod } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
+import { OutFrame } from "../d3/OutFrame";
+import { OutFrameCallback } from "../d3/OutFrame";
 import { TraceLog } from "../util/TraceLog.ts";
 import { ColorSet } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
@@ -14,18 +16,21 @@ const ROOT_ID = "root";
 const SVG_ROOT_ID = "svg_root";
 const HTML_ROOT_ID = "html_root";
 const DEFAULT_SIZE = 120;
+const DEFAULT_TOTAL_WIDTH = 640;
+const DEFAULT_TOTAL_HEIGHT = 640;
 
 // Current interaction context.
 class Context {
-
-  constructor() {
-    // NOP.
-  }
-
+  // Root nodes.
   public root!: JQueryNode;
   public svg!: D3Node.SVG;
   public html!: JQueryNode;
 
+  // Elements.
+  public outFrame! :OutFrame;
+  private readonly allArchMods: ArchMod[] = [];
+
+  // State flags.
   public isAddNewArchModMode: boolean = false;
 
   private _selectedArchMod: ArchMod|null = null;
@@ -36,11 +41,9 @@ class Context {
         if (this._selectedArchMod != selected && this._selectedArchMod != null) {
           this._selectedArchMod.resetState();
         }
-
+        this.outFrame.isEditing = false;
         this._selectedArchMod = selected;
       }
-
-  private readonly allArchMods: ArchMod[] = [];
 
   public addArchMod(archMod: ArchMod) {
     this.allArchMods.push(archMod);
@@ -59,6 +62,7 @@ class Context {
     if (this.selectedArchMod != null) {
       this.selectedArchMod.resetState();
     }
+    this.outFrame.isEditing = false;
   }
 
   public resetAllState() {
@@ -78,8 +82,22 @@ class Context {
       this.selectedArchMod.isSnapDragEnabled = false;
     }
   }
+
+  public changeOutFrameSize(width:number, height: number) {
+    this.root.css("width", width);
+    this.root.css("height", height);
+  }
+
 }
 const CONTEXT = new Context();
+
+// OutFrame callback implementation.
+class OutFrameCallbackImpl implements OutFrameCallback {
+  onSizeChanged(width: number, height: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChanged() : width=${width}, height=${height}`);
+    CONTEXT.changeOutFrameSize(width, height);
+  }
+}
 
 // Common callback implementation for ALL ArchMod instances.
 class ArchModCallbackImpl implements ArchModCallback {
@@ -108,12 +126,9 @@ class ArchModCallbackImpl implements ArchModCallback {
 (window as any).onArchitectureMapTopLoaded = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onArchitectureMapTopLoaded()");
 
-  let totalWidth = 640;
-  let totalHeight = 640;
-
   let root: JQueryNode = $(`#${ROOT_ID}`);
-  root.css("width", totalWidth);
-  root.css("height", totalHeight);
+  root.css("width", DEFAULT_TOTAL_WIDTH);
+  root.css("height", DEFAULT_TOTAL_HEIGHT);
   CONTEXT.root = root;
 
   let svg: D3Node.SVG = d3.select(`#${SVG_ROOT_ID}`);
@@ -122,6 +137,12 @@ class ArchModCallbackImpl implements ArchModCallback {
   let html: JQueryNode = $(`#${HTML_ROOT_ID}`);
   html.css("display", "none");
   CONTEXT.html = html;
+
+  let outFrame = new OutFrame(CONTEXT.svg);
+  outFrame.setCallback(new OutFrameCallbackImpl());
+  outFrame.setWH(DEFAULT_TOTAL_WIDTH, DEFAULT_TOTAL_HEIGHT);
+  outFrame.render();
+  CONTEXT.outFrame = outFrame;
 
   registerGlobalCallbacks();
 }
