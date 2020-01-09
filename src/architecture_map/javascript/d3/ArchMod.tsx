@@ -19,6 +19,9 @@ import { JQueryNode } from "../TypeDef.ts";
  * Callback interface for ArchMod.
  */
 export interface ArchModCallback {
+  onSvgAdded(archMod: ArchMod): void;
+  onSvgRemoved(archMod: ArchMod): void;
+
   onSelected(selected: ArchMod): void;
   onDeselected(deselected: ArchMod): void;
 
@@ -206,6 +209,8 @@ export class ArchMod {
 
         // Callbacks.
         this.registerCallbacks();
+
+        if (this.callback != null) this.callback.onSvgAdded(this);
     }
 
     /**
@@ -756,19 +761,19 @@ export class ArchMod {
             this.target = target;
         }
 
-        onOutsideClicked() {
+        close() {
             this.target.closeContextMenu();
         }
 
-        onLabelRotDegChanged(rotDeg: number) {
+        changeLabelRotDeg(rotDeg: number) {
             this.target.rotateLabel(rotDeg);
         }
 
-        onClipAreaChanged(clipArea: ClipArea) {
+        changeClipArea(clipArea: ClipArea) {
             this.target.changeClipArea(clipArea);
         }
 
-        onColorSetChanged(colorResolver: ColorResolver) {
+        changeColorSet(colorResolver: ColorResolver) {
             this.target.setColorResolver(colorResolver);
 
             // Re-construction and re-color.
@@ -783,6 +788,10 @@ export class ArchMod {
 
         moveToBackEnd() {
             this.target.moveToBackEnd();
+        }
+
+        delete() {
+            this.target.delete();
         }
     }
 
@@ -850,6 +859,13 @@ export class ArchMod {
     private moveToBackEnd() {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
         this.root.lower();
+    }
+
+    private delete() {
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
+        this.closeContextMenu();
+        this.root.remove();
+        if (this.callback != null) this.callback.onSvgRemoved(this);
     }
 }
 

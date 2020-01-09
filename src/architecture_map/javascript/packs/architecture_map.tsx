@@ -83,6 +83,16 @@ const CONTEXT = new Context();
 
 // Common callback implementation for ALL ArchMod instances.
 class ArchModCallbackImpl implements ArchModCallback {
+  onSvgAdded(archMod: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSvgAdded() : ${archMod.label}`);
+    CONTEXT.addArchMod(archMod);
+  }
+
+  onSvgRemoved(archMod: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSvgRemoved() : ${archMod.label}`);
+    CONTEXT.removeArchMod(archMod);
+  }
+
   onSelected(selected: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSelected() : ${selected.label}`);
     CONTEXT.selectedArchMod = selected;
@@ -186,8 +196,6 @@ function registerGlobalCallbacks() {
       archMod.setCallback(new ArchModCallbackImpl());
       archMod.setXYWH(posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
       archMod.render();
-
-      CONTEXT.addArchMod(archMod);
 
       if (TraceLog.IS_DEBUG) {
         let {x: x, y: y, width: w, height: h} = archMod.getXYWH();

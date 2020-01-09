@@ -18,12 +18,13 @@ interface State {
 }
 
 export interface ArchModContextMenuCallback {
-  onOutsideClicked(): void;
-  onLabelRotDegChanged(rotDeg: number): void;
-  onClipAreaChanged(clipArea: ClipArea): void;
-  onColorSetChanged(colorResolver: ColorResolver): void;
+  close(): void;
+  changeLabelRotDeg(rotDeg: number): void;
+  changeClipArea(clipArea: ClipArea): void;
+  changeColorSet(colorResolver: ColorResolver): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
+  delete(): void;
 
 }
 
@@ -35,41 +36,6 @@ export class ArchModContextMenu extends React.Component<Props, State> {
 
     this.state = {
     };
-  }
-
-  private onBackgroundClicked() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onBackgroundClicked()");
-    this.props.callback.onOutsideClicked();
-  }
-
-  private onContextMenuClicked() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onContextMenuClicked()");
-    // NOP.
-  }
-
-  private onLabelRotDegChanged(rotDeg: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onLabelRotDegChanged() : rotDeg=${rotDeg}`);
-    this.props.callback.onLabelRotDegChanged(rotDeg);
-  }
-
-  private onClipAreaChanged(clipArea: ClipArea) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onClipAreaChanged() : ${clipArea}`);
-    this.props.callback.onClipAreaChanged(clipArea);
-  }
-
-  private onColorSetChanged(colorResolver: ColorResolver) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `onColorSetChanged() : ${colorResolver}`);
-    this.props.callback.onColorSetChanged(colorResolver);
-  }
-
-  private moveToFrontEnd() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToFrontEnd()`);
-    this.props.callback.moveToFrontEnd();
-  }
-
-  private moveToBackEnd() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
-    this.props.callback.moveToBackEnd();
   }
 
   private genClickButton(label: string, callback: () => void ) {
@@ -93,14 +59,18 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     };
 
     let handleBackgroundClick = (e: ReactMouseEvent) => {
-        this.onBackgroundClicked();
-        e.stopPropagation();
+      if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onBackgroundClicked()");
+      e.stopPropagation();
+      this.props.callback.close();
     };
 
     let handleContextMenuClick = (e: ReactMouseEvent) => {
-        this.onContextMenuClicked();
-        e.stopPropagation();
+      if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onContextMenuClicked()");
+      e.stopPropagation();
+      // NOP.
     };
+
+    let callback = this.props.callback;
 
     return (
       <div className="layer-parent match-parent" >
@@ -125,35 +95,41 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Label Direction</td>
               <td className="no-wrap" >
-                {this.genClickButton("Horizontal",  () => { this.onLabelRotDegChanged(Def.DEG_HORIZONTAL) })}
-                {this.genClickButton("Vertical",    () => { this.onLabelRotDegChanged(Def.DEG_VERTICAL) })}
+                {this.genClickButton("Horizontal",  () => { callback.changeLabelRotDeg(Def.DEG_HORIZONTAL) })}
+                {this.genClickButton("Vertical",    () => { callback.changeLabelRotDeg(Def.DEG_VERTICAL) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Clip Area</td>
               <td className="no-wrap" >
-                {this.genClickButton("None",          () => { this.onClipAreaChanged(ClipArea.NONE) })}
-                {this.genClickButton("Left-Top",      () => { this.onClipAreaChanged(ClipArea.LEFT_TOP) })}
-                {this.genClickButton("Right-Top",     () => { this.onClipAreaChanged(ClipArea.RIGHT_TOP) })}
-                {this.genClickButton("Left-Bottom",   () => { this.onClipAreaChanged(ClipArea.LEFT_BOTTOM) })}
-                {this.genClickButton("Right-Bottom",  () => { this.onClipAreaChanged(ClipArea.RIGHT_BOTTOM) })}
+                {this.genClickButton("None",          () => { callback.changeClipArea(ClipArea.NONE) })}
+                {this.genClickButton("Left-Top",      () => { callback.changeClipArea(ClipArea.LEFT_TOP) })}
+                {this.genClickButton("Right-Top",     () => { callback.changeClipArea(ClipArea.RIGHT_TOP) })}
+                {this.genClickButton("Left-Bottom",   () => { callback.changeClipArea(ClipArea.LEFT_BOTTOM) })}
+                {this.genClickButton("Right-Bottom",  () => { callback.changeClipArea(ClipArea.RIGHT_BOTTOM) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
-                {this.genClickButton("Gray",    () => { this.onColorSetChanged(ColorSet.GRAY) })}
-                {this.genClickButton("Orange",  () => { this.onColorSetChanged(ColorSet.ORANGE) })}
-                {this.genClickButton("Green",   () => { this.onColorSetChanged(ColorSet.GREEN) })}
-                {this.genClickButton("Blue",    () => { this.onColorSetChanged(ColorSet.BLUE) })}
-                {this.genClickButton("Yellow",  () => { this.onColorSetChanged(ColorSet.YELLOW) })}
+                {this.genClickButton("Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
+                {this.genClickButton("Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
+                {this.genClickButton("Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
+                {this.genClickButton("Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
+                {this.genClickButton("Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Z-Order</td>
               <td className="no-wrap" >
-                {this.genClickButton("to Front End",  () => { this.moveToFrontEnd() })}
-                {this.genClickButton("to Back End",   () => { this.moveToBackEnd() })}
+                {this.genClickButton("to Front End",  () => { callback.moveToFrontEnd() })}
+                {this.genClickButton("to Back End",   () => { callback.moveToBackEnd() })}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Delete</td>
+              <td className="no-wrap" >
+                {this.genClickButton("DELETE", () => { callback.delete() })}
               </td>
             </tr>
           </tbody></table>
