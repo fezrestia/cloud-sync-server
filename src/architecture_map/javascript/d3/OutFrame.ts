@@ -43,8 +43,8 @@ export class OutFrame {
   private grip: D3Node.Circle|null = null;
 
   // Position/Size.
-  private readonly x: number = 0;
-  private readonly y: number = 0;
+  private x: number = 0;
+  private y: number = 0;
   private width: number = 0;
   private height: number = 0;
 
@@ -80,21 +80,25 @@ export class OutFrame {
   private callback: OutFrameCallback|null = null;
 
   /**
-   * Set size.
+   * Set position and size.
+   * @param x Pxiels
+   * @param y Pixels
    * @param width Pixels
    * @param height Pixels
    */
-  public setWH(width: number, height: number) {
+  public setXYWH(x: number, y: number, width: number, height: number) {
+    this.x = x;
+    this.y = y;
     this.width = width;
     this.height = height;
   }
 
   /**
    * Get size.
-   * @return {width, height}
+   * @return {x, y, width, height}
    */
-  public getWH(): {width: number, height:number} {
-    return {width: this.width, height: this.height};
+  public getXYWH(): {x: number, y: number, width: number, height:number} {
+    return {x: this.x, y: this.y, width: this.width, height: this.height};
   }
 
   /**
@@ -294,6 +298,7 @@ export class OutFrame {
     this.grip = null;
     this.root.lower();
     this.svg.attr("overflow", "hidden");
+    this.recolor();
   }
 }
 

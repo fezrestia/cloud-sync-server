@@ -25,6 +25,8 @@ export interface ArchModCallback {
   onSelected(selected: ArchMod): void;
   onDeselected(deselected: ArchMod): void;
 
+  onDragMoved(moved: ArchMod, pulsX: number, plusY: number): void;
+
 }
 
 /**
@@ -82,10 +84,10 @@ export class ArchMod {
 
   // Dynamic flags.
   private _isSelected: boolean = false;
-      private get isSelected(): boolean {
+      public get isSelected(): boolean {
         return this._isSelected;
       }
-      private set isSelected(selected: boolean) {
+      public set isSelected(selected: boolean) {
         let isChanged = this._isSelected != selected;
         this._isSelected = selected;
         this.setHighlight(selected);
@@ -95,10 +97,10 @@ export class ArchMod {
         }
       }
   private _isEditing: boolean = false;
-      private get isEditing(): boolean {
+      public get isEditing(): boolean {
         return this._isEditing;
       }
-      private set isEditing(editing: boolean) {
+      public set isEditing(editing: boolean) {
         if (editing) {
           this.enableEditMode();
         } else {
@@ -109,14 +111,6 @@ export class ArchMod {
   private _isContextMenuOpened: boolean = false;
       private get isContextMenuOpened(): boolean {
         return this.html.css("display") != "none";
-      }
-
-  private _isSnapDragEnabled: boolean = false;
-      public get isSnapDragEnabled(): boolean {
-        return this._isSnapDragEnabled;
-      }
-      public set isSnapDragEnabled(isEnabled: boolean) {
-        this._isSnapDragEnabled = isEnabled;
       }
 
   // Color resolver functions.
@@ -179,7 +173,6 @@ export class ArchMod {
   public resetState() {
     this.isEditing = false;
     this.isSelected = false;
-    this.isSnapDragEnabled = false;
   }
 
   /**
@@ -237,6 +230,21 @@ export class ArchMod {
     } else {
       this.polygon.attr("fill", this.colorResolver.bg);
     }
+  }
+
+  /**
+   * Move this ArchMod with X-Y diff.
+   *
+   * @param plusX
+   * @param plusY
+   */
+  public move(plusX: number, plusY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `move() : ID=${this.label}, plusX=${plusX}, plusY=${plusY}`);
+    this.x += plusX;
+    this.y += plusY;
+    this.pinX += plusX;
+    this.pinY += plusY;
+    this.relayout();
   }
 
   private registerCallbacks() {
@@ -300,8 +308,13 @@ export class ArchMod {
               .on("drag", () => {
                   if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:drag");
                   if (this.isEditing) {
+                    let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+
                     let dx = d3.event.x - d3.event.target.startX;
                     let dy = d3.event.y - d3.event.target.startY;
+
+                    let oldX = this.x;
+                    let oldY = this.y;
 
                     this.x = d3.event.target.origX + dx;
                     this.y = d3.event.target.origY + dy;
@@ -309,7 +322,7 @@ export class ArchMod {
                     this.pinY = d3.event.target.origPinY + dy;
 
                     // Position snapping.
-                    if (this.isSnapDragEnabled) {
+                    if (isSnapDragEnabled) {
                       let snapX = this.x % Def.SNAP_STEP_PIX;
                       this.x -= snapX;
                       this.pinX -= snapX;
@@ -319,6 +332,10 @@ export class ArchMod {
                     }
 
                     this.relayout();
+
+                    let plusX = this.x - oldX;
+                    let plusY = this.y - oldY;
+                    if (this.callback != null) this.callback.onDragMoved(this, plusX, plusY);
                   }
               } )
               .on("end", () => {
@@ -402,6 +419,8 @@ export class ArchMod {
           .on("drag", () => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
+              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+
               let origX = d3.event.target.origX;
               let origY = d3.event.target.origY;
               let origWidth = d3.event.target.origWidth;
@@ -430,7 +449,7 @@ export class ArchMod {
                   if (this.pinY < minPinY) this.pinY = minPinY;
 
                   // Snapping.
-                  if (this.isSnapDragEnabled) {
+                  if (isSnapDragEnabled) {
                     let snapX = this.x % Def.SNAP_STEP_PIX;
                     this.x -= snapX;
                     this.width += snapX;
@@ -457,7 +476,7 @@ export class ArchMod {
                   if (this.pinY < minPinY) this.pinY = minPinY;
 
                   // Snapping.
-                  if (this.isSnapDragEnabled) {
+                  if (isSnapDragEnabled) {
                     let snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
                     this.width -= snapX;
                     let snapY = this.y % Def.SNAP_STEP_PIX;
@@ -483,7 +502,7 @@ export class ArchMod {
                   if (this.pinY > maxPinY) this.pinY = maxPinY;
 
                   // Snapping.
-                  if (this.isSnapDragEnabled) {
+                  if (isSnapDragEnabled) {
                     let snapX = this.x % Def.SNAP_STEP_PIX;
                     this.x -= snapX;
                     this.width += snapX;
@@ -508,7 +527,7 @@ export class ArchMod {
                   if (this.pinY > maxPinY) this.pinY = maxPinY;
 
                   // Snapping.
-                  if (this.isSnapDragEnabled) {
+                  if (isSnapDragEnabled) {
                     let snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
                     this.width -= snapX;
                     let snapY = (this.y + this.height) % Def.SNAP_STEP_PIX;
@@ -522,7 +541,7 @@ export class ArchMod {
                    let newPinY = origPinY + dy;
 
                    // Snapping.
-                   if (this.isSnapDragEnabled) {
+                   if (isSnapDragEnabled) {
                      newPinX = Math.floor(newPinX / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
                      newPinY = Math.floor(newPinY / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
                    }

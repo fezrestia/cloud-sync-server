@@ -28,7 +28,9 @@ class Context {
 
   // Elements.
   public outFrame! :OutFrame;
+  public brushLayer!: D3Node.G|null;
   private readonly allArchMods: ArchMod[] = [];
+  private readonly brushedArchMods: ArchMod[] = [];
 
   // State flags.
   public isAddNewArchModMode: boolean = false;
@@ -41,7 +43,7 @@ class Context {
         if (this._selectedArchMod != selected && this._selectedArchMod != null) {
           this._selectedArchMod.resetState();
         }
-        this.outFrame.isEditing = false;
+        this.outFrame.resetState();
         this._selectedArchMod = selected;
       }
 
@@ -58,29 +60,46 @@ class Context {
     this.allArchMods.splice(index, 1);
   }
 
-  public resetSelectedState() {
-    if (this.selectedArchMod != null) {
-      this.selectedArchMod.resetState();
-    }
-    this.outFrame.isEditing = false;
+  // @param selection area 4-edge.
+  public updateBrushed(selected: number[][]) {
+    let minX = selected[0][0];
+    let minY = selected[0][1];
+    let maxX = selected[1][0];
+    let maxY = selected[1][1];
+
+    this.allArchMods.forEach( (archMod: ArchMod) => {
+      let {x, y, width, height} = archMod.getXYWH();
+
+      if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
+        if (!this.brushedArchMods.includes(archMod)) {
+          archMod.isEditing = true;
+          this.brushedArchMods.push(archMod);
+        }
+      } else {
+        let index = this.brushedArchMods.indexOf(archMod);
+        if (0 <= index) {
+          let removes: ArchMod[] = this.brushedArchMods.splice(index, 1);
+          removes[0].isEditing = false;
+        }
+      }
+
+    } );
+  }
+
+  public moveBrushedArchMod(plusX: number, plusY: number, except: ArchMod) {
+    this.brushedArchMods.forEach( (archMod: ArchMod) => {
+      if (archMod == except) return;
+      archMod.move(plusX, plusY);
+    } );
   }
 
   public resetAllState() {
     this.allArchMods.forEach( (archMod: ArchMod) => {
       archMod.resetState();
     } );
-  }
+    this.outFrame.resetState();
 
-  public enableSnapDrag() {
-    if (this.selectedArchMod != null) {
-      this.selectedArchMod.isSnapDragEnabled = true;
-    }
-  }
-
-  public disableSnapDrag() {
-    if (this.selectedArchMod != null) {
-      this.selectedArchMod.isSnapDragEnabled = false;
-    }
+    this.brushedArchMods.length = 0; // clear all.
   }
 
   public changeOutFrameSize(width:number, height: number) {
@@ -121,6 +140,11 @@ class ArchModCallbackImpl implements ArchModCallback {
     CONTEXT.selectedArchMod = null;
   }
 
+  onDragMoved(moved: ArchMod, plusX: number, plusY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragMoved() : plusX=${plusX}, plusY=${plusY}`);
+    CONTEXT.moveBrushedArchMod(plusX, plusY, moved);
+  }
+
 }
 
 (window as any).onArchitectureMapTopLoaded = () => {
@@ -140,11 +164,69 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   let outFrame = new OutFrame(CONTEXT.svg);
   outFrame.setCallback(new OutFrameCallbackImpl());
-  outFrame.setWH(DEFAULT_TOTAL_WIDTH, DEFAULT_TOTAL_HEIGHT);
+  outFrame.setXYWH(0, 0, DEFAULT_TOTAL_WIDTH, DEFAULT_TOTAL_HEIGHT);
   outFrame.render();
   CONTEXT.outFrame = outFrame;
 
+
+
   registerGlobalCallbacks();
+}
+
+function prepareBrushLayer() {
+  if (CONTEXT.brushLayer != null) return;
+
+  CONTEXT.resetAllState();
+
+  let brushLayer: D3Node.G = CONTEXT.svg.append("g")
+      .attr("class", "brushes")
+      .lower();
+  CONTEXT.brushLayer = brushLayer;
+
+  // Max brush area size.
+  let {x, y, width, height} = CONTEXT.outFrame.getXYWH();
+
+  let brush: d3.BrushBehavior<any> = d3.brush()
+      .extent([[x, y], [x + width, y + height]])
+      .filter( () => {
+        return !d3.event.button;
+      } )
+      .on("start", () => {
+        if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:start");
+
+        brushLayer.raise();
+      } )
+      .on("brush", () => {
+        if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:brush");
+
+        if (d3.event.selection != null) {
+          let brushArea: number[][] = d3.event.selection;
+          if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `brushArea = ${brushArea}`);
+
+          CONTEXT.updateBrushed(brushArea);
+        }
+      } )
+      .on("end", () => {
+        if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:end");
+
+        if (d3.event.selection != null) {
+          // Immediately cancel selection.
+          // After cleared, brush callback is called again with null selection.
+          // So, check selection != null here to avoid infinite loop.
+          brushLayer.call(d3.event.target.clear);
+        }
+
+        brushLayer.lower();
+      } );
+
+  brushLayer.call(brush);
+}
+
+function releaseBrushLayer() {
+  if (CONTEXT.brushLayer == null) return;
+
+  CONTEXT.brushLayer.remove();
+  CONTEXT.brushLayer = null;
 }
 
 function registerGlobalCallbacks() {
@@ -153,8 +235,8 @@ function registerGlobalCallbacks() {
     event.stopPropagation();
 
     switch (event.key) {
-      case "Alt":
-        CONTEXT.enableSnapDrag();
+      case "Control":
+        prepareBrushLayer();
         break;
 
       case "d":
@@ -168,8 +250,6 @@ function registerGlobalCallbacks() {
         }
         break;
     }
-
-    return true;
   };
 
   window.onkeyup = (event: KeyboardEvent) => {
@@ -177,17 +257,15 @@ function registerGlobalCallbacks() {
     event.stopPropagation();
 
     switch (event.key) {
-      case "Alt":
-        CONTEXT.disableSnapDrag();
+      case "Control":
+        releaseBrushLayer();
         break;
     }
-
-    return true;
   };
 
   CONTEXT.svg.on("click", () => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
-    CONTEXT.resetSelectedState();
+    CONTEXT.resetAllState();
     d3.event.stopPropagation();
   });
 }
@@ -213,24 +291,23 @@ function registerGlobalCallbacks() {
       let posX: number = e.offsetX || 0;
       let posY: number = e.offsetY || 0;
 
-      let archMod = new ArchMod(CONTEXT.html, CONTEXT.svg, "Test Label");
-      archMod.setCallback(new ArchModCallbackImpl());
-      archMod.setXYWH(posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
-      archMod.render();
-
-      if (TraceLog.IS_DEBUG) {
-        let {x: x, y: y, width: w, height: h} = archMod.getXYWH();
-        TraceLog.d(TAG, `ArchMod added. x=${x}, y=${y}, w=${w}, h=${h}`);
-      }
+      addNewArchMod("Test Label", posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
 
       // Finish add mode.
       resetHtmlRoot();
       CONTEXT.isAddNewArchModMode = false;
-
     } );
 
     CONTEXT.isAddNewArchModMode = true;
   }
+}
+
+function addNewArchMod(label: string, x: number, y: number, width: number, height: number): ArchMod {
+  let archMod = new ArchMod(CONTEXT.html, CONTEXT.svg, label);
+  archMod.setCallback(new ArchModCallbackImpl());
+  archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
+  archMod.render();
+  return archMod;
 }
 
 function resetHtmlRoot() {
