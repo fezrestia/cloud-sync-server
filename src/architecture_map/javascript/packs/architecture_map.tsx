@@ -40,11 +40,9 @@ class Context {
         return this._selectedArchMod;
       }
       set selectedArchMod(selected: ArchMod|null) {
-        if (this._selectedArchMod != selected && this._selectedArchMod != null) {
-          this._selectedArchMod.resetState();
-        }
-        this.outFrame.resetState();
+        if (this.selectedArchMod == selected) return;
         this._selectedArchMod = selected;
+        this.resetAllStateExceptFor(selected);
       }
 
   public addArchMod(archMod: ArchMod) {
@@ -72,14 +70,14 @@ class Context {
 
       if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
         if (!this.brushedArchMods.includes(archMod)) {
-          archMod.isEditing = true;
+          archMod.isMovable = true;
           this.brushedArchMods.push(archMod);
         }
       } else {
         let index = this.brushedArchMods.indexOf(archMod);
         if (0 <= index) {
           let removes: ArchMod[] = this.brushedArchMods.splice(index, 1);
-          removes[0].isEditing = false;
+          removes[0].isMovable = false;
         }
       }
 
@@ -93,13 +91,24 @@ class Context {
     } );
   }
 
-  public resetAllState() {
+  /**
+   * Reset selected/editing or something state to default without exception.
+   *
+   * @param except ArchMod Exception of reset target. If null, ALL state will be reset.
+   */
+  public resetAllStateExceptFor(except: ArchMod|null) {
     this.allArchMods.forEach( (archMod: ArchMod) => {
+      if (except == archMod) return;
       archMod.resetState();
     } );
+
     this.outFrame.resetState();
 
     this.brushedArchMods.length = 0; // clear all.
+  }
+
+  public resetAllState() {
+    this.resetAllStateExceptFor(null);
   }
 
   public changeOutFrameSize(width:number, height: number) {
@@ -137,6 +146,16 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onDeselected(deselected: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDeselected() : ${deselected.label}`);
+    CONTEXT.selectedArchMod = null;
+  }
+
+  onEditing(editing: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onEditing() : ${editing.label}`);
+    CONTEXT.selectedArchMod = editing;
+  }
+
+  onEdited(edited: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onEdited() : ${edited.label}`);
     CONTEXT.selectedArchMod = null;
   }
 

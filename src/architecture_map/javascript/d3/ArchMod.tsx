@@ -25,6 +25,9 @@ export interface ArchModCallback {
   onSelected(selected: ArchMod): void;
   onDeselected(deselected: ArchMod): void;
 
+  onEditing(editing: ArchMod): void;
+  onEdited(edited: ArchMod): void;
+
   onDragMoved(moved: ArchMod, pulsX: number, plusY: number): void;
 
 }
@@ -77,37 +80,60 @@ export class ArchMod {
   // Font.
   private fontSize: number = 12;
 
-  // Static flags.
-  private isSelectable: boolean = true;
-  private isDraggable: boolean = true;
-  private isEditable: boolean = true;
-
   // Dynamic flags.
   private _isSelected: boolean = false;
       public get isSelected(): boolean {
         return this._isSelected;
       }
       public set isSelected(selected: boolean) {
-        let isChanged = this._isSelected != selected;
+        if (this.isSelected == selected) return;
+        this.isMovable = false;
         this._isSelected = selected;
         this.setHighlight(selected);
-
-        if (this.callback != null && isChanged) {
-          selected ? this.callback.onSelected(this) : this.callback.onDeselected(this);
+        if (selected) {
+          if (this.callback != null) this.callback.onSelected(this);
+        } else {
+          if (this.callback != null) this.callback.onDeselected(this);
         }
       }
-  private _isEditing: boolean = false;
-      public get isEditing(): boolean {
-        return this._isEditing;
+  private _isMovable: boolean = false;
+      public get isMovable(): boolean {
+        return this._isMovable || this._isEditable;
       }
-      public set isEditing(editing: boolean) {
-        if (editing) {
+      public set isMovable(movable: boolean) {
+        this._isMovable = movable;
+        this.setHighlight(movable);
+      }
+  private _isEditable: boolean = false;
+      public get isEditable(): boolean {
+        return this._isEditable;
+      }
+      public set isEditable(editable: boolean) {
+        if (this.isEditable == editable) return;
+        this.isSelected = false;
+        this.isMovable = false;
+        this._isEditable = editable;
+        if (editable) {
           this.enableEditMode();
         } else {
+          this.closeContextMenu();
           this.disableEditMode();
         }
-        this._isEditing = editing;
+        if (editable) {
+          if (this.callback != null) this.callback.onEditing(this);
+        } else {
+          if (this.callback != null) this.callback.onEdited(this);
+        }
       }
+
+  private get isIdle(): boolean {
+    return !this.isSelected && !this.isMovable && !this.isEditable;
+  }
+
+  private get isSelectable(): boolean {
+    return !this.isMovable && !this.isEditable;
+  }
+
   private _isContextMenuOpened: boolean = false;
       private get isContextMenuOpened(): boolean {
         return this.html.css("display") != "none";
@@ -168,11 +194,12 @@ export class ArchMod {
   }
 
   /**
-   * Reset selected or editing state to default.
+   * Reset dynamic states to default.
    */
   public resetState() {
-    this.isEditing = false;
     this.isSelected = false;
+    this.isMovable = false;
+    this.isEditable = false;
   }
 
   /**
@@ -251,13 +278,13 @@ export class ArchMod {
     if (this.isSelectable) {
       this.polygon.on("mouseover", () => {
           if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseover");
-          if (!this.isSelected && !this.isEditing) {
+          if (this.isIdle) {
               this.setHighlight(true);
           }
       });
       this.polygon.on("mouseout", () => {
           if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseout");
-          if (!this.isSelected && !this.isEditing) {
+          if (this.isIdle) {
               this.setHighlight(false);
           }
       });
@@ -265,7 +292,7 @@ export class ArchMod {
       this.polygon.on("click", () => {
           if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:click");
 
-          if (!this.isEditing) {
+          if (this.isSelectable) {
             this.isSelected = !this.isSelected;
           }
 
@@ -274,93 +301,85 @@ export class ArchMod {
       this.polygon.on("dblclick", () => {
           if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:dblclick");
 
-          if (this.isEditing) {
+          if (this.isEditable) {
             if (!this.isContextMenuOpened) {
               let clickX = d3.event.x;
               let clickY = d3.event.y;
               this.openContextMenu(clickX, clickY);
             }
           } else {
-            // Change to edit view.
-            this.isSelected = true;
-            this.isEditing = true;
+            if (this.isSelectable) {
+              this.isEditable = true;
+            }
           }
 
           d3.event.stopPropagation();
       });
 
-      if (this.isDraggable) {
-        this.root.call(
-          d3.drag<SVGGElement, any, any>()
-              .on("start", () => {
-                  if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:start");
-                  if (this.isEditing) {
-                    this.setHighlight(true);
+      this.root.call(
+        d3.drag<SVGGElement, any, any>()
+            .on("start", () => {
+                if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:start");
+                if (this.isMovable) {
+                  d3.event.target.origX = this.x;
+                  d3.event.target.origY = this.y;
+                  d3.event.target.origPinX = this.pinX;
+                  d3.event.target.origPinY = this.pinY;
+                  d3.event.target.startX = d3.event.x;
+                  d3.event.target.startY = d3.event.y;
+                }
+            } )
+            .on("drag", () => {
+                if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:drag");
+                if (this.isMovable) {
+                  let isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
-                    d3.event.target.origX = this.x;
-                    d3.event.target.origY = this.y;
-                    d3.event.target.origPinX = this.pinX;
-                    d3.event.target.origPinY = this.pinY;
-                    d3.event.target.startX = d3.event.x;
-                    d3.event.target.startY = d3.event.y;
+                  let dx = d3.event.x - d3.event.target.startX;
+                  let dy = d3.event.y - d3.event.target.startY;
+
+                  let oldX = this.x;
+                  let oldY = this.y;
+
+                  this.x = d3.event.target.origX + dx;
+                  this.y = d3.event.target.origY + dy;
+                  this.pinX = d3.event.target.origPinX + dx;
+                  this.pinY = d3.event.target.origPinY + dy;
+
+                  // Position snapping.
+                  if (isSnapDragEnabled) {
+                    let snapX = this.x % Def.SNAP_STEP_PIX;
+                    this.x -= snapX;
+                    this.pinX -= snapX;
+                    let snapY = this.y % Def.SNAP_STEP_PIX;
+                    this.y -= snapY;
+                    this.pinY -= snapY;
                   }
-              } )
-              .on("drag", () => {
-                  if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:drag");
-                  if (this.isEditing) {
-                    let isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
-                    let dx = d3.event.x - d3.event.target.startX;
-                    let dy = d3.event.y - d3.event.target.startY;
+                  this.relayout();
 
-                    let oldX = this.x;
-                    let oldY = this.y;
-
-                    this.x = d3.event.target.origX + dx;
-                    this.y = d3.event.target.origY + dy;
-                    this.pinX = d3.event.target.origPinX + dx;
-                    this.pinY = d3.event.target.origPinY + dy;
-
-                    // Position snapping.
-                    if (isSnapDragEnabled) {
-                      let snapX = this.x % Def.SNAP_STEP_PIX;
-                      this.x -= snapX;
-                      this.pinX -= snapX;
-                      let snapY = this.y % Def.SNAP_STEP_PIX;
-                      this.y -= snapY;
-                      this.pinY -= snapY;
-                    }
-
-                    this.relayout();
-
-                    let plusX = this.x - oldX;
-                    let plusY = this.y - oldY;
-                    if (this.callback != null) this.callback.onDragMoved(this, plusX, plusY);
-                  }
-              } )
-              .on("end", () => {
-                  if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:end");
-                  if (this.isEditing) {
-                    this.setHighlight(false);
-
-                    d3.event.target.origX = 0;
-                    d3.event.target.origY = 0;
-                    d3.event.target.origPinX = 0;
-                    d3.event.target.origPinY = 0;
-                    d3.event.target.startX = 0;
-                    d3.event.target.startY = 0;
-                  }
-              } )
+                  let plusX = this.x - oldX;
+                  let plusY = this.y - oldY;
+                  if (this.callback != null) this.callback.onDragMoved(this, plusX, plusY);
+                }
+            } )
+            .on("end", () => {
+                if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:end");
+                if (this.isMovable) {
+                  d3.event.target.origX = 0;
+                  d3.event.target.origY = 0;
+                  d3.event.target.origPinX = 0;
+                  d3.event.target.origPinY = 0;
+                  d3.event.target.startX = 0;
+                  d3.event.target.startY = 0;
+                }
+            } )
         );
-      }
     }
   }
 
   private enableEditMode() {
     if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "enableEditMode()");
     if (this.editor != null) return;
-
-    this.setHighlight(false);
 
     this.editor = this.root.append("g");
 
