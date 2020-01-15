@@ -1003,7 +1003,10 @@ export class ArchMod {
     if (this.callback != null) this.callback.onLowered(this);
   }
 
-  private delete() {
+  /**
+   * Delete this instance.
+   */
+  public delete() {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
     this.closeContextMenu();
     this.root.remove();

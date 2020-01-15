@@ -189,6 +189,16 @@ class Context {
     this.allArchMods.unshift(lowered);
   }
 
+  public deleteSelected() {
+    if (this.selectedArchMod != null) {
+      this.selectedArchMod.delete();
+    }
+    this.brushedArchMods.forEach( (archMod: ArchMod) => {
+      archMod.delete();
+    } );
+    this.resetAllState();
+  }
+
 }
 const CONTEXT = new Context();
 
@@ -337,6 +347,10 @@ function registerGlobalCallbacks() {
     switch (event.key) {
       case "Control":
         prepareBrushLayer();
+        break;
+
+      case "Delete":
+        CONTEXT.deleteSelected();
         break;
 
       case "d":
