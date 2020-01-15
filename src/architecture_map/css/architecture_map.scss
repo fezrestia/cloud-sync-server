@@ -5,9 +5,12 @@
 hr {
   border: none;
   border-top: solid;
-  height: 1px;
-  color: #AAAAAA;
+  height: 0.5px;
+  color: #DDDDDD;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
 }
+
 table {
   border-collapse: collapse;
 }
@@ -61,5 +64,36 @@ div#html_root {
 
 .no-wrap {
   white-space: nowrap;
+}
+
+.fixed-button {
+  min-width: 120px;
+  height: 24px;
+  vertical-align: top;
+}
+
+#upload_json_form {
+  display: inline-block;
+  width: 120px;
+  height: 20px;
+  border-style: dashed;
+  border-width: 2px;
+  color: #AAAAAA;
+}
+
+#upload_json_label_visible {
+  width: 100%;
+  text-align: center;
+  line-height: 24px;
+}
+
+#upload_json_label_hidden {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#upload_json_input {
+  display: none;
 }
 

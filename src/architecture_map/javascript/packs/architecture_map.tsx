@@ -3,12 +3,16 @@ import * as $ from "jquery";
 
 import { ArchMod } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
+import { ArchModJson } from "../d3/ArchMod";
 import { OutFrame } from "../d3/OutFrame";
 import { OutFrameCallback } from "../d3/OutFrame";
 import { TraceLog } from "../util/TraceLog.ts";
 import { ColorSet } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
+import { Def } from "../Def.ts";
+import { Util } from "../util/Util";
+import { Downloader } from "../util/Downloader.ts";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
@@ -19,6 +23,15 @@ const DEFAULT_SIZE = 120;
 const DEFAULT_TOTAL_WIDTH = 640;
 const DEFAULT_TOTAL_HEIGHT = 640;
 
+interface ElementJson {
+  [Def.KEY_CLASS]: string,
+}
+
+interface ArchitectureMapJson {
+  [Def.KEY_VERSION]: string,
+  [Def.KEY_ARCHITECTURE_MAP]: ElementJson[],
+}
+
 // Current interaction context.
 class Context {
   // Root nodes.
@@ -26,11 +39,15 @@ class Context {
   public svg!: D3Node.SVG;
   public html!: JQueryNode;
 
-  // Elements.
+  // Background static elements.
   public outFrame! :OutFrame;
+
+  // Interactable dynamic elements.
   public brushLayer!: D3Node.G|null;
-  private readonly allArchMods: ArchMod[] = [];
   private readonly brushedArchMods: ArchMod[] = [];
+
+  // Total elements. Head->Tail = Z-Low->Z-High = SVG/HTML Order Top->Bottom.
+  private readonly allArchMods: ArchMod[] = [];
 
   // State flags.
   public isAddNewArchModMode: boolean = false;
@@ -44,6 +61,52 @@ class Context {
         this._selectedArchMod = selected;
         this.resetAllStateExceptFor(selected);
       }
+
+  /**
+   * Serialized current static context to JSON string.
+   * @return string JSON.
+   */
+  public serializeToJson(): string {
+    let serializedElements: ElementJson[] = [];
+    this.allArchMods.forEach( (archMod: ArchMod) => {
+      let serialized = archMod.serialize();
+      serializedElements.push(serialized);
+    } );
+
+    let totalJson: ArchitectureMapJson = {
+      [Def.KEY_VERSION]: Def.VAL_VERSION,
+      [Def.KEY_ARCHITECTURE_MAP]: serializedElements,
+    };
+
+    let jsonString = JSON.stringify(totalJson, null, 2);
+    return jsonString;
+  }
+
+  public deserializeFromJson(serialized: string) {
+    TraceLog.d(TAG, `deserializeFromjson()`);
+
+    let jsonObj: ArchitectureMapJson = JSON.parse(serialized);
+
+    let ver: string = jsonObj[Def.KEY_VERSION];
+    TraceLog.d(TAG, `## ver = ${ver}`);
+
+    let elements: ElementJson[] = jsonObj[Def.KEY_ARCHITECTURE_MAP];
+    elements.forEach( (element: ElementJson) => {
+      switch (element[Def.KEY_CLASS]) {
+        case ArchMod.TAG:
+          let json = element as ArchModJson;
+          let archMod = ArchMod.deserialize(CONTEXT.html, CONTEXT.svg, json);
+          archMod.setCallback(new ArchModCallbackImpl());
+          archMod.render();
+          break;
+
+        default:
+          TraceLog.e(TAG, `Unexpected Element:`);
+          console.log(element);
+          break;
+      }
+    } );
+  }
 
   public addArchMod(archMod: ArchMod) {
     this.allArchMods.push(archMod);
@@ -116,6 +179,16 @@ class Context {
     this.root.css("height", height);
   }
 
+  public raise(raised: ArchMod) {
+    this.removeArchMod(raised);
+    this.allArchMods.push(raised);
+  }
+
+  public lower(lowered: ArchMod) {
+    this.removeArchMod(lowered);
+    this.allArchMods.unshift(lowered);
+  }
+
 }
 const CONTEXT = new Context();
 
@@ -164,6 +237,16 @@ class ArchModCallbackImpl implements ArchModCallback {
     CONTEXT.moveBrushedArchMod(plusX, plusY, moved);
   }
 
+  onRaised(raised: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onRaised()`);
+    CONTEXT.raise(raised);
+  }
+
+  onLowered(lowered: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLowered()`);
+    CONTEXT.lower(lowered);
+  }
+
 }
 
 (window as any).onArchitectureMapTopLoaded = () => {
@@ -186,8 +269,6 @@ class ArchModCallbackImpl implements ArchModCallback {
   outFrame.setXYWH(0, 0, DEFAULT_TOTAL_WIDTH, DEFAULT_TOTAL_HEIGHT);
   outFrame.render();
   CONTEXT.outFrame = outFrame;
-
-
 
   registerGlobalCallbacks();
 }
@@ -333,5 +414,42 @@ function resetHtmlRoot() {
   CONTEXT.html.css("display", "none");
   CONTEXT.html.css("background-color", "");
   CONTEXT.html.off("click");
+}
+
+(window as any).onSaveJsonClicked = () => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSaveJsonClicked()");
+
+  let currentSerialized: string = CONTEXT.serializeToJson();
+
+  if (TraceLog.IS_DEBUG) {
+    TraceLog.d(TAG, "#### TOTAL JSON OBJ");
+    let jsonObj = JSON.parse(currentSerialized);
+    console.log(jsonObj);
+  }
+
+  let filename = `ArchMap_${Util.genTimestamp()}.json`;
+
+  Downloader.downloadJson(currentSerialized, filename);
+}
+
+(window as any).onLoadJsonClicked = (event: Event) => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onLoadJsonClicked()");
+
+  let target = event.target as HTMLInputElement;
+  let file: File = (target.files as FileList)[0];
+  let reader = new FileReader();
+  reader.onload = (event: Event) => {
+    let reader = event.target as FileReader;
+    let jsonStr: string = reader.result as string;
+
+    if (TraceLog.IS_DEBUG) {
+      TraceLog.d(TAG, "Imported JSON loaded.");
+      let jsonObj: object = JSON.parse(jsonStr);
+      console.log(jsonObj);
+    }
+
+    CONTEXT.deserializeFromJson(jsonStr);
+  };
+  reader.readAsText(file);
 }
 

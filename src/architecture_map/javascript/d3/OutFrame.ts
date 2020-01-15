@@ -34,7 +34,7 @@ export class OutFrame {
    * @param svg SVG root object.
    */
   constructor(private svg: D3Node.SVG) {
-    // NOP.
+    this.colorResolver = ColorSet.resolve(this.colorSet);
   }
 
   // Elements.
@@ -74,7 +74,8 @@ export class OutFrame {
   private isHighlight: boolean = false;
 
   // Color resolver functions.
-  private colorResolver: ColorResolver = ColorSet.LIGHT_GRAY;
+  private colorSet: ColorSet = ColorSet.LIGHT_GRAY;
+  private colorResolver: ColorResolver;
 
   // Callback.
   private callback: OutFrameCallback|null = null;
@@ -99,14 +100,6 @@ export class OutFrame {
    */
   public getXYWH(): {x: number, y: number, width: number, height:number} {
     return {x: this.x, y: this.y, width: this.width, height: this.height};
-  }
-
-  /**
-   * Set color strategy.
-   * @param colorResolver Color strategy object.
-   */
-  public setColorResolver(colorResolver: ColorResolver) {
-    this.colorResolver = colorResolver;
   }
 
   /**

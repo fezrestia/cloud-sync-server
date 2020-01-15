@@ -5,7 +5,6 @@ import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { ColorResolver } from "../d3/resolver/ColorResolver.ts";
 
 interface Props {
   idLabel: string,
@@ -21,7 +20,7 @@ export interface ArchModContextMenuCallback {
   close(): void;
   changeLabelRotDeg(rotDeg: number): void;
   changeClipArea(clipArea: ClipArea): void;
-  changeColorSet(colorResolver: ColorResolver): void;
+  changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
   delete(): void;

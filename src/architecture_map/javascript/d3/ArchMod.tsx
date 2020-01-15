@@ -30,13 +30,35 @@ export interface ArchModCallback {
 
   onDragMoved(moved: ArchMod, pulsX: number, plusY: number): void;
 
+  onRaised(raised: ArchMod): void;
+  onLowered(lowered: ArchMod): void;
+
+}
+
+/**
+ * ArchMod serialized JSON interface.
+ */
+export interface ArchModJson {
+  [Def.KEY_CLASS]: string,
+  [Def.KEY_LABEL]: string,
+  [Def.KEY_DIMENS]: {
+      [Def.KEY_X]: number,
+      [Def.KEY_Y]: number,
+      [Def.KEY_WIDTH]: number,
+      [Def.KEY_HEIGHT]: number,
+      [Def.KEY_PIN_X]: number,
+      [Def.KEY_PIN_Y]: number,
+      [Def.KEY_LABEL_ROT_DEG]: number,
+  },
+  [Def.KEY_CLIP_AREA]: string,
+  [Def.KEY_COLOR_SET]: string,
 }
 
 /**
  * Architecture Module class.
  */
 export class ArchMod {
-  private readonly TAG = "ArchMod";
+  public static readonly TAG = "ArchMod";
 
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
   private readonly MIN_SIZE_PIX = 16;
@@ -57,7 +79,54 @@ export class ArchMod {
     private html: JQueryNode,
     private svg: D3Node.SVG,
     public readonly label: string) {
-    // NOP.
+      this.colorSet = this.colorSet; // Load defaut
+  }
+
+  /**
+   * Serialize ArchMod object to ArchModJson Object.
+   *
+   * @return string ArchModJson Object.
+   */
+  public serialize(): ArchModJson {
+    let jsonObj = {
+        [Def.KEY_CLASS]: ArchMod.TAG,
+        [Def.KEY_LABEL]: this.label,
+        [Def.KEY_DIMENS]: {
+            [Def.KEY_X]: this.x,
+            [Def.KEY_Y]: this.y,
+            [Def.KEY_WIDTH]: this.width,
+            [Def.KEY_HEIGHT]: this.height,
+            [Def.KEY_PIN_X]: this.pinX,
+            [Def.KEY_PIN_Y]: this.pinY,
+            [Def.KEY_LABEL_ROT_DEG]: this.labelRotDeg,
+        },
+        [Def.KEY_CLIP_AREA]: this.clipArea,
+        [Def.KEY_COLOR_SET]: this.colorSet,
+    };
+    return jsonObj;
+  }
+
+  /**
+   * Deserlialize ArchMod object from JSON object.
+   *
+   * @param html HTML root node.
+   * @param svg SVG root node.
+   * @param json JSON object.
+   * @return ArchMod.
+   */
+  public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: ArchModJson): ArchMod {
+    let archMod = new ArchMod(html, svg, json[Def.KEY_LABEL]);
+    archMod.setDimens(
+        json[Def.KEY_DIMENS][Def.KEY_X],
+        json[Def.KEY_DIMENS][Def.KEY_Y],
+        json[Def.KEY_DIMENS][Def.KEY_WIDTH],
+        json[Def.KEY_DIMENS][Def.KEY_HEIGHT],
+        json[Def.KEY_DIMENS][Def.KEY_PIN_X],
+        json[Def.KEY_DIMENS][Def.KEY_PIN_Y],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG]);
+    archMod.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+    archMod.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
+    return archMod;
   }
 
   // Elements.
@@ -75,7 +144,13 @@ export class ArchMod {
   private pinX: number = 0;
   private pinY: number = 0;
 
-  private clipArea = ClipArea.NONE;
+  private _clipArea = ClipArea.NONE;
+      public get clipArea(): ClipArea {
+        return this._clipArea;
+      }
+      public set clipArea(clipArea: ClipArea) {
+        this._clipArea = clipArea;
+      }
 
   // Font.
   private fontSize: number = 12;
@@ -140,7 +215,16 @@ export class ArchMod {
       }
 
   // Color resolver functions.
-  private colorResolver: ColorResolver = ColorSet.GRAY;
+  private _colorSet: ColorSet = ColorSet.GRAY;
+      public get colorSet(): ColorSet {
+        return this._colorSet;
+      }
+      public set colorSet(colorSet: ColorSet) {
+        this._colorSet = colorSet;
+        this.colorResolver = ColorSet.resolve(colorSet);
+      }
+
+  private colorResolver!: ColorResolver;
 
   // Callback.
   private callback: ArchModCallback|null = null;
@@ -153,12 +237,13 @@ export class ArchMod {
    * @param height Pixels
    */
   public setXYWH(x: number, y: number, width: number, height: number) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.pinX = x + width / 2;
-    this.pinY = y + height / 2;
+    let pinX: number|null = null;
+    let pinY: number|null = null;
+
+    if (this.pinX == 0) pinX = x + width / 2;
+    if (this.pinY == 0) pinY = y + height / 2;
+
+    this.setDimens(x, y, width, height, pinX, pinY, null);
   }
 
   /**
@@ -170,11 +255,30 @@ export class ArchMod {
   }
 
   /**
-   * Set color strategy.
-   * @param colorResolver Color strategy object.
+   * Update total dimension values.
+   * @param x
+   * @param y
+   * @param width
+   * @param height
+   * @param pinX
+   * @param pinY
+   * @param labelRotDeg
    */
-  public setColorResolver(colorResolver: ColorResolver) {
-    this.colorResolver = colorResolver;
+  public setDimens(
+      x: number|null,
+      y: number|null,
+      width: number|null,
+      height: number|null,
+      pinX: number|null,
+      pinY: number|null,
+      labelRotDeg: number|null) {
+    if (x != null) this.x = x;
+    if (y != null) this.y = y;
+    if (width != null) this.width = width;
+    if (height != null) this.height = height;
+    if (pinX != null) this.pinX = pinX;
+    if (pinY != null) this.pinY = pinY;
+    if (labelRotDeg != null) this.labelRotDeg = labelRotDeg;
   }
 
   /**
@@ -266,7 +370,7 @@ export class ArchMod {
    * @param plusY
    */
   public move(plusX: number, plusY: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `move() : ID=${this.label}, plusX=${plusX}, plusY=${plusY}`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `move() : ID=${this.label}, plusX=${plusX}, plusY=${plusY}`);
     this.x += plusX;
     this.y += plusY;
     this.pinX += plusX;
@@ -277,20 +381,20 @@ export class ArchMod {
   private registerCallbacks() {
     if (this.isSelectable) {
       this.polygon.on("mouseover", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseover");
+          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:mouseover");
           if (this.isIdle) {
               this.setHighlight(true);
           }
       });
       this.polygon.on("mouseout", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseout");
+          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:mouseout");
           if (this.isIdle) {
               this.setHighlight(false);
           }
       });
 
       this.polygon.on("click", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:click");
+          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:click");
 
           if (this.isSelectable) {
             this.isSelected = !this.isSelected;
@@ -299,7 +403,7 @@ export class ArchMod {
           d3.event.stopPropagation();
       });
       this.polygon.on("dblclick", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:dblclick");
+          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:dblclick");
 
           if (this.isEditable) {
             if (!this.isContextMenuOpened) {
@@ -319,7 +423,7 @@ export class ArchMod {
       this.root.call(
         d3.drag<SVGGElement, any, any>()
             .on("start", () => {
-                if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:start");
+                if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:start");
                 if (this.isMovable) {
                   d3.event.target.origX = this.x;
                   d3.event.target.origY = this.y;
@@ -330,7 +434,7 @@ export class ArchMod {
                 }
             } )
             .on("drag", () => {
-                if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:drag");
+                if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:drag");
                 if (this.isMovable) {
                   let isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
@@ -363,7 +467,7 @@ export class ArchMod {
                 }
             } )
             .on("end", () => {
-                if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:drag:end");
+                if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:end");
                 if (this.isMovable) {
                   d3.event.target.origX = 0;
                   d3.event.target.origY = 0;
@@ -378,7 +482,7 @@ export class ArchMod {
   }
 
   private enableEditMode() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "enableEditMode()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "enableEditMode()");
     if (this.editor != null) return;
 
     this.editor = this.root.append("g");
@@ -601,7 +705,7 @@ export class ArchMod {
   }
 
   private disableEditMode() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "disableEditMode()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "disableEditMode()");
     if (this.editor == null) return;
 
     this.editor.remove();
@@ -809,8 +913,8 @@ export class ArchMod {
       this.target.changeClipArea(clipArea);
     }
 
-    changeColorSet(colorResolver: ColorResolver) {
-      this.target.setColorResolver(colorResolver);
+    changeColorSet(colorSet: ColorSet) {
+      this.target.colorSet = colorSet;
 
       // Re-construction and re-color.
       this.target.disableEditMode();
@@ -832,7 +936,7 @@ export class ArchMod {
   }
 
   private openContextMenu(clickX: number, clickY: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "openContextMenu()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "openContextMenu()");
 
     this.html.css("display", "block");
 
@@ -858,7 +962,7 @@ export class ArchMod {
   }
 
   private closeContextMenu() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "closeContextMenu()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "closeContextMenu()");
 
     let container = document.getElementById(this.html[0].id);
     if (container != null) {
@@ -869,13 +973,13 @@ export class ArchMod {
   }
 
   private rotateLabel(rotDeg: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `rotateLabel() : rotDeg=${rotDeg}`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `rotateLabel() : rotDeg=${rotDeg}`);
     this.labelRotDeg = rotDeg;
     this.relayout();
   }
 
   private changeClipArea(clipArea: ClipArea) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `changeClipArea() : ${clipArea}`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `changeClipArea() : ${clipArea}`);
 
     if (this.clipArea != clipArea) {
       this.clipArea = clipArea;
@@ -888,17 +992,19 @@ export class ArchMod {
   }
 
   private moveToFrontEnd() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToFrontEnd()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToFrontEnd()`);
     this.root.raise();
+    if (this.callback != null) this.callback.onRaised(this);
   }
 
   private moveToBackEnd() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
     this.root.lower();
+    if (this.callback != null) this.callback.onLowered(this);
   }
 
   private delete() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
     this.closeContextMenu();
     this.root.remove();
     if (this.callback != null) this.callback.onSvgRemoved(this);

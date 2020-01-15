@@ -6,9 +6,22 @@
   <body>
     <h3>Architecture Map : TOP</h3>
 
-    <p>
-      <button onClick="onAddNewArchModClicked();" >Add New ArchMod</button>
-    </p>
+    <strong>Save/Load JSON</strong>
+    <br>
+    <button class="fixed-button" onClick="onSaveJsonClicked();" >Save JSON</button>
+    <form id="upload_json_form" class="layer-parent" >
+      <span id="upload_json_label_visible" class="layer-child" >Load JSON</span>
+      <label id="upload_json_label_hidden" class="layer-child" for="upload_json_input" ></label>
+      <input id="upload_json_input" type="file" accept=".json" onChange="onLoadJsonClicked(event)" />
+    </form>
+
+    <br>
+
+    <strong>CRUD</strong>
+    <br>
+    <button class="fixed-button" onClick="onAddNewArchModClicked();" >Add ArchMod</button>
+
+    <hr>
 
     <div id="root" class="layer-parent" >
       <svg id="svg_root" class="layer-child" ></svg>
