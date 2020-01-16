@@ -22,6 +22,7 @@ const HTML_ROOT_ID = "html_root";
 const DEFAULT_SIZE = 120;
 const DEFAULT_TOTAL_WIDTH = 640;
 const DEFAULT_TOTAL_HEIGHT = 640;
+const COPY_PASTE_SLIDE_DIFF = 30;
 
 interface ElementJson {
   [Def.KEY_CLASS]: string,
@@ -45,6 +46,7 @@ class Context {
   // Interactable dynamic elements.
   public brushLayer!: D3Node.G|null;
   private readonly brushedArchMods: ArchMod[] = [];
+  private readonly clipboard: ElementJson[] = [];
 
   // Total elements. Head->Tail = Z-Low->Z-High = SVG/HTML Order Top->Bottom.
   private readonly allArchMods: ArchMod[] = [];
@@ -190,13 +192,72 @@ class Context {
   }
 
   public deleteSelected() {
+    // Delete selected.
     if (this.selectedArchMod != null) {
       this.selectedArchMod.delete();
     }
+    // Delete brushed.
     this.brushedArchMods.forEach( (archMod: ArchMod) => {
       archMod.delete();
     } );
+
     this.resetAllState();
+  }
+
+  private genUniqLabelIdFrom(baseLabel: string) {
+
+    // TODO: check and gen uniq.
+
+    return `${baseLabel}_copy`;
+  }
+
+  public copyToClipBoard() {
+    if (this.clipboard.length != 0) this.clipboard.length = 0; // Clear all.
+
+    if (this.selectedArchMod != null) {
+      this.clipboard.push(this.selectedArchMod.serialize());
+    }
+    this.brushedArchMods.forEach( (archMod: ArchMod) => {
+      this.clipboard.push(archMod.serialize());
+    } );
+
+    this.resetAllState();
+  }
+
+  public pasteFromClipBoard() {
+    if (this.clipboard.length == 0) return;
+
+    this.resetAllState();
+
+    this.clipboard.forEach( (serialized: ElementJson) => {
+      switch (serialized[Def.KEY_CLASS]) {
+        case ArchMod.TAG:
+          let json = serialized as ArchModJson;
+
+          // Update label for copied one.
+          json[Def.KEY_LABEL] = this.genUniqLabelIdFrom(json[Def.KEY_LABEL]);
+          json[Def.KEY_DIMENS][Def.KEY_X] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_Y] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_PIN_X] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_PIN_Y] += COPY_PASTE_SLIDE_DIFF;
+
+          let archMod = ArchMod.deserialize(this.html, this.svg, json);
+          archMod.setCallback(new ArchModCallbackImpl());
+          archMod.render();
+
+          // Paste as brushed state.
+          archMod.isMovable = true;
+          this.brushedArchMods.push(archMod);
+          break;
+
+        default:
+          TraceLog.e(TAG, `Unexpected Element:`);
+          console.log(serialized);
+          break;
+      }
+    } );
+
+    this.clipboard.length = 0; // Clear all.
   }
 
 }
@@ -286,8 +347,6 @@ class ArchModCallbackImpl implements ArchModCallback {
 function prepareBrushLayer() {
   if (CONTEXT.brushLayer != null) return;
 
-  CONTEXT.resetAllState();
-
   let brushLayer: D3Node.G = CONTEXT.svg.append("g")
       .attr("class", "brushes")
       .lower();
@@ -304,6 +363,8 @@ function prepareBrushLayer() {
       .on("start", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:start");
 
+        CONTEXT.resetAllState();
+
         brushLayer.raise();
       } )
       .on("brush", () => {
@@ -319,12 +380,18 @@ function prepareBrushLayer() {
       .on("end", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:end");
 
-        if (d3.event.selection != null) {
-          // Immediately cancel selection.
-          // After cleared, brush callback is called again with null selection.
-          // So, check selection != null here to avoid infinite loop.
-          brushLayer.call(d3.event.target.clear);
-        }
+        d3.event.target.on("start", null);
+        d3.event.target.on("brush", null);
+        d3.event.target.on("end", null);
+
+        // Immediately cancel selection.
+        // After cleared, brush callback is called again with null selection.
+        // So, unregister callbacks above here to avoid infinite loop.
+        brushLayer.call(d3.event.target.clear);
+
+        // After unregister callbacks, brush behavior is back to default.
+        // So, release brush layer here before ctrl key is released.
+        releaseBrushLayer();
 
         brushLayer.lower();
       } );
@@ -351,6 +418,18 @@ function registerGlobalCallbacks() {
 
       case "Delete":
         CONTEXT.deleteSelected();
+        break;
+
+      case "c":
+        if (event.ctrlKey) {
+          CONTEXT.copyToClipBoard();
+        }
+        break;
+
+      case "v":
+        if (event.ctrlKey) {
+          CONTEXT.pasteFromClipBoard();
+        }
         break;
 
       case "d":
