@@ -33,6 +33,9 @@ export interface ArchModCallback {
   onRaised(raised: ArchMod): void;
   onLowered(lowered: ArchMod): void;
 
+  canChangeLabel(archMod: ArchMod, newLabel: string): boolean;
+  onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string): void;
+
 }
 
 /**
@@ -78,9 +81,15 @@ export class ArchMod {
   constructor(
     private html: JQueryNode,
     private svg: D3Node.SVG,
-    public readonly label: string) {
+    label: string) {
+      this._label = label;
       this.colorSet = this.colorSet; // Load defaut
   }
+
+  private _label: string;
+      public get label(): string {
+        return this._label;
+      }
 
   /**
    * Serialize ArchMod object to ArchModJson Object.
@@ -311,23 +320,20 @@ export class ArchMod {
    */
   public render() {
     this.root = this.svg.append("g")
-        .attr("id", `ArchMod_${this.label}`)
         .datum(this);
 
     // Polygon, normally Rect.
     this.polygon = this.root.append("polygon")
-        .attr("id", Util.getElementId("polygon", this.label))
         .attr("stroke-width", 2);
 
     // Text.
     this.text = this.root.append("text")
-        .attr("id", Util.getElementId("text", this.label))
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
         .attr("font-size", this.fontSize)
-        .attr("pointer-events", "none")
-        .text(this.label);
+        .attr("pointer-events", "none");
 
+    this.relabel();
     this.relayout();
     this.recolor();
 
@@ -909,6 +915,16 @@ export class ArchMod {
 
   }
 
+  private relabel() {
+    this.root
+        .attr("id", Util.getElementId("archmod", this.label));
+    this.polygon
+        .attr("id", Util.getElementId("polygon", this.label));
+    this.text
+        .attr("id", Util.getElementId("text", this.label))
+        .text(this.label);
+  }
+
   private ContextMenuCallbackImpl = class implements ArchModContextMenuCallback {
     private target: ArchMod;
 
@@ -948,6 +964,15 @@ export class ArchMod {
     delete() {
       this.target.delete();
     }
+
+    canChangeLabel(newLabel: string): boolean {
+      return this.target.canChangeLabel(newLabel);
+    }
+
+    onLabelChanged(oldLabel: string, newLabel: string) {
+      this.target.onLabelChanged(oldLabel, newLabel);
+    }
+
   }
 
   private openContextMenu(clickX: number, clickY: number) {
@@ -968,7 +993,7 @@ export class ArchMod {
 
     ReactDOM.render(
         <ArchModContextMenu
-            idLabel={"Test Label"}
+            label={this.label}
             callback={new this.ContextMenuCallbackImpl(this)}
             leftPix={leftPix}
             topPix={topPix}
@@ -1027,5 +1052,21 @@ export class ArchMod {
     this.root.remove();
     if (this.callback != null) this.callback.onSvgRemoved(this);
   }
+
+  private canChangeLabel(newLabel: string): boolean {
+    let isOk = false;
+    if (this.callback != null) {
+      isOk = this.callback.canChangeLabel(this, newLabel);
+    }
+    return isOk;
+  }
+
+  private onLabelChanged(oldLabel: string, newLabel: string) {
+    this._label = newLabel;
+    this.relabel();
+
+    if (this.callback != null) this.callback.onLabelChanged(this, oldLabel, newLabel);
+  }
+
 }
 

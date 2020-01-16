@@ -3,6 +3,7 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 
 export type ReactMouseEvent = React.MouseEvent<HTMLElement, MouseEvent>;
+export type ReactInputChangeEvent = React.ChangeEvent<HTMLInputElement>;
 
 export namespace D3Node {
   export type SVG = d3.Selection<SVGSVGElement, any, HTMLElement, any>;

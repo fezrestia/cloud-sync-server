@@ -2,18 +2,21 @@ import * as React from "react";
 
 import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
+import { ReactInputChangeEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 
 interface Props {
-  idLabel: string,
+  label: string,
   callback: ArchModContextMenuCallback,
   leftPix: number,
   topPix: number,
 }
 
 interface State {
+  currentLabel: string,
+  labelError: string|null,
 }
 
 export interface ArchModContextMenuCallback {
@@ -24,6 +27,8 @@ export interface ArchModContextMenuCallback {
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
   delete(): void;
+  canChangeLabel(newLabel: string): boolean;
+  onLabelChanged(oldLaebl: string, newLabel: string): void;
 
 }
 
@@ -34,6 +39,8 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     super(props);
 
     this.state = {
+        currentLabel: props.label,
+        labelError: null,
     };
   }
 
@@ -60,6 +67,11 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     let handleBackgroundClick = (e: ReactMouseEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onBackgroundClicked()");
       e.stopPropagation();
+
+      if (this.state.labelError == null) {
+        this.props.callback.onLabelChanged(this.props.label, this.state.currentLabel);
+      }
+
       this.props.callback.close();
     };
 
@@ -67,6 +79,24 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onContextMenuClicked()");
       e.stopPropagation();
       // NOP.
+    };
+
+    let handleLabelChanged = (e: ReactInputChangeEvent) => {
+      if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onLabelChanged()");
+      e.stopPropagation();
+
+      let newLabel = e.target.value;
+      let isOk = false;
+      if (this.props.callback != null) {
+        isOk = this.props.callback.canChangeLabel(newLabel);
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `Label Change OK/NG = ${isOk}, newLabel=${newLabel}`);
+      }
+
+      let error = isOk ? null : "ID is already exists.";
+      this.setState( {
+          currentLabel: newLabel,
+          labelError: error,
+      } );
     };
 
     let callback = this.props.callback;
@@ -89,7 +119,10 @@ export class ArchModContextMenu extends React.Component<Props, State> {
           <table className="context-menu-contents" ><tbody>
             <tr>
               <td className="no-wrap" >Module ID Label</td>
-              <td className="no-wrap" >{this.props.idLabel}</td>
+              <td className="no-wrap" >
+                <input type="text" size={32} value={this.state.currentLabel} onChange={ handleLabelChanged } />
+                {this.state.labelError && <span className="error-msg" >{this.state.labelError}</span>}
+              </td>
             </tr>
             <tr>
               <td className="no-wrap" >Label Direction</td>

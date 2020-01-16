@@ -318,6 +318,21 @@ class ArchModCallbackImpl implements ArchModCallback {
     CONTEXT.lower(lowered);
   }
 
+  canChangeLabel(archMod: ArchMod, newLabel: string): boolean {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.canChangeLabel() : newLabel=${newLabel}`);
+
+    // TODO: Check unique.
+
+    return true;
+  }
+
+  onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLabelChanged() : old=${oldLabel}, new=${newLabel}`);
+
+    // TODO: Replace total label list.
+
+  }
+
 }
 
 (window as any).onArchitectureMapTopLoaded = () => {
