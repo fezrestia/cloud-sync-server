@@ -375,7 +375,21 @@ export class ArchMod {
     this.y += plusY;
     this.pinX += plusX;
     this.pinY += plusY;
+
+    this.checkLayoutLimit();
     this.relayout();
+  }
+
+  private checkLayoutLimit() {
+    // Top-Left edge limit check. Bottom-Right edge is movable, so skip check.
+    if (this.x < 0) {
+      this.pinX -= this.x;
+      this.x = 0;
+    }
+    if (this.y < 0) {
+      this.pinY -= this.y;
+      this.y = 0;
+    }
   }
 
   private registerCallbacks() {
@@ -459,6 +473,7 @@ export class ArchMod {
                     this.pinY -= snapY;
                   }
 
+                  this.checkLayoutLimit();
                   this.relayout();
 
                   let plusX = this.x - oldX;
