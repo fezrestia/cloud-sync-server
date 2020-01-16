@@ -3,6 +3,7 @@ import * as React from "react";
 import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
 import { ReactInputChangeEvent } from "../TypeDef.ts";
+import { ReactKeyboardInputEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
@@ -69,7 +70,9 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       e.stopPropagation();
 
       if (this.state.labelError == null) {
-        this.props.callback.onLabelChanged(this.props.label, this.state.currentLabel);
+        if (this.props.label != this.state.currentLabel) {
+          this.props.callback.onLabelChanged(this.props.label, this.state.currentLabel);
+        }
       }
 
       this.props.callback.close();
@@ -86,8 +89,16 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       e.stopPropagation();
 
       let newLabel = e.target.value;
+
+      // Correction.
+      newLabel = newLabel.trim();
+
       let isOk = false;
-      if (this.props.callback != null) {
+      if (this.props.label == newLabel) {
+        // No changed.
+        isOk = true;
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `Label is NOT changed.`);
+      } else if (this.props.callback != null) {
         isOk = this.props.callback.canChangeLabel(newLabel);
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `Label Change OK/NG = ${isOk}, newLabel=${newLabel}`);
       }
@@ -98,6 +109,11 @@ export class ArchModContextMenu extends React.Component<Props, State> {
           labelError: error,
       } );
     };
+
+    let handleKeyDownUp = (e: ReactKeyboardInputEvent) => {
+      if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onKeyDown/Up()");
+      e.stopPropagation();
+    }
 
     let callback = this.props.callback;
 
@@ -120,7 +136,14 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Module ID Label</td>
               <td className="no-wrap" >
-                <input type="text" size={32} value={this.state.currentLabel} onChange={ handleLabelChanged } />
+                <input
+                    type="text"
+                    size={32}
+                    value={this.state.currentLabel}
+                    onChange={ handleLabelChanged }
+                    onKeyDown={ handleKeyDownUp }
+                    onKeyUp={ handleKeyDownUp }
+                />
                 {this.state.labelError && <span className="error-msg" >{this.state.labelError}</span>}
               </td>
             </tr>

@@ -97,9 +97,15 @@ class Context {
       switch (element[Def.KEY_CLASS]) {
         case ArchMod.TAG:
           let json = element as ArchModJson;
+          json[Def.KEY_LABEL] = this.genUniqLabelIdFrom(json[Def.KEY_LABEL]);
+
           let archMod = ArchMod.deserialize(CONTEXT.html, CONTEXT.svg, json);
           archMod.setCallback(new ArchModCallbackImpl());
           archMod.render();
+
+          // Load as brushed state.
+          archMod.isMovable = true;
+          this.brushedArchMods.push(archMod);
           break;
 
         default:
@@ -204,11 +210,36 @@ class Context {
     this.resetAllState();
   }
 
-  private genUniqLabelIdFrom(baseLabel: string) {
+  /**
+   * Generate new unique Label ID based on baseLabel.
+   * @param baseLabel
+   * @return
+   */
+  public genUniqLabelIdFrom(baseLabel: string): string {
+    let index: number = 0;
+    let newLabel = baseLabel;
 
-    // TODO: check and gen uniq.
+    // Detect current copy index.
+    let pattern: RegExp = /\_(\d+)$/;
+    let matched: string[]|null = baseLabel.match(pattern);
+    if (matched != null) {
+      // This baseLabel has xxx_100 like copy index.
+      index = Number(matched[1]);
+      baseLabel = baseLabel.replace(matched[0], "");
+    }
 
-    return `${baseLabel}_copy`;
+    while (true) {
+      let isPresent = this.allArchMods.some( (archMod: ArchMod) => {
+        return archMod.label == newLabel;
+      } );
+
+      if (!isPresent) break;
+
+      index++;
+      newLabel = `${baseLabel}_${index}`;
+    }
+
+    return newLabel;
   }
 
   public copyToClipBoard() {
@@ -258,6 +289,12 @@ class Context {
     } );
 
     this.clipboard.length = 0; // Clear all.
+  }
+
+  public isLabelPresent(newLabel: string): boolean {
+    return this.allArchMods.some( (archMod: ArchMod) => {
+      return archMod.label == newLabel;
+    } );
   }
 
 }
@@ -320,17 +357,12 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   canChangeLabel(archMod: ArchMod, newLabel: string): boolean {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.canChangeLabel() : newLabel=${newLabel}`);
-
-    // TODO: Check unique.
-
-    return true;
+    return !CONTEXT.isLabelPresent(newLabel);
   }
 
   onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLabelChanged() : old=${oldLabel}, new=${newLabel}`);
-
-    // TODO: Replace total label list.
-
+    // NOP.
   }
 
 }
@@ -499,7 +531,7 @@ function registerGlobalCallbacks() {
       let posX: number = e.offsetX || 0;
       let posY: number = e.offsetY || 0;
 
-      addNewArchMod("Test Label", posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
+      addNewArchMod(CONTEXT.genUniqLabelIdFrom(ArchMod.TAG), posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
 
       // Finish add mode.
       resetHtmlRoot();
@@ -558,6 +590,9 @@ function resetHtmlRoot() {
 
     CONTEXT.deserializeFromJson(jsonStr);
   };
+
   reader.readAsText(file);
+
+  target.value = ""; // Clear to trigger next input callback with same path.
 }
 
