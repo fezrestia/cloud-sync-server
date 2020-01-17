@@ -578,7 +578,6 @@ function registerGlobalCallbacks() {
   window.onkeydown = (event: KeyboardEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeydown() : key=${event.key}`);
     event.stopPropagation();
-    event.preventDefault();
 
     switch (event.key) {
       case "Control":
@@ -632,19 +631,30 @@ function registerGlobalCallbacks() {
           TraceLog.d(TAG, "###################");
         }
         break;
+
+      default:
+        // Other key event should be ignored and should not call preventDefault().
+        return;
     }
+
+    event.preventDefault();
   };
 
   window.onkeyup = (event: KeyboardEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeyup() : key=${event.key}`);
     event.stopPropagation();
-    event.preventDefault();
 
     switch (event.key) {
       case "Control":
         releaseBrushLayer();
         break;
+
+      default:
+        // Other key event should be ignored and should not call preventDefault().
+        return;
     }
+
+    event.preventDefault();
   };
 
   CONTEXT.svg.on("click", () => {
