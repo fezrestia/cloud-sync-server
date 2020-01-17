@@ -12,7 +12,9 @@ import { ColorSet } from "../Def.ts";
  * Callback interface for OutFrame.
  */
 export interface OutFrameCallback {
-  onSizeChanged(width: number, height: number): void;
+  onSizeChangeStart(): void;
+  onSizeChange(width: number, height: number): void;
+  onSizeChangeEnd(): void;
 
 }
 
@@ -236,6 +238,8 @@ export class OutFrame {
 
               d3.event.target.startX = d3.event.x;
               d3.event.target.startY = d3.event.y;
+
+              if (this.callback != null) this.callback.onSizeChangeStart();
           } )
           .on("drag", () => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
@@ -264,7 +268,7 @@ export class OutFrame {
                 break;
               }
 
-              if (this.callback != null) this.callback.onSizeChanged(this.width, this.height);
+              if (this.callback != null) this.callback.onSizeChange(this.width, this.height);
 
               this.relayout();
           } )
@@ -276,6 +280,8 @@ export class OutFrame {
 
               d3.event.target.startX = 0;
               d3.event.target.startY = 0;
+
+              if (this.callback != null) this.callback.onSizeChangeEnd();
           } )
     );
 

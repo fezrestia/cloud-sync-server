@@ -23,6 +23,7 @@ const DEFAULT_SIZE = 120;
 const DEFAULT_TOTAL_WIDTH = 640;
 const DEFAULT_TOTAL_HEIGHT = 640;
 const COPY_PASTE_SLIDE_DIFF = 30;
+const MAX_UNDO_HISTORY_SIZE = 100;
 
 interface ElementJson {
   [Def.KEY_CLASS]: string,
@@ -51,6 +52,10 @@ class Context {
   // Total elements. Head->Tail = Z-Low->Z-High = SVG/HTML Order Top->Bottom.
   private readonly allArchMods: ArchMod[] = [];
 
+  // UNDO history.
+  private readonly history: ArchitectureMapJson[] = [];
+  private historyUndoCount: number = 0;
+
   // State flags.
   public isAddNewArchModMode: boolean = false;
 
@@ -65,10 +70,10 @@ class Context {
       }
 
   /**
-   * Serialized current static context to JSON string.
-   * @return string JSON.
+   * Serialize current static context to JSON object.
+   * @return ArchitectureMapJson object.
    */
-  public serializeToJson(): string {
+  public serializeToJson(): ArchitectureMapJson {
     let serializedElements: ElementJson[] = [];
     this.allArchMods.forEach( (archMod: ArchMod) => {
       let serialized = archMod.serialize();
@@ -80,19 +85,20 @@ class Context {
       [Def.KEY_ARCHITECTURE_MAP]: serializedElements,
     };
 
-    let jsonString = JSON.stringify(totalJson, null, 2);
-    return jsonString;
+    return totalJson;
   }
 
-  public deserializeFromJson(serialized: string) {
+  /**
+   * Deserialize static context from JSON object.
+   * @param serialized ArchitectureMapJson object.
+   */
+  public deserializeFromJson(serialized: ArchitectureMapJson) {
     TraceLog.d(TAG, `deserializeFromjson()`);
 
-    let jsonObj: ArchitectureMapJson = JSON.parse(serialized);
-
-    let ver: string = jsonObj[Def.KEY_VERSION];
+    let ver: string = serialized[Def.KEY_VERSION];
     TraceLog.d(TAG, `## ver = ${ver}`);
 
-    let elements: ElementJson[] = jsonObj[Def.KEY_ARCHITECTURE_MAP];
+    let elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
     elements.forEach( (element: ElementJson) => {
       switch (element[Def.KEY_CLASS]) {
         case ArchMod.TAG:
@@ -297,14 +303,94 @@ class Context {
     } );
   }
 
+  public recordHistory() {
+    // Remove old history branch.
+    if (this.historyUndoCount != 0) {
+      this.history.splice(-1 * this.historyUndoCount);
+    }
+
+    let curJson: ArchitectureMapJson = this.serializeToJson();
+
+    let curSize = this.history.length;
+    if (curSize > 0) {
+      let last = this.history[curSize - 1];
+      let lastStr = JSON.stringify(last);
+      let curStr = JSON.stringify(curJson);
+      if (lastStr == curStr) {
+        // Same as last state.
+        return;
+      }
+    }
+
+    this.history.push(curJson);
+    this.historyUndoCount = 0;
+
+    if (this.history.length > MAX_UNDO_HISTORY_SIZE) {
+      this.history.shift();
+    }
+  }
+
+  private recoverJson(json: ArchitectureMapJson) {
+    let deletes = this.allArchMods.concat();
+    deletes.forEach( (archMod: ArchMod) => { archMod.delete() } );
+    this.deserializeFromJson(json);
+    this.resetAllState();
+  }
+
+  public undo() {
+    if (this.history.length < 2) return;
+    this.resetAllState();
+
+    this.historyUndoCount++;
+
+    let historyJson = this.history[this.history.length - 1 - this.historyUndoCount];
+
+    if (historyJson == null) {
+      // No history.
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo() : NO History`);
+      this.historyUndoCount--;
+      return;
+    }
+
+    this.recoverJson(historyJson);
+  }
+
+  public redo() {
+    if (this.history.length < 2) return;
+    this.resetAllState();
+
+    this.historyUndoCount--;
+
+    let futureJson = this.history[this.history.length - 1 - this.historyUndoCount];
+
+    if (futureJson == null) {
+      // No future.
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo() : NO Future`);
+      this.historyUndoCount++;
+      return;
+    }
+
+    this.recoverJson(futureJson);
+  }
+
 }
 const CONTEXT = new Context();
 
 // OutFrame callback implementation.
 class OutFrameCallbackImpl implements OutFrameCallback {
-  onSizeChanged(width: number, height: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChanged() : width=${width}, height=${height}`);
+  onSizeChangeStart() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChangeStart()`);
+    // NOP.
+  }
+
+  onSizeChange(width: number, height: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChange() : width=${width}, height=${height}`);
     CONTEXT.changeOutFrameSize(width, height);
+  }
+
+  onSizeChangeEnd() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChangeEnd()`);
+    CONTEXT.recordHistory();
   }
 }
 
@@ -338,21 +424,34 @@ class ArchModCallbackImpl implements ArchModCallback {
   onEdited(edited: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onEdited() : ${edited.label}`);
     CONTEXT.selectedArchMod = null;
+    CONTEXT.recordHistory();
   }
 
-  onDragMoved(moved: ArchMod, plusX: number, plusY: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragMoved() : plusX=${plusX}, plusY=${plusY}`);
+  onDragStart(moved: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragStart()`);
+    // NOP.
+  }
+
+  onDrag(moved: ArchMod, plusX: number, plusY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDrag() : plusX=${plusX}, plusY=${plusY}`);
     CONTEXT.moveBrushedArchMod(plusX, plusY, moved);
+  }
+
+  onDragEnd(moved: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragEnd()`);
+    CONTEXT.recordHistory();
   }
 
   onRaised(raised: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onRaised()`);
     CONTEXT.raise(raised);
+    CONTEXT.recordHistory();
   }
 
   onLowered(lowered: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLowered()`);
     CONTEXT.lower(lowered);
+    CONTEXT.recordHistory();
   }
 
   canChangeLabel(archMod: ArchMod, newLabel: string): boolean {
@@ -362,7 +461,7 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLabelChanged() : old=${oldLabel}, new=${newLabel}`);
-    // NOP.
+    CONTEXT.recordHistory();
   }
 
 }
@@ -465,6 +564,7 @@ function registerGlobalCallbacks() {
 
       case "Delete":
         CONTEXT.deleteSelected();
+        CONTEXT.recordHistory();
         break;
 
       case "c":
@@ -476,9 +576,23 @@ function registerGlobalCallbacks() {
       case "v":
         if (event.ctrlKey) {
           CONTEXT.pasteFromClipBoard();
+          CONTEXT.recordHistory();
         }
         break;
 
+      case "z":
+        if (event.ctrlKey) {
+          CONTEXT.undo();
+        }
+        break;
+
+      case "y":
+        if (event.ctrlKey) {
+          CONTEXT.redo();
+        }
+        break;
+
+      // DEBUG LOG.
       case "d":
         if (TraceLog.IS_DEBUG) {
           TraceLog.d(TAG, "#### DEBUG LOG ####");
@@ -533,6 +647,8 @@ function registerGlobalCallbacks() {
 
       addNewArchMod(CONTEXT.genUniqLabelIdFrom(ArchMod.TAG), posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
 
+      CONTEXT.recordHistory();
+
       // Finish add mode.
       resetHtmlRoot();
       CONTEXT.isAddNewArchModMode = false;
@@ -559,17 +675,16 @@ function resetHtmlRoot() {
 (window as any).onSaveJsonClicked = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSaveJsonClicked()");
 
-  let currentSerialized: string = CONTEXT.serializeToJson();
+  let serialized: ArchitectureMapJson = CONTEXT.serializeToJson();
 
   if (TraceLog.IS_DEBUG) {
     TraceLog.d(TAG, "#### TOTAL JSON OBJ");
-    let jsonObj = JSON.parse(currentSerialized);
-    console.log(jsonObj);
+    console.log(serialized);
   }
 
+  let jsonStr = JSON.stringify(serialized, null, 2);
   let filename = `ArchMap_${Util.genTimestamp()}.json`;
-
-  Downloader.downloadJson(currentSerialized, filename);
+  Downloader.downloadJson(jsonStr, filename);
 }
 
 (window as any).onLoadJsonClicked = (event: Event) => {
@@ -582,13 +697,16 @@ function resetHtmlRoot() {
     let reader = event.target as FileReader;
     let jsonStr: string = reader.result as string;
 
+    let serialized: ArchitectureMapJson = JSON.parse(jsonStr);
+
     if (TraceLog.IS_DEBUG) {
       TraceLog.d(TAG, "Imported JSON loaded.");
-      let jsonObj: object = JSON.parse(jsonStr);
-      console.log(jsonObj);
+      console.log(serialized);
     }
 
-    CONTEXT.deserializeFromJson(jsonStr);
+    CONTEXT.deserializeFromJson(serialized);
+
+    CONTEXT.recordHistory();
   };
 
   reader.readAsText(file);

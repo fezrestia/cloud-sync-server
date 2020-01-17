@@ -28,7 +28,9 @@ export interface ArchModCallback {
   onEditing(editing: ArchMod): void;
   onEdited(edited: ArchMod): void;
 
-  onDragMoved(moved: ArchMod, pulsX: number, plusY: number): void;
+  onDragStart(moved: ArchMod): void;
+  onDrag(moved: ArchMod, pulsX: number, plusY: number): void;
+  onDragEnd(moved: ArchMod): void;
 
   onRaised(raised: ArchMod): void;
   onLowered(lowered: ArchMod): void;
@@ -451,6 +453,8 @@ export class ArchMod {
                   d3.event.target.origPinY = this.pinY;
                   d3.event.target.startX = d3.event.x;
                   d3.event.target.startY = d3.event.y;
+
+                  if (this.callback != null) this.callback.onDragStart(this);
                 }
             } )
             .on("drag", () => {
@@ -484,7 +488,7 @@ export class ArchMod {
 
                   let plusX = this.x - oldX;
                   let plusY = this.y - oldY;
-                  if (this.callback != null) this.callback.onDragMoved(this, plusX, plusY);
+                  if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
                 }
             } )
             .on("end", () => {
@@ -496,6 +500,8 @@ export class ArchMod {
                   d3.event.target.origPinY = 0;
                   d3.event.target.startX = 0;
                   d3.event.target.startY = 0;
+
+                  if (this.callback != null) this.callback.onDragEnd(this);
                 }
             } )
         );
