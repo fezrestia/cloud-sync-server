@@ -29,8 +29,16 @@ interface ElementJson {
   [Def.KEY_CLASS]: string,
 }
 
+interface OutFrameJson {
+  [Def.KEY_X]: number,
+  [Def.KEY_Y]: number,
+  [Def.KEY_WIDTH]: number,
+  [Def.KEY_HEIGHT]: number,
+}
+
 interface ArchitectureMapJson {
   [Def.KEY_VERSION]: string,
+  [Def.KEY_OUT_FRAME]: OutFrameJson,
   [Def.KEY_ARCHITECTURE_MAP]: ElementJson[],
 }
 
@@ -80,8 +88,17 @@ class Context {
       serializedElements.push(serialized);
     } );
 
+    let outSize = this.outFrame.getXYWH();
+    let outFrameJson = {
+      [Def.KEY_X]: outSize.x,
+      [Def.KEY_Y]: outSize.y,
+      [Def.KEY_WIDTH]: outSize.width,
+      [Def.KEY_HEIGHT]: outSize.height,
+    };
+
     let totalJson: ArchitectureMapJson = {
       [Def.KEY_VERSION]: Def.VAL_VERSION,
+      [Def.KEY_OUT_FRAME]: outFrameJson,
       [Def.KEY_ARCHITECTURE_MAP]: serializedElements,
     };
 
@@ -97,6 +114,11 @@ class Context {
 
     let ver: string = serialized[Def.KEY_VERSION];
     TraceLog.d(TAG, `## ver = ${ver}`);
+
+    let outSize = serialized[Def.KEY_OUT_FRAME];
+    this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
+    this.changeOutFrameSize(outSize.width, outSize.height);
+    this.outFrame.relayout();
 
     let elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
     elements.forEach( (element: ElementJson) => {

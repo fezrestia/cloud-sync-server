@@ -136,7 +136,7 @@ export class OutFrame {
     this.registerCallbacks();
   }
 
-  private relayout() {
+  public relayout() {
     this.path
         .datum(this.genAnchors())
         .attr("d", this.genLine());

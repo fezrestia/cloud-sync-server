@@ -6,9 +6,11 @@ export class Def {
 
   public static readonly SNAP_STEP_PIX = 8;
 
-  public static readonly KEY_ARCHITECTURE_MAP = "architecture_map";
   public static readonly KEY_VERSION = "version";
   public static readonly VAL_VERSION = "1.0";
+
+  public static readonly KEY_ARCHITECTURE_MAP = "architecture_map";
+  public static readonly KEY_OUT_FRAME = "out_frame";
 
   public static readonly KEY_CLASS = "class";
   public static readonly KEY_LABEL = "label";
