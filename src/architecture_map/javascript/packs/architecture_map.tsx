@@ -578,6 +578,7 @@ function registerGlobalCallbacks() {
   window.onkeydown = (event: KeyboardEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeydown() : key=${event.key}`);
     event.stopPropagation();
+    event.preventDefault();
 
     switch (event.key) {
       case "Control":
@@ -614,6 +615,12 @@ function registerGlobalCallbacks() {
         }
         break;
 
+      case "s":
+        if (event.ctrlKey) {
+          (window as any).onSaveJsonClicked();
+        }
+        break;
+
       // DEBUG LOG.
       case "d":
         if (TraceLog.IS_DEBUG) {
@@ -631,6 +638,7 @@ function registerGlobalCallbacks() {
   window.onkeyup = (event: KeyboardEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeyup() : key=${event.key}`);
     event.stopPropagation();
+    event.preventDefault();
 
     switch (event.key) {
       case "Control":
