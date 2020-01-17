@@ -702,6 +702,10 @@ function resetHtmlRoot() {
   CONTEXT.html.off("click");
 }
 
+function getExportFileNameBase(): string {
+  return `ArchMap_${Util.genTimestamp()}`
+}
+
 (window as any).onSaveJsonClicked = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSaveJsonClicked()");
 
@@ -713,7 +717,7 @@ function resetHtmlRoot() {
   }
 
   let jsonStr = JSON.stringify(serialized, null, 2);
-  let filename = `ArchMap_${Util.genTimestamp()}.json`;
+  let filename = getExportFileNameBase();
   Downloader.downloadJson(jsonStr, filename);
 }
 
@@ -742,5 +746,29 @@ function resetHtmlRoot() {
   reader.readAsText(file);
 
   target.value = ""; // Clear to trigger next input callback with same path.
+}
+
+(window as any).onSaveSvgClicked = (event: Event) => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSaveSvgClicked()");
+
+  CONTEXT.resetAllState();
+
+  Downloader.downloadSvgAsSvg(
+      CONTEXT.svg,
+      getExportFileNameBase());
+}
+
+(window as any).onSavePngClicked = (event: Event) => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSavePngClicked()");
+
+  CONTEXT.resetAllState();
+
+  let outSize = CONTEXT.outFrame.getXYWH();
+
+  Downloader.downloadSvgAsPng(
+      CONTEXT.svg,
+      outSize.width,
+      outSize.height,
+      getExportFileNameBase());
 }
 

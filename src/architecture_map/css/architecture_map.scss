@@ -23,6 +23,12 @@ th, td {
   border: 1px solid #000000;
 }
 
+td.no-border {
+  border-style: none;
+  padding-right: 30px;
+  vertical-align: top;
+}
+
 // FOR DEBUG
 //div#root {
 //  border-style: solid;
@@ -67,7 +73,7 @@ div#html_root {
 }
 
 .fixed-button {
-  min-width: 120px;
+  min-width: 124px;
   height: 24px;
   vertical-align: top;
 }
