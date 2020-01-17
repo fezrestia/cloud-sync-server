@@ -1,7 +1,7 @@
 {
-  "name": "cloud-sync-service",
+  "name": "cloud-sync-server",
   "version": "1.0.0",
-  "description": "CloudSyncService",
+  "description": "CloudSyncServer",
   "dependencies": {
     "antd": "^3.26.7",
     "d3": "^5.15.0",
