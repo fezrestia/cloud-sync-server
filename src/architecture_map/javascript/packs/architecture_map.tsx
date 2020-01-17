@@ -110,10 +110,10 @@ class Context {
    * @param serialized ArchitectureMapJson object.
    */
   public deserializeFromJson(serialized: ArchitectureMapJson) {
-    TraceLog.d(TAG, `deserializeFromjson()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `deserializeFromjson()`);
 
     let ver: string = serialized[Def.KEY_VERSION];
-    TraceLog.d(TAG, `## ver = ${ver}`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `## ver = ${ver}`);
 
     let outSize = serialized[Def.KEY_OUT_FRAME];
     this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
@@ -622,14 +622,10 @@ function registerGlobalCallbacks() {
 
       // DEBUG LOG.
       case "d":
-        if (TraceLog.IS_DEBUG) {
-          TraceLog.d(TAG, "#### DEBUG LOG ####");
-
-          TraceLog.d(TAG, "CONTEXT =");
-          console.log(CONTEXT);
-
-          TraceLog.d(TAG, "###################");
-        }
+        TraceLog.d(TAG, "#### DEBUG LOG ####");
+        TraceLog.d(TAG, "CONTEXT =");
+        console.log(CONTEXT);
+        TraceLog.d(TAG, "###################");
         break;
 
       default:
