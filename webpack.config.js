@@ -90,7 +90,7 @@ module.exports = (env, argv) => {
                 },
             } ),
             new HtmlWebpackPlugin( {
-                template: "src/architecture_map/html/top.html",
+                template: "src/architecture-map/html/top.html",
                 filename: "architecture_map.html",
                 files: {
                     "js": [filenameJS],
