@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 
 import { ArchMod } from "../d3/ArchMod";
+import { ArchModItxMode } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
 import { ArchModJson } from "../d3/ArchMod";
 import { OutFrame } from "../d3/OutFrame";
@@ -24,6 +25,11 @@ const DEFAULT_TOTAL_WIDTH = 640;
 const DEFAULT_TOTAL_HEIGHT = 640;
 const COPY_PASTE_SLIDE_DIFF = 30;
 const MAX_UNDO_HISTORY_SIZE = 100;
+
+const GLOBAL_MODE_LABEL_ID = "global_mode_label";
+const GLOBAL_MODE_ITX = "User Interactive";
+const GLOBAL_MODE_GOD = "God Creation";
+const GOD_MODE_UI_ID = "god_mode_ui";
 
 interface ElementJson {
   [Def.KEY_CLASS]: string,
@@ -66,6 +72,7 @@ class Context {
 
   // State flags.
   public isAddNewArchModMode: boolean = false;
+  public globalMode: string = GLOBAL_MODE_GOD;
 
   private _selectedArchMod: ArchMod|null = null;
       get selectedArchMod(): ArchMod|null {
@@ -127,12 +134,10 @@ class Context {
           let json = element as ArchModJson;
           json[Def.KEY_LABEL] = this.genUniqLabelIdFrom(json[Def.KEY_LABEL]);
 
-          let archMod = ArchMod.deserialize(CONTEXT.html, CONTEXT.svg, json);
-          archMod.setCallback(new ArchModCallbackImpl());
-          archMod.render();
+          let archMod = this.deserializeArchMod(json);
 
           // Load as brushed state.
-          archMod.isMovable = true;
+          archMod.selectNoCallback();
           this.brushedArchMods.push(archMod);
           break;
 
@@ -142,6 +147,24 @@ class Context {
           break;
       }
     } );
+  }
+
+  private deserializeArchMod(json: ArchModJson): ArchMod {
+    let archMod = ArchMod.deserialize(this.html, this.svg, json);
+    archMod.setCallback(new ArchModCallbackImpl());
+
+    switch (this.globalMode) {
+      case GLOBAL_MODE_GOD:
+        archMod.itxMode = ArchModItxMode.EDITABLE;
+        break;
+      case GLOBAL_MODE_ITX:
+        archMod.itxMode = ArchModItxMode.SELECTABLE;
+        break;
+    }
+
+    archMod.render();
+
+    return archMod;
   }
 
   public addArchMod(archMod: ArchMod) {
@@ -169,14 +192,14 @@ class Context {
 
       if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
         if (!this.brushedArchMods.includes(archMod)) {
-          archMod.isMovable = true;
+          archMod.selectNoCallback();
           this.brushedArchMods.push(archMod);
         }
       } else {
         let index = this.brushedArchMods.indexOf(archMod);
         if (0 <= index) {
           let removes: ArchMod[] = this.brushedArchMods.splice(index, 1);
-          removes[0].isMovable = false;
+          removes[0].deselectNoCallback();
         }
       }
 
@@ -300,12 +323,10 @@ class Context {
           json[Def.KEY_DIMENS][Def.KEY_PIN_X] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_PIN_Y] += COPY_PASTE_SLIDE_DIFF;
 
-          let archMod = ArchMod.deserialize(this.html, this.svg, json);
-          archMod.setCallback(new ArchModCallbackImpl());
-          archMod.render();
+          let archMod = this.deserializeArchMod(json);
 
           // Paste as brushed state.
-          archMod.isMovable = true;
+          archMod.selectNoCallback();
           this.brushedArchMods.push(archMod);
           break;
 
@@ -395,6 +416,23 @@ class Context {
     this.recoverJson(futureJson);
   }
 
+  public changeToGodMode() {
+    this.globalMode = GLOBAL_MODE_GOD;
+
+    this.resetAllState();
+    this.allArchMods.forEach( (archMod: ArchMod) => {
+      archMod.itxMode = ArchModItxMode.EDITABLE;
+    } );
+  }
+
+  public changeToItxMode() {
+    this.globalMode = GLOBAL_MODE_ITX;
+
+    this.resetAllState();
+    this.allArchMods.forEach( (archMod: ArchMod) => {
+      archMod.itxMode = ArchModItxMode.SELECTABLE;
+    } );
+  }
 }
 const CONTEXT = new Context();
 
@@ -488,6 +526,7 @@ class ArchModCallbackImpl implements ArchModCallback {
 
 }
 
+// Entry point from HTML.
 (window as any).onArchitectureMapTopLoaded = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onArchitectureMapTopLoaded()");
 
@@ -510,6 +549,9 @@ class ArchModCallbackImpl implements ArchModCallback {
   CONTEXT.outFrame = outFrame;
 
   registerGlobalCallbacks();
+
+  // Default global mode.
+  changeGlobalModeTo(GLOBAL_MODE_GOD);
 }
 
 function prepareBrushLayer() {
@@ -579,85 +621,104 @@ function registerGlobalCallbacks() {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeydown() : key=${event.key}`);
     event.stopPropagation();
 
-    switch (event.key) {
-      case "Control":
-        prepareBrushLayer();
-        break;
+    if (CONTEXT.globalMode == GLOBAL_MODE_GOD) {
+      switch (event.key) {
+        case "Control":
+          prepareBrushLayer();
+          break;
 
-      case "Delete":
-        CONTEXT.deleteSelected();
-        CONTEXT.recordHistory();
-        break;
-
-      case "c":
-        if (event.ctrlKey) {
-          CONTEXT.copyToClipBoard();
-        }
-        break;
-
-      case "v":
-        if (event.ctrlKey) {
-          CONTEXT.pasteFromClipBoard();
+        case "Delete":
+          CONTEXT.deleteSelected();
           CONTEXT.recordHistory();
-        }
-        break;
+          break;
 
-      case "z":
-        if (event.ctrlKey) {
-          CONTEXT.undo();
-        }
-        break;
+        case "c":
+          if (event.ctrlKey) {
+            CONTEXT.copyToClipBoard();
+          }
+          break;
 
-      case "y":
-        if (event.ctrlKey) {
-          CONTEXT.redo();
-        }
-        break;
+        case "v":
+          if (event.ctrlKey) {
+            CONTEXT.pasteFromClipBoard();
+            CONTEXT.recordHistory();
+          }
+          break;
 
-      case "s":
-        if (event.ctrlKey) {
-          (window as any).onSaveJsonClicked();
-        }
-        break;
+        case "z":
+          if (event.ctrlKey) {
+            CONTEXT.undo();
+          }
+          break;
 
-      // DEBUG LOG.
-      case "d":
-        TraceLog.d(TAG, "#### DEBUG LOG ####");
-        TraceLog.d(TAG, "CONTEXT =");
-        console.log(CONTEXT);
-        TraceLog.d(TAG, "###################");
-        break;
+        case "y":
+          if (event.ctrlKey) {
+            CONTEXT.redo();
+          }
+          break;
 
-      default:
-        // Other key event should be ignored and should not call preventDefault().
-        return;
+        case "s":
+          if (event.ctrlKey) {
+            (window as any).onSaveJsonClicked();
+          }
+          break;
+
+        // DEBUG LOG.
+        case "d":
+          TraceLog.d(TAG, "#### DEBUG LOG ####");
+          TraceLog.d(TAG, "CONTEXT =");
+          console.log(CONTEXT);
+          TraceLog.d(TAG, "###################");
+          break;
+
+        default:
+          // Other key event should be ignored and should not call preventDefault().
+          return;
+      }
+
+      event.preventDefault();
     }
-
-    event.preventDefault();
   };
 
   window.onkeyup = (event: KeyboardEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeyup() : key=${event.key}`);
     event.stopPropagation();
 
-    switch (event.key) {
-      case "Control":
-        releaseBrushLayer();
-        break;
+    if (CONTEXT.globalMode == GLOBAL_MODE_GOD) {
+      switch (event.key) {
+        case "Control":
+          releaseBrushLayer();
+          break;
 
-      default:
-        // Other key event should be ignored and should not call preventDefault().
-        return;
+        default:
+          // Other key event should be ignored and should not call preventDefault().
+          return;
+      }
+
+      event.preventDefault();
     }
-
-    event.preventDefault();
   };
 
   CONTEXT.svg.on("click", () => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
     CONTEXT.resetAllState();
     d3.event.stopPropagation();
-  });
+    d3.event.preventDefault();
+  } );
+
+  CONTEXT.svg.on("contextmenu", () => {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:contextmenu");
+    // NOP.
+    d3.event.stopPropagation();
+    d3.event.preventDefault();
+  } );
+
+  CONTEXT.html.on("contextmenu", (event: JQuery.Event) => {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:contextmenu");
+    // NOP.
+    event.stopPropagation();
+    event.preventDefault();
+  } );
 }
 
 (window as any).onAddNewArchModClicked = () => {
@@ -698,7 +759,18 @@ function addNewArchMod(label: string, x: number, y: number, width: number, heigh
   let archMod = new ArchMod(CONTEXT.html, CONTEXT.svg, label);
   archMod.setCallback(new ArchModCallbackImpl());
   archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
+
+  switch (CONTEXT.globalMode) {
+    case GLOBAL_MODE_GOD:
+      archMod.itxMode = ArchModItxMode.EDITABLE;
+      break;
+    case GLOBAL_MODE_ITX:
+      archMod.itxMode = ArchModItxMode.SELECTABLE;
+      break;
+  }
+
   archMod.render();
+
   return archMod;
 }
 
@@ -725,7 +797,7 @@ function getExportFileNameBase(): string {
   let jsonStr = JSON.stringify(serialized, null, 2);
   let filename = getExportFileNameBase();
   Downloader.downloadJson(jsonStr, filename);
-}
+};
 
 (window as any).onLoadJsonClicked = (event: Event) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onLoadJsonClicked()");
@@ -752,7 +824,7 @@ function getExportFileNameBase(): string {
   reader.readAsText(file);
 
   target.value = ""; // Clear to trigger next input callback with same path.
-}
+};
 
 (window as any).onSaveSvgClicked = (event: Event) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSaveSvgClicked()");
@@ -762,7 +834,7 @@ function getExportFileNameBase(): string {
   Downloader.downloadSvgAsSvg(
       CONTEXT.svg,
       getExportFileNameBase());
-}
+};
 
 (window as any).onSavePngClicked = (event: Event) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSavePngClicked()");
@@ -776,5 +848,34 @@ function getExportFileNameBase(): string {
       outSize.width,
       outSize.height,
       getExportFileNameBase());
+};
+
+function changeGlobalModeTo(mode: string) {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `changeGlobalModeTo() : mode=$mode`);
+
+  let elm = document.getElementById(GLOBAL_MODE_LABEL_ID) as HTMLElement;
+  elm.textContent = mode;
+
+  let godModePanel = document.getElementById(GOD_MODE_UI_ID) as HTMLElement;
+
+  switch (mode) {
+    case GLOBAL_MODE_GOD:
+      CONTEXT.changeToGodMode();
+      godModePanel.style.display = "";
+      break;
+
+    case GLOBAL_MODE_ITX:
+      CONTEXT.changeToItxMode();
+      godModePanel.style.display = "none";
+      break;
+  }
 }
+
+(window as any).onGodModeClicked = (event: Event) => {
+  changeGlobalModeTo(GLOBAL_MODE_GOD);
+};
+
+(window as any).onItxModeClicked = (event: Event) => {
+  changeGlobalModeTo(GLOBAL_MODE_ITX);
+};
 

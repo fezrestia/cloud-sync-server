@@ -30,12 +30,27 @@
     <table><tbody>
       <tr>
         <td class="no-border" >
-          <strong>CRUD</strong>
+          <strong>Global Mode Change</strong>
           <br>
-          <button class="fixed-button" onClick="onAddNewArchModClicked();" >Add ArchMod</button>
+          Current = <span id="global_mode_label" ></span>
+          <br>
+          <button class=fixed-button" onClick="onGodModeClicked();" >GOD</button>
+          <button class=fixed-button" onClick="onItxModeClicked();" >ITX</button>
         </td>
       </tr>
     </tbody></table>
+    <div id="god_mode_ui" style="display: none;" >
+      <br>
+      <table ><tbody>
+        <tr>
+          <td class="no-border" >
+            <strong>CRUD</strong>
+            <br>
+            <button class="fixed-button" onClick="onAddNewArchModClicked();" >Add ArchMod</button>
+          </td>
+        </tr>
+      </tbody></table>
+    </div>
 
     <hr>
 

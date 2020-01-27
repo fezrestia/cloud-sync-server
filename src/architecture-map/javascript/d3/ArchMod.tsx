@@ -60,6 +60,47 @@ export interface ArchModJson {
 }
 
 /**
+ * Interactive mode options for ArchMod.
+ */
+export enum ArchModItxMode {
+  RIGID,
+  SELECTABLE,
+  EDITABLE,
+}
+
+/**
+ * Base state class for ArchMod state machine.
+ */
+class ArchModState {
+  protected target: ArchMod;
+  constructor(target: ArchMod) {
+    this.target = target;
+  }
+
+  enter() {
+  }
+
+  exit() {
+  }
+
+  onLeftClicked(clickX: number, clickY: number) {
+  }
+
+  onRightClicked(clickX: number, clickY: number) {
+  }
+
+  onCanceled() {
+  }
+
+  reset() {
+  }
+
+  isMovable(): boolean {
+    return false;
+  }
+}
+
+/**
  * Architecture Module class.
  */
 export class ArchMod {
@@ -74,6 +115,83 @@ export class ArchMod {
   private readonly GRIP_ID_RIGHT_BOTTOM = "grip_right_bottom";
   private readonly GRIP_ID_PIN = "grip_pin";
 
+  private static IdleState = class extends ArchModState {
+    enter() {
+      this.target.setHighlight(false);
+    }
+
+    onLeftClicked(clickX: number, clickY: number) {
+      switch (this.target.itxMode) {
+        case ArchModItxMode.SELECTABLE:
+          this.target.currentState = new ArchMod.SelectedState(this.target);
+          break;
+
+        case ArchModItxMode.EDITABLE:
+          this.target.currentState = new ArchMod.EditingState(this.target);
+          break;
+      }
+    }
+  }
+
+  private static SelectedState = class extends ArchModState {
+    enter() {
+      this.target.setHighlight(true);
+      if (this.target.callback != null) this.target.callback.onSelected(this.target);
+    }
+
+    exit() {
+      this.target.setHighlight(false);
+      if (this.target.callback != null) this.target.callback.onDeselected(this.target);
+    }
+
+    onLeftClicked(clickX: number, clickY: number) {
+      this.onCanceled();
+    }
+
+    onCanceled() {
+      this.target.currentState = new ArchMod.IdleState(this.target);
+    }
+
+    reset() {
+      this.onCanceled();
+    }
+  }
+
+  private static EditingState = class extends ArchModState {
+    enter() {
+      this.target.setHighlight(true);
+      this.target.enableEditMode();
+      if (this.target.callback != null) this.target.callback.onEditing(this.target);
+    }
+
+    exit() {
+      this.target.closeContextMenu();
+      this.target.setHighlight(false);
+      this.target.disableEditMode();
+      if (this.target.callback != null) this.target.callback.onEdited(this.target);
+    }
+
+    onLeftClicked(clickX: number, clickY: number) {
+      this.onCanceled();
+    }
+
+    onRightClicked(clickX: number, clickY: number) {
+      this.target.openContextMenu(clickX, clickY);
+    }
+
+    onCanceled() {
+      this.target.currentState = new ArchMod.IdleState(this.target);
+    }
+
+    reset() {
+      this.onCanceled();
+    }
+
+    isMovable(): boolean {
+      return true;
+    }
+  }
+
   /**
    * CONSTRUCTOR.
    * @param html HTML root view. Used for non-svg contents like as pop-up window.
@@ -86,11 +204,31 @@ export class ArchMod {
     label: string) {
       this._label = label;
       this.colorSet = this.colorSet; // Load defaut
+
+      this._currentState = new ArchMod.IdleState(this);
   }
+
+  private _currentState: ArchModState;
+      private get currentState(): ArchModState {
+        return this._currentState;
+      }
+      private set currentState(newState: ArchModState) {
+        this._currentState.exit();
+        this._currentState = newState;
+        this._currentState.enter();
+      }
 
   private _label: string;
       public get label(): string {
         return this._label;
+      }
+
+  private _itxMode: ArchModItxMode = ArchModItxMode.RIGID;
+      public get itxMode(): ArchModItxMode {
+        return this._itxMode;
+      }
+      public set itxMode(mode: ArchModItxMode) {
+        this._itxMode = mode;
       }
 
   /**
@@ -166,65 +304,6 @@ export class ArchMod {
   // Font.
   private fontSize: number = 12;
 
-  // Dynamic flags.
-  private _isSelected: boolean = false;
-      public get isSelected(): boolean {
-        return this._isSelected;
-      }
-      public set isSelected(selected: boolean) {
-        if (this.isSelected == selected) return;
-        this.isMovable = false;
-        this._isSelected = selected;
-        this.setHighlight(selected);
-        if (selected) {
-          if (this.callback != null) this.callback.onSelected(this);
-        } else {
-          if (this.callback != null) this.callback.onDeselected(this);
-        }
-      }
-  private _isMovable: boolean = false;
-      public get isMovable(): boolean {
-        return this._isMovable || this._isEditable;
-      }
-      public set isMovable(movable: boolean) {
-        this._isMovable = movable;
-        this.setHighlight(movable);
-      }
-  private _isEditable: boolean = false;
-      public get isEditable(): boolean {
-        return this._isEditable;
-      }
-      public set isEditable(editable: boolean) {
-        if (this.isEditable == editable) return;
-        this.isSelected = false;
-        this.isMovable = false;
-        this._isEditable = editable;
-        if (editable) {
-          this.enableEditMode();
-        } else {
-          this.closeContextMenu();
-          this.disableEditMode();
-        }
-        if (editable) {
-          if (this.callback != null) this.callback.onEditing(this);
-        } else {
-          if (this.callback != null) this.callback.onEdited(this);
-        }
-      }
-
-  private get isIdle(): boolean {
-    return !this.isSelected && !this.isMovable && !this.isEditable;
-  }
-
-  private get isSelectable(): boolean {
-    return !this.isMovable && !this.isEditable;
-  }
-
-  private _isContextMenuOpened: boolean = false;
-      private get isContextMenuOpened(): boolean {
-        return this.html.css("display") != "none";
-      }
-
   // Color resolver functions.
   private _colorSet: ColorSet = ColorSet.GRAY;
       public get colorSet(): ColorSet {
@@ -239,6 +318,13 @@ export class ArchMod {
 
   // Callback.
   private callback: ArchModCallback|null = null;
+
+  private runNoCallback(proc: () => void) {
+    let cb = this.callback;
+    this.callback = null;
+    proc();
+    this.callback = cb;
+  }
 
   /**
    * Set module position and size.
@@ -309,12 +395,12 @@ export class ArchMod {
   }
 
   /**
-   * Reset dynamic states to default.
+   * Reset state to idle.
    */
   public resetState() {
-    this.isSelected = false;
-    this.isMovable = false;
-    this.isEditable = false;
+    this.runNoCallback( () => {
+      this.currentState.reset();
+    } );
   }
 
   /**
@@ -372,6 +458,24 @@ export class ArchMod {
   }
 
   /**
+   * Selected by other UI. Callback is NOT invoked.
+   */
+  public selectNoCallback() {
+    this.runNoCallback( () => {
+      this.currentState.onLeftClicked(0, 0);
+    } );
+  }
+
+  /**
+   * Deselected by other UI. Callback is NOT invoked.
+   */
+  public deselectNoCallback() {
+    this.runNoCallback( () => {
+      this.currentState.onCanceled();
+    } );
+  }
+
+  /**
    * Move this ArchMod with X-Y diff.
    *
    * @param plusX
@@ -401,111 +505,87 @@ export class ArchMod {
   }
 
   private registerCallbacks() {
-    if (this.isSelectable) {
-      this.polygon.on("mouseover", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:mouseover");
-          if (this.isIdle) {
-              this.setHighlight(true);
-          }
-      });
-      this.polygon.on("mouseout", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:mouseout");
-          if (this.isIdle) {
-              this.setHighlight(false);
-          }
-      });
+    this.polygon.on("click", () => {
+        if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:click");
 
-      this.polygon.on("click", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:click");
+        this.currentState.onLeftClicked(d3.event.x, d3.event.y);
 
-          if (this.isSelectable) {
-            this.isSelected = !this.isSelected;
-          }
+        d3.event.stopPropagation();
+        d3.event.preventDefault();
+    });
 
-          d3.event.stopPropagation();
-      });
-      this.polygon.on("dblclick", () => {
-          if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:dblclick");
+    this.polygon.on("contextmenu", () => {
+        if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:contextmenu");
 
-          if (this.isEditable) {
-            if (!this.isContextMenuOpened) {
-              let clickX = d3.event.x;
-              let clickY = d3.event.y;
-              this.openContextMenu(clickX, clickY);
-            }
-          } else {
-            if (this.isSelectable) {
-              this.isEditable = true;
-            }
-          }
+        this.currentState.onRightClicked(d3.event.x, d3.event.y);
 
-          d3.event.stopPropagation();
-      });
+        d3.event.stopPropagation();
+        d3.event.preventDefault();
+    });
 
-      this.root.call(
-        d3.drag<SVGGElement, any, any>()
-            .on("start", () => {
-                if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:start");
-                if (this.isMovable) {
-                  d3.event.target.origX = this.x;
-                  d3.event.target.origY = this.y;
-                  d3.event.target.origPinX = this.pinX;
-                  d3.event.target.origPinY = this.pinY;
-                  d3.event.target.startX = d3.event.x;
-                  d3.event.target.startY = d3.event.y;
+    this.root.call(
+      d3.drag<SVGGElement, any, any>()
+          .on("start", () => {
+              if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:start");
+              if (this.currentState.isMovable()) {
+                d3.event.target.origX = this.x;
+                d3.event.target.origY = this.y;
+                d3.event.target.origPinX = this.pinX;
+                d3.event.target.origPinY = this.pinY;
+                d3.event.target.startX = d3.event.x;
+                d3.event.target.startY = d3.event.y;
 
-                  if (this.callback != null) this.callback.onDragStart(this);
+                if (this.callback != null) this.callback.onDragStart(this);
+              }
+          } )
+          .on("drag", () => {
+              if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:drag");
+              if (this.currentState.isMovable()) {
+                let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+
+                let dx = d3.event.x - d3.event.target.startX;
+                let dy = d3.event.y - d3.event.target.startY;
+
+                let oldX = this.x;
+                let oldY = this.y;
+
+                this.x = d3.event.target.origX + dx;
+                this.y = d3.event.target.origY + dy;
+                this.pinX = d3.event.target.origPinX + dx;
+                this.pinY = d3.event.target.origPinY + dy;
+
+                // Position snapping.
+                if (isSnapDragEnabled) {
+                  let snapX = this.x % Def.SNAP_STEP_PIX;
+                  this.x -= snapX;
+                  this.pinX -= snapX;
+                  let snapY = this.y % Def.SNAP_STEP_PIX;
+                  this.y -= snapY;
+                  this.pinY -= snapY;
                 }
-            } )
-            .on("drag", () => {
-                if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:drag");
-                if (this.isMovable) {
-                  let isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
-                  let dx = d3.event.x - d3.event.target.startX;
-                  let dy = d3.event.y - d3.event.target.startY;
+                this.checkLayoutLimit();
+                this.relayout();
 
-                  let oldX = this.x;
-                  let oldY = this.y;
+                let plusX = this.x - oldX;
+                let plusY = this.y - oldY;
+                if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
+              }
+          } )
+          .on("end", () => {
+              if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:end");
+              if (this.currentState.isMovable()) {
+                d3.event.target.origX = 0;
+                d3.event.target.origY = 0;
+                d3.event.target.origPinX = 0;
+                d3.event.target.origPinY = 0;
+                d3.event.target.startX = 0;
+                d3.event.target.startY = 0;
 
-                  this.x = d3.event.target.origX + dx;
-                  this.y = d3.event.target.origY + dy;
-                  this.pinX = d3.event.target.origPinX + dx;
-                  this.pinY = d3.event.target.origPinY + dy;
-
-                  // Position snapping.
-                  if (isSnapDragEnabled) {
-                    let snapX = this.x % Def.SNAP_STEP_PIX;
-                    this.x -= snapX;
-                    this.pinX -= snapX;
-                    let snapY = this.y % Def.SNAP_STEP_PIX;
-                    this.y -= snapY;
-                    this.pinY -= snapY;
-                  }
-
-                  this.checkLayoutLimit();
-                  this.relayout();
-
-                  let plusX = this.x - oldX;
-                  let plusY = this.y - oldY;
-                  if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
-                }
-            } )
-            .on("end", () => {
-                if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:end");
-                if (this.isMovable) {
-                  d3.event.target.origX = 0;
-                  d3.event.target.origY = 0;
-                  d3.event.target.origPinX = 0;
-                  d3.event.target.origPinY = 0;
-                  d3.event.target.startX = 0;
-                  d3.event.target.startY = 0;
-
-                  if (this.callback != null) this.callback.onDragEnd(this);
-                }
-            } )
-        );
-    }
+                if (this.callback != null) this.callback.onDragEnd(this);
+              }
+          } )
+      );
   }
 
   private enableEditMode() {
@@ -1054,7 +1134,7 @@ export class ArchMod {
    */
   public delete() {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
-    this.closeContextMenu();
+    this.resetState();
     this.root.remove();
     if (this.callback != null) this.callback.onSvgRemoved(this);
   }
