@@ -144,7 +144,6 @@ class Context {
       switch (element[Def.KEY_CLASS]) {
         case ArchMod.TAG:
           let json = element as ArchModJson;
-          json[Def.KEY_LABEL] = this.genUniqLabelIdFrom(json[Def.KEY_LABEL]);
 
           let archMod = this.deserializeArchMod(json);
 
@@ -286,38 +285,6 @@ class Context {
     this.selectedArchMods.length = 0;
   }
 
-  /**
-   * Generate new unique Label ID based on baseLabel.
-   * @param baseLabel
-   * @return
-   */
-  public genUniqLabelIdFrom(baseLabel: string): string {
-    let index: number = 0;
-    let newLabel = baseLabel;
-
-    // Detect current copy index.
-    let pattern: RegExp = /\_(\d+)$/;
-    let matched: string[]|null = baseLabel.match(pattern);
-    if (matched != null) {
-      // This baseLabel has xxx_100 like copy index.
-      index = Number(matched[1]);
-      baseLabel = baseLabel.replace(matched[0], "");
-    }
-
-    while (true) {
-      let isPresent = this.allArchMods.some( (archMod: ArchMod) => {
-        return archMod.label == newLabel;
-      } );
-
-      if (!isPresent) break;
-
-      index++;
-      newLabel = `${baseLabel}_${index}`;
-    }
-
-    return newLabel;
-  }
-
   public copyToClipBoard() {
     if (this.clipboard.length != 0) this.clipboard.length = 0; // Clear all.
 
@@ -339,7 +306,6 @@ class Context {
           let json = serialized as ArchModJson;
 
           // Update label for copied one.
-          json[Def.KEY_LABEL] = this.genUniqLabelIdFrom(json[Def.KEY_LABEL]);
           json[Def.KEY_DIMENS][Def.KEY_X] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_Y] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_PIN_X] += COPY_PASTE_SLIDE_DIFF;
@@ -754,7 +720,7 @@ function registerGlobalCallbacks() {
       let posY: number = e.offsetY || 0;
 
       CONTEXT.addNewArchMod(
-          CONTEXT.genUniqLabelIdFrom(ArchMod.TAG),
+          ArchMod.TAG,
           posX,
           posY,
           DEFAULT_SIZE,
