@@ -1,9 +1,15 @@
 // System Test for Architecture Map Web.
 
 // Setup chrome web driver.
-let webdriver = require("selenium-webdriver");
-let driver = new webdriver.Builder()
-    .withCapabilities(webdriver.Capabilities.chrome())
+const webdriver = require("selenium-webdriver");
+const chrome = require("selenium-webdriver/chrome");
+const options = new chrome.Options();
+options.addArguments( [
+//    "--headless",
+] );
+const driver = new webdriver.Builder()
+    .forBrowser("chrome")
+    .setChromeOptions(options)
     .build();
 
 
