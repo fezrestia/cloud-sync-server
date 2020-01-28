@@ -27,8 +27,8 @@ const COPY_PASTE_SLIDE_DIFF = 30;
 const MAX_UNDO_HISTORY_SIZE = 100;
 
 const GLOBAL_MODE_LABEL_ID = "global_mode_label";
-const GLOBAL_MODE_ITX = "User Interactive";
-const GLOBAL_MODE_GOD = "God Creation";
+const GLOBAL_MODE_ITX = "ITX";
+const GLOBAL_MODE_GOD = "GOD";
 const GOD_MODE_UI_ID = "god_mode_ui";
 
 interface ElementJson {
@@ -60,7 +60,8 @@ class Context {
 
   // Interactable dynamic elements.
   public brushLayer!: D3Node.G|null;
-  private readonly brushedArchMods: ArchMod[] = [];
+
+  // Clip board for copy and paste.
   private readonly clipboard: ElementJson[] = [];
 
   // Total elements. Head->Tail = Z-Low->Z-High = SVG/HTML Order Top->Bottom.
@@ -74,15 +75,26 @@ class Context {
   public isAddNewArchModMode: boolean = false;
   public globalMode: string = GLOBAL_MODE_GOD;
 
-  private _selectedArchMod: ArchMod|null = null;
-      get selectedArchMod(): ArchMod|null {
-        return this._selectedArchMod;
-      }
-      set selectedArchMod(selected: ArchMod|null) {
-        if (this.selectedArchMod == selected) return;
-        this._selectedArchMod = selected;
-        this.resetAllStateExceptFor(selected);
-      }
+  // Selected list.
+  private readonly selectedArchMods: ArchMod[] = [];
+
+  public onSelected(selected: ArchMod, isMulti: boolean) {
+    this.selectedArchMods.push(selected);
+    if (!isMulti) {
+      this.resetAllStateExceptFor(selected);
+    }
+  }
+
+  public onMultiSelected(selected: ArchMod) {
+    this.selectedArchMods.push(selected);
+  }
+
+  public onDeselected(deselected: ArchMod) {
+    let index = this.selectedArchMods.indexOf(deselected);
+    if (0 <= index) {
+      this.selectedArchMods.splice(index, 1);
+    }
+  }
 
   /**
    * Serialize current static context to JSON object.
@@ -136,9 +148,9 @@ class Context {
 
           let archMod = this.deserializeArchMod(json);
 
-          // Load as brushed state.
-          archMod.selectNoCallback();
-          this.brushedArchMods.push(archMod);
+          // Load as selected state.
+          archMod.selectMultiNoCallback();
+          this.onMultiSelected(archMod);
           break;
 
         default:
@@ -151,6 +163,17 @@ class Context {
 
   private deserializeArchMod(json: ArchModJson): ArchMod {
     let archMod = ArchMod.deserialize(this.html, this.svg, json);
+    this.renderArchMod(archMod);
+    return archMod;
+  }
+
+  public addNewArchMod(label: string, x: number, y: number, width: number, height: number) {
+    let archMod = new ArchMod(this.html, this.svg, label);
+    archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
+    this.renderArchMod(archMod);
+  }
+
+  private renderArchMod(archMod: ArchMod) {
     archMod.setCallback(new ArchModCallbackImpl());
 
     switch (this.globalMode) {
@@ -163,8 +186,7 @@ class Context {
     }
 
     archMod.render();
-
-    return archMod;
+    this.addArchMod(archMod);
   }
 
   public addArchMod(archMod: ArchMod) {
@@ -181,7 +203,7 @@ class Context {
   }
 
   // @param selection area 4-edge.
-  public updateBrushed(selected: number[][]) {
+  public updateBrushSelected(selected: number[][]) {
     let minX = selected[0][0];
     let minY = selected[0][1];
     let maxX = selected[1][0];
@@ -191,23 +213,22 @@ class Context {
       let {x, y, width, height} = archMod.getXYWH();
 
       if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
-        if (!this.brushedArchMods.includes(archMod)) {
-          archMod.selectNoCallback();
-          this.brushedArchMods.push(archMod);
+        if (!this.selectedArchMods.includes(archMod)) {
+          archMod.selectMultiNoCallback();
+          this.onMultiSelected(archMod);
         }
       } else {
-        let index = this.brushedArchMods.indexOf(archMod);
-        if (0 <= index) {
-          let removes: ArchMod[] = this.brushedArchMods.splice(index, 1);
-          removes[0].deselectNoCallback();
+        if (this.selectedArchMods.includes(archMod)) {
+          archMod.deselectNoCallback();
+          this.onDeselected(archMod);
         }
       }
 
     } );
   }
 
-  public moveBrushedArchMod(plusX: number, plusY: number, except: ArchMod) {
-    this.brushedArchMods.forEach( (archMod: ArchMod) => {
+  public moveSelectedArchMods(plusX: number, plusY: number, except: ArchMod) {
+    this.selectedArchMods.forEach( (archMod: ArchMod) => {
       if (archMod == except) return;
       archMod.move(plusX, plusY);
     } );
@@ -222,11 +243,10 @@ class Context {
     this.allArchMods.forEach( (archMod: ArchMod) => {
       if (except == archMod) return;
       archMod.resetState();
+      this.onDeselected(archMod);
     } );
 
     this.outFrame.resetState();
-
-    this.brushedArchMods.length = 0; // clear all.
   }
 
   public resetAllState() {
@@ -249,16 +269,21 @@ class Context {
   }
 
   public deleteSelected() {
-    // Delete selected.
-    if (this.selectedArchMod != null) {
-      this.selectedArchMod.delete();
-    }
-    // Delete brushed.
-    this.brushedArchMods.forEach( (archMod: ArchMod) => {
-      archMod.delete();
+    this.selectedArchMods.forEach( (selected: ArchMod) => {
+      selected.delete();
+      this.removeArchMod(selected);
     } );
+    this.selectedArchMods.length = 0;
 
     this.resetAllState();
+  }
+
+  public deleteAll() {
+    this.allArchMods.forEach ( (archMod: ArchMod) => {
+      archMod.delete();
+    } );
+    this.allArchMods.length = 0;
+    this.selectedArchMods.length = 0;
   }
 
   /**
@@ -296,11 +321,8 @@ class Context {
   public copyToClipBoard() {
     if (this.clipboard.length != 0) this.clipboard.length = 0; // Clear all.
 
-    if (this.selectedArchMod != null) {
-      this.clipboard.push(this.selectedArchMod.serialize());
-    }
-    this.brushedArchMods.forEach( (archMod: ArchMod) => {
-      this.clipboard.push(archMod.serialize());
+    this.selectedArchMods.forEach( (selected: ArchMod) => {
+      this.clipboard.push(selected.serialize());
     } );
 
     this.resetAllState();
@@ -325,9 +347,9 @@ class Context {
 
           let archMod = this.deserializeArchMod(json);
 
-          // Paste as brushed state.
-          archMod.selectNoCallback();
-          this.brushedArchMods.push(archMod);
+          // Paste as selected state.
+          archMod.selectMultiNoCallback();
+          this.onMultiSelected(archMod);
           break;
 
         default:
@@ -374,8 +396,7 @@ class Context {
   }
 
   private recoverJson(json: ArchitectureMapJson) {
-    let deletes = this.allArchMods.concat();
-    deletes.forEach( (archMod: ArchMod) => { archMod.delete() } );
+    this.deleteAll();
     this.deserializeFromJson(json);
     this.resetAllState();
   }
@@ -456,34 +477,24 @@ class OutFrameCallbackImpl implements OutFrameCallback {
 
 // Common callback implementation for ALL ArchMod instances.
 class ArchModCallbackImpl implements ArchModCallback {
-  onSvgAdded(archMod: ArchMod) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSvgAdded() : ${archMod.label}`);
-    CONTEXT.addArchMod(archMod);
-  }
-
-  onSvgRemoved(archMod: ArchMod) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSvgRemoved() : ${archMod.label}`);
-    CONTEXT.removeArchMod(archMod);
-  }
-
-  onSelected(selected: ArchMod) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSelected() : ${selected.label}`);
-    CONTEXT.selectedArchMod = selected;
+  onSelected(selected: ArchMod, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSelected() : ${selected.label}, isMulti=${isMulti}`);
+    CONTEXT.onSelected(selected, isMulti);
   }
 
   onDeselected(deselected: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDeselected() : ${deselected.label}`);
-    CONTEXT.selectedArchMod = null;
+    CONTEXT.onDeselected(deselected);
   }
 
-  onEditing(editing: ArchMod) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onEditing() : ${editing.label}`);
-    CONTEXT.selectedArchMod = editing;
+  onEditing(editing: ArchMod, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onEditing() : ${editing.label}, isMulti=${isMulti}`);
+    CONTEXT.onSelected(editing, isMulti);
   }
 
   onEdited(edited: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onEdited() : ${edited.label}`);
-    CONTEXT.selectedArchMod = null;
+    CONTEXT.onDeselected(edited);
     CONTEXT.recordHistory();
   }
 
@@ -494,7 +505,7 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onDrag(moved: ArchMod, plusX: number, plusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDrag() : plusX=${plusX}, plusY=${plusY}`);
-    CONTEXT.moveBrushedArchMod(plusX, plusY, moved);
+    CONTEXT.moveSelectedArchMods(plusX, plusY, moved);
   }
 
   onDragEnd(moved: ArchMod) {
@@ -584,7 +595,7 @@ function prepareBrushLayer() {
           let brushArea: number[][] = d3.event.selection;
           if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `brushArea = ${brushArea}`);
 
-          CONTEXT.updateBrushed(brushArea);
+          CONTEXT.updateBrushSelected(brushArea);
         }
       } )
       .on("end", () => {
@@ -742,7 +753,12 @@ function registerGlobalCallbacks() {
       let posX: number = e.offsetX || 0;
       let posY: number = e.offsetY || 0;
 
-      addNewArchMod(CONTEXT.genUniqLabelIdFrom(ArchMod.TAG), posX, posY, DEFAULT_SIZE, DEFAULT_SIZE);
+      CONTEXT.addNewArchMod(
+          CONTEXT.genUniqLabelIdFrom(ArchMod.TAG),
+          posX,
+          posY,
+          DEFAULT_SIZE,
+          DEFAULT_SIZE);
 
       CONTEXT.recordHistory();
 
@@ -753,25 +769,6 @@ function registerGlobalCallbacks() {
 
     CONTEXT.isAddNewArchModMode = true;
   }
-}
-
-function addNewArchMod(label: string, x: number, y: number, width: number, height: number): ArchMod {
-  let archMod = new ArchMod(CONTEXT.html, CONTEXT.svg, label);
-  archMod.setCallback(new ArchModCallbackImpl());
-  archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
-
-  switch (CONTEXT.globalMode) {
-    case GLOBAL_MODE_GOD:
-      archMod.itxMode = ArchModItxMode.EDITABLE;
-      break;
-    case GLOBAL_MODE_ITX:
-      archMod.itxMode = ArchModItxMode.SELECTABLE;
-      break;
-  }
-
-  archMod.render();
-
-  return archMod;
 }
 
 function resetHtmlRoot() {

@@ -19,13 +19,10 @@ import { JQueryNode } from "../TypeDef.ts";
  * Callback interface for ArchMod.
  */
 export interface ArchModCallback {
-  onSvgAdded(archMod: ArchMod): void;
-  onSvgRemoved(archMod: ArchMod): void;
-
-  onSelected(selected: ArchMod): void;
+  onSelected(selected: ArchMod, isMulti: boolean): void;
   onDeselected(deselected: ArchMod): void;
 
-  onEditing(editing: ArchMod): void;
+  onEditing(editing: ArchMod, isMulti: boolean): void;
   onEdited(edited: ArchMod): void;
 
   onDragStart(moved: ArchMod): void;
@@ -83,7 +80,7 @@ class ArchModState {
   exit() {
   }
 
-  onLeftClicked(clickX: number, clickY: number) {
+  onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
   }
 
   onRightClicked(clickX: number, clickY: number) {
@@ -120,23 +117,29 @@ export class ArchMod {
       this.target.setHighlight(false);
     }
 
-    onLeftClicked(clickX: number, clickY: number) {
+    onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
       switch (this.target.itxMode) {
         case ArchModItxMode.SELECTABLE:
-          this.target.currentState = new ArchMod.SelectedState(this.target);
+          this.target.currentState = new ArchMod.SelectedState(this.target, withCtrl);
           break;
 
         case ArchModItxMode.EDITABLE:
-          this.target.currentState = new ArchMod.EditingState(this.target);
+          this.target.currentState = new ArchMod.EditingState(this.target, withCtrl);
           break;
       }
     }
   }
 
   private static SelectedState = class extends ArchModState {
+    private isMulti: boolean;
+    constructor(target: ArchMod, isMulti: boolean) {
+      super(target);
+      this.isMulti = isMulti;
+    }
+
     enter() {
       this.target.setHighlight(true);
-      if (this.target.callback != null) this.target.callback.onSelected(this.target);
+      if (this.target.callback != null) this.target.callback.onSelected(this.target, this.isMulti);
     }
 
     exit() {
@@ -144,7 +147,7 @@ export class ArchMod {
       if (this.target.callback != null) this.target.callback.onDeselected(this.target);
     }
 
-    onLeftClicked(clickX: number, clickY: number) {
+    onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
       this.onCanceled();
     }
 
@@ -158,10 +161,16 @@ export class ArchMod {
   }
 
   private static EditingState = class extends ArchModState {
+    private isMulti: boolean;
+    constructor(target: ArchMod, isMulti: boolean) {
+      super(target);
+      this.isMulti = isMulti;
+    }
+
     enter() {
       this.target.setHighlight(true);
       this.target.enableEditMode();
-      if (this.target.callback != null) this.target.callback.onEditing(this.target);
+      if (this.target.callback != null) this.target.callback.onEditing(this.target, this.isMulti);
     }
 
     exit() {
@@ -171,7 +180,7 @@ export class ArchMod {
       if (this.target.callback != null) this.target.callback.onEdited(this.target);
     }
 
-    onLeftClicked(clickX: number, clickY: number) {
+    onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
       this.onCanceled();
     }
 
@@ -427,8 +436,6 @@ export class ArchMod {
 
     // Callbacks.
     this.registerCallbacks();
-
-    if (this.callback != null) this.callback.onSvgAdded(this);
   }
 
   /**
@@ -458,11 +465,22 @@ export class ArchMod {
   }
 
   /**
-   * Selected by other UI. Callback is NOT invoked.
+   * Select this ArchMod as single selection.
    */
-  public selectNoCallback() {
+  public selectSingleNoCallback() {
+    this.selectNoCallback(false);
+  }
+
+  /**
+   * Select this ArchMod as multi selection.
+   */
+  public selectMultiNoCallback() {
+    this.selectNoCallback(true);
+  }
+
+  private selectNoCallback(isMulti: boolean) {
     this.runNoCallback( () => {
-      this.currentState.onLeftClicked(0, 0);
+      this.currentState.onLeftClicked(0, 0, isMulti);
     } );
   }
 
@@ -508,7 +526,11 @@ export class ArchMod {
     this.polygon.on("click", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:click");
 
-        this.currentState.onLeftClicked(d3.event.x, d3.event.y);
+        if (d3.event.ctrlKey) {
+          this.currentState.onLeftClicked(d3.event.x, d3.event.y, true);
+        } else {
+          this.currentState.onLeftClicked(d3.event.x, d3.event.y, false);
+        }
 
         d3.event.stopPropagation();
         d3.event.preventDefault();
@@ -1047,10 +1069,6 @@ export class ArchMod {
       this.target.moveToBackEnd();
     }
 
-    delete() {
-      this.target.delete();
-    }
-
     canChangeLabel(newLabel: string): boolean {
       return this.target.canChangeLabel(newLabel);
     }
@@ -1136,7 +1154,6 @@ export class ArchMod {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
     this.resetState();
     this.root.remove();
-    if (this.callback != null) this.callback.onSvgRemoved(this);
   }
 
   private canChangeLabel(newLabel: string): boolean {

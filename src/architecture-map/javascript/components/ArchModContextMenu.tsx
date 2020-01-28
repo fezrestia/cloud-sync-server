@@ -27,7 +27,6 @@ export interface ArchModContextMenuCallback {
   changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
-  delete(): void;
   canChangeLabel(newLabel: string): boolean;
   onLabelChanged(oldLaebl: string, newLabel: string): void;
 
@@ -179,12 +178,6 @@ export class ArchModContextMenu extends React.Component<Props, State> {
               <td className="no-wrap" >
                 {this.genClickButton("to Front End",  () => { callback.moveToFrontEnd() })}
                 {this.genClickButton("to Back End",   () => { callback.moveToBackEnd() })}
-              </td>
-            </tr>
-            <tr>
-              <td className="no-wrap" >Delete</td>
-              <td className="no-wrap" >
-                {this.genClickButton("DELETE", () => { callback.delete() })}
               </td>
             </tr>
           </tbody></table>
