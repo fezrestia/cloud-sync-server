@@ -107,5 +107,17 @@ module.exports = (env, argv) => {
 
         devtool: 'inline-source-map',
 
+        // webpack-dev-server
+        devServer: {
+            contentBase: dstPath,
+            host: "0.0.0.0", // Open to local network.
+            port: 8080,
+            overlay: {
+              warnings: true,
+              errors: true,
+            },
+
+        },
+
     }; // return
 };

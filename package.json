@@ -40,7 +40,8 @@
     "tslint-config-google": "^1.0.1",
     "typescript": "^3.7.5",
     "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1"
   },
   "scripts": {
     "build": "webpack --mode=development",
@@ -50,7 +51,9 @@
     "test": "./node_modules/.bin/jest",
     "test:coverage": "./node_modules/.bin/jest --coverage",
     "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.tsx'",
-    "test:system": "node test/system/*.js"
+    "test:system": "node test/system/*.js",
+    "test:system-headless": "node test/system/*.js --headless",
+    "start:dev": "webpack-dev-server"
   },
   "author": "",
   "license": "ISC",
