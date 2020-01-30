@@ -5,6 +5,10 @@ import { ArchMod } from "../d3/ArchMod";
 import { ArchModItxMode } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
 import { ArchModJson } from "../d3/ArchMod";
+import { DividerLine } from "../d3/DividerLine";
+import { DividerLineItxMode } from "../d3/DividerLine";
+import { DividerLineCallback } from "../d3/DividerLine";
+import { DividerLineJson } from "../d3/DividerLine";
 import { OutFrame } from "../d3/OutFrame";
 import { OutFrameCallback } from "../d3/OutFrame";
 import { TraceLog } from "../util/TraceLog.ts";
@@ -73,6 +77,7 @@ class Context {
 
   // State flags.
   public isAddNewArchModMode: boolean = false;
+  public isAddNewDividerLineMode: boolean = false;
   public globalMode: string = GLOBAL_MODE_GOD;
 
   // Selected list.
@@ -734,6 +739,48 @@ function registerGlobalCallbacks() {
     } );
 
     CONTEXT.isAddNewArchModMode = true;
+  }
+}
+
+(window as any).onAddNewDividerLineClicked = () => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewDividerLineClicked()");
+
+  if (CONTEXT.isAddNewDividerLineMode) {
+    // Finish add mode.
+
+    resetHtmlRoot();
+    CONTEXT.isAddNewDividerLineMode = false;
+
+  } else {
+    // Prepare add mode.
+
+    CONTEXT. resetAllState();
+
+    CONTEXT.html.css("display", "block");
+    CONTEXT.html.css("background-color", "#AAAAAAAA");
+
+    CONTEXT.html.on("click", (e: JQuery.Event) => {
+      let posX: number = e.offsetX || 0;
+      let posY: number = e.offsetY || 0;
+
+
+
+      let line = new DividerLine(CONTEXT.html, CONTEXT.svg)
+      line.setFromPoint(100, 100);
+      line.setToPoint(200, 300);
+      line.itxMode = DividerLineItxMode.EDITABLE;
+      line.render();
+
+
+
+      CONTEXT.recordHistory();
+
+      // Finish add mode.
+      resetHtmlRoot();
+      CONTEXT.isAddNewDividerLineMode = false;
+    } );
+
+    CONTEXT.isAddNewDividerLineMode = true;
   }
 }
 

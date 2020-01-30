@@ -25,6 +25,11 @@ export class Def {
   public static readonly KEY_CLIP_AREA = "clip_area";
   public static readonly KEY_COLOR_SET = "color_set";
 
+  public static readonly KEY_FROM_X = "from_x";
+  public static readonly KEY_FROM_Y = "from_y";
+  public static readonly KEY_TO_X = "to_x";
+  public static readonly KEY_TO_Y = "to_y";
+
 }
 
 /**
