@@ -37,6 +37,7 @@ export interface ArchModCallback {
   canChangeLabel(archMod: ArchMod, newLabel: string): boolean;
   onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string): void;
 
+  onHistoricalChanged(archMod: ArchMod): void;
 }
 
 /**
@@ -605,6 +606,8 @@ export class ArchMod extends Element {
                 d3.event.target.startY = 0;
 
                 if (this.callback != null) this.callback.onDragEnd(this);
+
+                if (this.callback != null) this.callback.onHistoricalChanged(this);
               }
           } )
       );
@@ -639,14 +642,6 @@ export class ArchMod extends Element {
         .attr("fill", this.colorResolver.stroke)
         .attr("r", this.EDIT_GRIP_RADIUS_PIX);
 
-    circle.on("mouseover", () => {
-        if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:mouseover");
-        circle.attr("fill", this.colorResolver.bgHighlight);
-    });
-    circle.on("mouseout", () => {
-        if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:mouseout");
-        circle.attr("fill", this.colorResolver.stroke);
-    });
     circle.on("click", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
         d3.event.stopPropagation();
@@ -829,6 +824,8 @@ export class ArchMod extends Element {
 
               d3.event.target.startX = 0;
               d3.event.target.startY = 0;
+
+              if (this.callback != null) this.callback.onHistoricalChanged(this);
           } )
     );
   }
@@ -1042,6 +1039,8 @@ export class ArchMod extends Element {
 
     close() {
       this.target.closeContextMenu();
+
+      if (this.target.callback != null) this.target.callback.onHistoricalChanged(this.target);
     }
 
     changeLabelRotDeg(rotDeg: number) {

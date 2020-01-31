@@ -32,6 +32,8 @@ export interface DividerLineCallback {
   onRaised(raised: DividerLine): void;
   onLowered(lowered: DividerLine): void;
 
+  onHistoricalChanged(line: DividerLine): void;
+
 }
 
 /**
@@ -515,6 +517,8 @@ export class DividerLine extends Element {
                 d3.event.target.startY = 0;
 
                 if (this.callback != null) this.callback.onDragEnd(this);
+
+                if (this.callback != null) this.callback.onHistoricalChanged(this);
               }
           } )
       );
@@ -607,6 +611,8 @@ export class DividerLine extends Element {
               d3.event.target.origToPoint = new Point(0, 0);
               d3.event.target.startX = 0;
               d3.event.target.startY = 0;
+
+              if (this.callback != null) this.callback.onHistoricalChanged(this);
           } )
     );
   }
@@ -665,6 +671,8 @@ export class DividerLine extends Element {
 
     close() {
       this.target.closeContextMenu();
+
+      if (this.target.callback != null) this.target.callback.onHistoricalChanged(this.target);
     }
 
     changeColorSet(colorSet: ColorSet) {

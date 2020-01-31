@@ -563,7 +563,6 @@ class ArchModCallbackImpl implements ArchModCallback {
   onEdited(edited: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onEdited() : ${edited.label}`);
     CONTEXT.onDeselected(edited);
-    CONTEXT.recordHistory();
   }
 
   onDragStart(moved: ArchMod) {
@@ -578,19 +577,16 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onDragEnd(moved: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragEnd()`);
-    CONTEXT.recordHistory();
   }
 
   onRaised(raised: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onRaised()`);
     CONTEXT.raise(raised);
-    CONTEXT.recordHistory();
   }
 
   onLowered(lowered: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLowered()`);
     CONTEXT.lower(lowered);
-    CONTEXT.recordHistory();
   }
 
   canChangeLabel(archMod: ArchMod, newLabel: string): boolean {
@@ -600,9 +596,12 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLabelChanged() : old=${oldLabel}, new=${newLabel}`);
-    CONTEXT.recordHistory();
   }
 
+  onHistoricalChanged(archMod: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onHistoricalChanged() : label=${archMod.label}`);
+    CONTEXT.recordHistory();
+  }
 }
 
 // Common callback for ALL DividerLine instances.
@@ -625,7 +624,6 @@ class DividerLineCallbackImpl implements DividerLineCallback {
   onEdited(edited: DividerLine) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onEdited()`);
     CONTEXT.onDeselected(edited);
-    CONTEXT.recordHistory();
   }
 
   onDragStart(moved: DividerLine) {
@@ -640,18 +638,21 @@ class DividerLineCallbackImpl implements DividerLineCallback {
 
   onDragEnd(moved: DividerLine) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDragEnd()`);
-    CONTEXT.recordHistory();
+    // NOP.
   }
 
   onRaised(raised: DividerLine) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onRaised()`);
     CONTEXT.raise(raised);
-    CONTEXT.recordHistory();
   }
 
   onLowered(lowered: DividerLine) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onLowered()`);
     CONTEXT.lower(lowered);
+  }
+
+  onHistoricalChanged(line: DividerLine) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onHistoricalChanged()`);
     CONTEXT.recordHistory();
   }
 }
