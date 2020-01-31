@@ -14,6 +14,8 @@ import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
+import { Element } from "./Element";
+import { ElementItxMode } from "./Element";
 
 /**
  * Callback interface for ArchMod.
@@ -57,15 +59,6 @@ export interface ArchModJson {
 }
 
 /**
- * Interactive mode options for ArchMod.
- */
-export enum ArchModItxMode {
-  RIGID,
-  SELECTABLE,
-  EDITABLE,
-}
-
-/**
  * Base state class for ArchMod state machine.
  */
 class ArchModState {
@@ -100,8 +93,9 @@ class ArchModState {
 /**
  * Architecture Module class.
  */
-export class ArchMod {
+export class ArchMod extends Element {
   public static readonly TAG = "ArchMod";
+  public readonly TAG = ArchMod.TAG;
 
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
   private readonly MIN_SIZE_PIX = 16;
@@ -119,11 +113,11 @@ export class ArchMod {
 
     onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
       switch (this.target.itxMode) {
-        case ArchModItxMode.SELECTABLE:
+        case ElementItxMode.SELECTABLE:
           this.target.currentState = new ArchMod.SelectedState(this.target, withCtrl);
           break;
 
-        case ArchModItxMode.EDITABLE:
+        case ElementItxMode.EDITABLE:
           this.target.currentState = new ArchMod.EditingState(this.target, withCtrl);
           break;
       }
@@ -207,10 +201,9 @@ export class ArchMod {
    * @param svg SVG root object.
    * @param label Module ID.
    */
-  constructor(
-    private html: JQueryNode,
-    private svg: D3Node.SVG,
-    label: string) {
+  constructor(html: JQueryNode, svg: D3Node.SVG, label: string) {
+      super(html, svg);
+
       this._label = label;
       this.colorSet = this.colorSet; // Load defaut
 
@@ -232,11 +225,11 @@ export class ArchMod {
         return this._label;
       }
 
-  private _itxMode: ArchModItxMode = ArchModItxMode.RIGID;
-      public get itxMode(): ArchModItxMode {
+  private _itxMode: ElementItxMode = ElementItxMode.RIGID;
+      public get itxMode(): ElementItxMode {
         return this._itxMode;
       }
-      public set itxMode(mode: ArchModItxMode) {
+      public set itxMode(mode: ElementItxMode) {
         this._itxMode = mode;
       }
 
@@ -407,9 +400,7 @@ export class ArchMod {
    * Reset state to idle.
    */
   public resetState() {
-    this.runNoCallback( () => {
-      this.currentState.reset();
-    } );
+    this.currentState.reset();
   }
 
   /**
@@ -481,6 +472,15 @@ export class ArchMod {
   private selectNoCallback(isMulti: boolean) {
     this.runNoCallback( () => {
       this.currentState.onLeftClicked(0, 0, isMulti);
+    } );
+  }
+
+  /**
+   * Reset state without callback invocation.
+   */
+  public resetStateNoCallback() {
+    this.runNoCallback( () => {
+      this.currentState.reset();
     } );
   }
 
@@ -1152,7 +1152,7 @@ export class ArchMod {
    */
   public delete() {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
-    this.resetState();
+    this.resetStateNoCallback();
     this.root.remove();
   }
 

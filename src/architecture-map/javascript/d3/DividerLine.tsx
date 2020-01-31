@@ -12,6 +12,8 @@ import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
+import { Element } from "./Element";
+import { ElementItxMode } from "./Element";
 
 /**
  * Callback interface for DividerLine.
@@ -24,7 +26,7 @@ export interface DividerLineCallback {
   onEdited(edited: DividerLine): void;
 
   onDragStart(moved: DividerLine): void;
-  onDrag(moved: DividerLine, pulsX: number, plusY: number): void;
+  onDrag(moved: DividerLine, plusX: number, plusY: number): void;
   onDragEnd(moved: DividerLine): void;
 
   onRaised(raised: DividerLine): void;
@@ -45,15 +47,6 @@ export interface DividerLineJson {
       [Def.KEY_WIDTH]: number,
   },
   [Def.KEY_COLOR_SET]: string,
-}
-
-/**
- * Interactive mode options for DividerLine.
- */
-export enum DividerLineItxMode {
-  RIGID,
-  SELECTABLE,
-  EDITABLE,
 }
 
 /**
@@ -91,8 +84,9 @@ class DividerLineState {
 /**
  * Divider Line class.
  */
-export class DividerLine {
+export class DividerLine extends Element {
   public static readonly TAG = "DividerLine";
+  public readonly TAG = DividerLine.TAG;
 
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
   private readonly MIN_SIZE_PIX = 16;
@@ -107,11 +101,11 @@ export class DividerLine {
 
     onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
       switch (this.target.itxMode) {
-        case DividerLineItxMode.SELECTABLE:
+        case ElementItxMode.SELECTABLE:
           this.target.currentState = new DividerLine.SelectedState(this.target, withCtrl);
           break;
 
-        case DividerLineItxMode.EDITABLE:
+        case ElementItxMode.EDITABLE:
           this.target.currentState = new DividerLine.EditingState(this.target, withCtrl);
           break;
       }
@@ -195,7 +189,9 @@ export class DividerLine {
    * @param html HTML root view. Used for non-svg contents like as pop-up window.
    * @param svg SVG root object.
    */
-  constructor(private html: JQueryNode, private svg: D3Node.SVG) {
+  constructor(html: JQueryNode, svg: D3Node.SVG) {
+      super(html, svg);
+
       this.colorSet = this.colorSet; // Load defaut
       this._currentState = new DividerLine.IdleState(this);
       this.width = this.DEFAULT_WIDTH;
@@ -211,11 +207,11 @@ export class DividerLine {
         this._currentState.enter();
       }
 
-  private _itxMode: DividerLineItxMode = DividerLineItxMode.RIGID;
-      public get itxMode(): DividerLineItxMode {
+  private _itxMode: ElementItxMode = ElementItxMode.RIGID;
+      public get itxMode(): ElementItxMode {
         return this._itxMode;
       }
-      public set itxMode(mode: DividerLineItxMode) {
+      public set itxMode(mode: ElementItxMode) {
         this._itxMode = mode;
       }
 
@@ -290,43 +286,31 @@ export class DividerLine {
   }
 
   /**
-   * Set "FROM" anchor point.
+   * Set FROM/TO X-Y coordinates.
    *
-   * @param x
-   * @param y
+   * @param fromX
+   * @param fromY
+   * @param toX
+   * @param toY
    */
-  public setFromPoint(x: number, y: number) {
-    this.fromPoint = new Point(x, y);
+  public setFromToXY(fromX: number, fromY: number, toX: number, toY: number) {
+    this.fromPoint = new Point(fromX, fromY);
+    this.toPoint = new Point(toX, toY);
     this.relayout();
   }
 
   /**
-   * Get "FROM" anchor point of line.
+   * Get FROM/TO X-Y coordinates.
    *
-   * @return Point
+   * @return {fromX, fromY, toX, toY}
    */
-  public getFromPoint(): Point {
-    return this.fromPoint;
-  }
-
-  /**
-   * Set "TO" anchor point.
-   *
-   * @param x
-   * @param y
-   */
-  public setToPoint(x: number, y: number) {
-    this.toPoint = new Point(x, y);
-    this.relayout();
-  }
-
-  /**
-   * Get "TO" anchor point of line.
-   *
-   * @return Point
-   */
-  public getToPoint(): Point {
-    return this.toPoint;
+  public getFromToXY(): {fromX: number, fromY: number, toX: number, toY:number} {
+    return {
+        fromX: this.fromPoint.x,
+        fromY: this.fromPoint.y,
+        toX: this.toPoint.x,
+        toY: this.toPoint.y,
+    };
   }
 
   /**
@@ -358,9 +342,7 @@ export class DividerLine {
    * Reset state to idle.
    */
   public resetState() {
-    this.runNoCallback( () => {
-      this.currentState.reset();
-    } );
+    this.currentState.reset();
   }
 
   /**
@@ -415,6 +397,15 @@ export class DividerLine {
   public deselectNoCallback() {
     this.runNoCallback( () => {
       this.currentState.onCanceled();
+    } );
+  }
+
+  /**
+   * Reset state without callback invocation.
+   */
+  public resetStateNoCallback() {
+    this.runNoCallback( () => {
+      this.currentState.reset();
     } );
   }
 
@@ -549,17 +540,9 @@ export class DividerLine {
         .attr("id", id)
         .attr("cx", cx)
         .attr("cy", cy)
-        .attr("fill", this.colorResolver.stroke)
+        .attr("fill", this.colorResolver.bgHighlight)
         .attr("r", this.EDIT_GRIP_RADIUS_PIX);
 
-    circle.on("mouseover", () => {
-        if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:mouseover");
-        circle.attr("fill", this.colorResolver.bgHighlight);
-    });
-    circle.on("mouseout", () => {
-        if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:mouseout");
-        circle.attr("fill", this.colorResolver.stroke);
-    });
     circle.on("click", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
         d3.event.stopPropagation();
@@ -669,7 +652,7 @@ export class DividerLine {
   }
 
   private recolor() {
-    this.path.attr("stroke", this.colorResolver.stroke);
+    this.path.attr("stroke", this.colorResolver.bg);
 
   }
 
@@ -756,7 +739,7 @@ export class DividerLine {
    */
   public delete() {
     if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, `moveToBackEnd()`);
-    this.resetState();
+    this.resetStateNoCallback();
     this.root.remove();
   }
 

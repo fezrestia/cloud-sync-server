@@ -1,12 +1,13 @@
 import * as d3 from "d3";
 import * as $ from "jquery";
 
+import { Element } from "../d3/Element";
+import { ElementItxMode } from "../d3/Element";
+import { ElementJson } from "../d3/Element";
 import { ArchMod } from "../d3/ArchMod";
-import { ArchModItxMode } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
 import { ArchModJson } from "../d3/ArchMod";
 import { DividerLine } from "../d3/DividerLine";
-import { DividerLineItxMode } from "../d3/DividerLine";
 import { DividerLineCallback } from "../d3/DividerLine";
 import { DividerLineJson } from "../d3/DividerLine";
 import { OutFrame } from "../d3/OutFrame";
@@ -34,10 +35,6 @@ const GLOBAL_MODE_LABEL_ID = "global_mode_label";
 const GLOBAL_MODE_ITX = "ITX";
 const GLOBAL_MODE_GOD = "GOD";
 const GOD_MODE_UI_ID = "god_mode_ui";
-
-interface ElementJson {
-  [Def.KEY_CLASS]: string,
-}
 
 interface OutFrameJson {
   [Def.KEY_X]: number,
@@ -69,7 +66,7 @@ class Context {
   private readonly clipboard: ElementJson[] = [];
 
   // Total elements. Head->Tail = Z-Low->Z-High = SVG/HTML Order Top->Bottom.
-  private readonly allArchMods: ArchMod[] = [];
+  private readonly allElements: Element[] = [];
 
   // UNDO history.
   private readonly history: ArchitectureMapJson[] = [];
@@ -81,23 +78,23 @@ class Context {
   public globalMode: string = GLOBAL_MODE_GOD;
 
   // Selected list.
-  private readonly selectedArchMods: ArchMod[] = [];
+  private readonly selectedElements: Element[] = [];
 
-  public onSelected(selected: ArchMod, isMulti: boolean) {
-    this.selectedArchMods.push(selected);
+  public onSelected(selected: Element, isMulti: boolean) {
+    this.selectedElements.push(selected);
     if (!isMulti) {
       this.resetAllStateExceptFor(selected);
     }
   }
 
-  public onMultiSelected(selected: ArchMod) {
-    this.selectedArchMods.push(selected);
+  public onMultiSelected(selected: Element) {
+    this.selectedElements.push(selected);
   }
 
-  public onDeselected(deselected: ArchMod) {
-    let index = this.selectedArchMods.indexOf(deselected);
+  public onDeselected(deselected: Element) {
+    let index = this.selectedElements.indexOf(deselected);
     if (0 <= index) {
-      this.selectedArchMods.splice(index, 1);
+      this.selectedElements.splice(index, 1);
     }
   }
 
@@ -107,8 +104,8 @@ class Context {
    */
   public serializeToJson(): ArchitectureMapJson {
     let serializedElements: ElementJson[] = [];
-    this.allArchMods.forEach( (archMod: ArchMod) => {
-      let serialized = archMod.serialize();
+    this.allElements.forEach( (element: Element) => {
+      let serialized = element.serialize();
       serializedElements.push(serialized);
     } );
 
@@ -146,22 +143,30 @@ class Context {
 
     let elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
     elements.forEach( (element: ElementJson) => {
+      let deserialized: Element;
+      let json;
+
       switch (element[Def.KEY_CLASS]) {
         case ArchMod.TAG:
-          let json = element as ArchModJson;
+          json = element as ArchModJson;
+          deserialized = this.deserializeArchMod(json);
+          break;
 
-          let archMod = this.deserializeArchMod(json);
-
-          // Load as selected state.
-          archMod.selectMultiNoCallback();
-          this.onMultiSelected(archMod);
+        case DividerLine.TAG:
+          json = element as DividerLineJson;
+          deserialized = this.deserializeDividerLine(json);
           break;
 
         default:
           TraceLog.e(TAG, `Unexpected Element:`);
           console.log(element);
-          break;
+          return;
       }
+
+      // Load as selected state.
+      deserialized.selectMultiNoCallback();
+      this.onMultiSelected(deserialized);
+
     } );
   }
 
@@ -182,28 +187,60 @@ class Context {
 
     switch (this.globalMode) {
       case GLOBAL_MODE_GOD:
-        archMod.itxMode = ArchModItxMode.EDITABLE;
+        archMod.itxMode = ElementItxMode.EDITABLE;
         break;
       case GLOBAL_MODE_ITX:
-        archMod.itxMode = ArchModItxMode.SELECTABLE;
+        archMod.itxMode = ElementItxMode.SELECTABLE;
         break;
     }
 
     archMod.render();
-    this.addArchMod(archMod);
+    this.addElementToTop(archMod);
   }
 
-  public addArchMod(archMod: ArchMod) {
-    this.allArchMods.push(archMod);
+  private deserializeDividerLine(json: DividerLineJson): DividerLine {
+    let line = DividerLine.deserialize(this.html, this.svg, json);
+    this.renderDividerLine(line);
+    return line;
   }
 
-  public removeArchMod(archMod: ArchMod) {
-    let index = this.allArchMods.indexOf(archMod);
+  public addNewDividerLine(fromX: number, fromY: number) {
+    let line = new DividerLine(this.html, this.svg);
+    line.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
+    this.renderDividerLine(line);
+  }
+
+  private renderDividerLine(line: DividerLine) {
+    line.setCallback(new DividerLineCallbackImpl());
+
+    switch (this.globalMode) {
+      case GLOBAL_MODE_GOD:
+        line.itxMode = ElementItxMode.EDITABLE;
+        break;
+      case GLOBAL_MODE_ITX:
+        line.itxMode = ElementItxMode.RIGID;
+        break;
+    }
+
+    line.render();
+    this.addElementToTop(line);
+  }
+
+  public addElementToTop(element: Element) {
+    this.allElements.push(element);
+  }
+
+  public addElementToBottom(element: Element) {
+    this.allElements.unshift(element);
+  }
+
+  public removeElement(element: Element) {
+    let index = this.allElements.indexOf(element);
     if (index < 0) {
-      TraceLog.e(TAG, `## ArchMod=${archMod.label} is NOT existing.`);
+      TraceLog.e(TAG, `## Element=${element.serialize()} is NOT existing.`);
       return;
     }
-    this.allArchMods.splice(index, 1);
+    this.allElements.splice(index, 1);
   }
 
   // @param selection area 4-edge.
@@ -213,41 +250,68 @@ class Context {
     let maxX = selected[1][0];
     let maxY = selected[1][1];
 
-    this.allArchMods.forEach( (archMod: ArchMod) => {
-      let {x, y, width, height} = archMod.getXYWH();
+    this.allElements.forEach( (element: Element) => {
+      switch (element.TAG) {
+        case ArchMod.TAG:
+          let archMod = element as ArchMod;
 
-      if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
-        if (!this.selectedArchMods.includes(archMod)) {
-          archMod.selectMultiNoCallback();
-          this.onMultiSelected(archMod);
-        }
-      } else {
-        if (this.selectedArchMods.includes(archMod)) {
-          archMod.deselectNoCallback();
-          this.onDeselected(archMod);
-        }
+          let {x, y, width, height} = archMod.getXYWH();
+
+          if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
+            if (!this.selectedElements.includes(archMod)) {
+              archMod.selectMultiNoCallback();
+              this.onMultiSelected(archMod);
+            }
+          } else {
+            if (this.selectedElements.includes(archMod)) {
+              archMod.deselectNoCallback();
+              this.onDeselected(archMod);
+            }
+          }
+          break;
+
+        case DividerLine.TAG:
+          let line = element as DividerLine;
+
+          let {fromX, fromY, toX, toY} = line.getFromToXY();
+
+          if (minX < fromX && minY < fromY && minX < toX && minY < toY) {
+            if (!this.selectedElements.includes(line)) {
+              line.selectMultiNoCallback();
+              this.onMultiSelected(line);
+            }
+          } else {
+            if (this.selectedElements.includes(line)) {
+              line.deselectNoCallback();
+              this.onDeselected(line);
+            }
+          }
+          break;
+
+        default:
+          TraceLog.e(TAG, `## Element=${element.serialize()} is NOT existing.`);
+          break;
       }
-
     } );
   }
 
-  public moveSelectedArchMods(plusX: number, plusY: number, except: ArchMod) {
-    this.selectedArchMods.forEach( (archMod: ArchMod) => {
-      if (archMod == except) return;
-      archMod.move(plusX, plusY);
+  public moveSelectedElements(plusX: number, plusY: number, except: Element) {
+    this.selectedElements.forEach( (element: Element) => {
+      if (element == except) return;
+      element.move(plusX, plusY);
     } );
   }
 
   /**
    * Reset selected/editing or something state to default without exception.
    *
-   * @param except ArchMod Exception of reset target. If null, ALL state will be reset.
+   * @param except Exception of reset target. If null, ALL state will be reset.
    */
-  public resetAllStateExceptFor(except: ArchMod|null) {
-    this.allArchMods.forEach( (archMod: ArchMod) => {
-      if (except == archMod) return;
-      archMod.resetState();
-      this.onDeselected(archMod);
+  public resetAllStateExceptFor(except: Element|null) {
+    this.allElements.forEach( (element: Element) => {
+      if (except == element) return;
+      element.resetStateNoCallback();
+      this.onDeselected(element);
     } );
 
     this.outFrame.resetState();
@@ -262,38 +326,38 @@ class Context {
     this.root.css("height", height);
   }
 
-  public raise(raised: ArchMod) {
-    this.removeArchMod(raised);
-    this.allArchMods.push(raised);
+  public raise(raised: Element) {
+    this.removeElement(raised);
+    this.addElementToTop(raised);
   }
 
-  public lower(lowered: ArchMod) {
-    this.removeArchMod(lowered);
-    this.allArchMods.unshift(lowered);
+  public lower(lowered: Element) {
+    this.removeElement(lowered);
+    this.addElementToBottom(lowered);
   }
 
   public deleteSelected() {
-    this.selectedArchMods.forEach( (selected: ArchMod) => {
+    this.selectedElements.forEach( (selected: Element) => {
       selected.delete();
-      this.removeArchMod(selected);
+      this.removeElement(selected);
     } );
-    this.selectedArchMods.length = 0;
+    this.selectedElements.length = 0;
 
     this.resetAllState();
   }
 
   public deleteAll() {
-    this.allArchMods.forEach ( (archMod: ArchMod) => {
-      archMod.delete();
+    this.allElements.forEach ( (element: Element) => {
+      element.delete();
     } );
-    this.allArchMods.length = 0;
-    this.selectedArchMods.length = 0;
+    this.allElements.length = 0;
+    this.selectedElements.length = 0;
   }
 
   public copyToClipBoard() {
     if (this.clipboard.length != 0) this.clipboard.length = 0; // Clear all.
 
-    this.selectedArchMods.forEach( (selected: ArchMod) => {
+    this.selectedElements.forEach( (selected: Element) => {
       this.clipboard.push(selected.serialize());
     } );
 
@@ -306,36 +370,55 @@ class Context {
     this.resetAllState();
 
     this.clipboard.forEach( (serialized: ElementJson) => {
+      let element: Element;
+      let json;
+
       switch (serialized[Def.KEY_CLASS]) {
         case ArchMod.TAG:
-          let json = serialized as ArchModJson;
+          json = serialized as ArchModJson;
 
-          // Update label for copied one.
           json[Def.KEY_DIMENS][Def.KEY_X] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_Y] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_PIN_X] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_PIN_Y] += COPY_PASTE_SLIDE_DIFF;
 
-          let archMod = this.deserializeArchMod(json);
+          element = this.deserializeArchMod(json);
+          break;
 
-          // Paste as selected state.
-          archMod.selectMultiNoCallback();
-          this.onMultiSelected(archMod);
+        case DividerLine.TAG:
+          json = serialized as DividerLineJson;
+
+          json[Def.KEY_DIMENS][Def.KEY_FROM_X] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_FROM_Y] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_TO_X] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_TO_Y] += COPY_PASTE_SLIDE_DIFF;
+
+          element = this.deserializeDividerLine(json);
           break;
 
         default:
           TraceLog.e(TAG, `Unexpected Element:`);
           console.log(serialized);
-          break;
+          return;
       }
+
+      // Paste as selected state.
+      element.selectMultiNoCallback();
+      this.onMultiSelected(element);
+
     } );
 
     this.clipboard.length = 0; // Clear all.
   }
 
   public isLabelPresent(newLabel: string): boolean {
-    return this.allArchMods.some( (archMod: ArchMod) => {
-      return archMod.label == newLabel;
+    return this.allElements.some( (element: Element) => {
+      if (element.TAG == ArchMod.TAG) {
+        let archMod = element as ArchMod;
+        return archMod.label == newLabel;
+      } else {
+        return false;
+      }
     } );
   }
 
@@ -412,8 +495,15 @@ class Context {
     this.globalMode = GLOBAL_MODE_GOD;
 
     this.resetAllState();
-    this.allArchMods.forEach( (archMod: ArchMod) => {
-      archMod.itxMode = ArchModItxMode.EDITABLE;
+    this.allElements.forEach( (element: Element) => {
+      switch (element.TAG) {
+        case ArchMod.TAG:
+          element.itxMode = ElementItxMode.EDITABLE;
+          break;
+        case DividerLine.TAG:
+          element.itxMode = ElementItxMode.EDITABLE;
+          break;
+      }
     } );
   }
 
@@ -421,8 +511,15 @@ class Context {
     this.globalMode = GLOBAL_MODE_ITX;
 
     this.resetAllState();
-    this.allArchMods.forEach( (archMod: ArchMod) => {
-      archMod.itxMode = ArchModItxMode.SELECTABLE;
+    this.allElements.forEach( (element: Element) => {
+      switch (element.TAG) {
+        case ArchMod.TAG:
+          element.itxMode = ElementItxMode.SELECTABLE;
+          break;
+        case DividerLine.TAG:
+          element.itxMode = ElementItxMode.RIGID;
+          break;
+      }
     } );
   }
 }
@@ -476,7 +573,7 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onDrag(moved: ArchMod, plusX: number, plusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDrag() : plusX=${plusX}, plusY=${plusY}`);
-    CONTEXT.moveSelectedArchMods(plusX, plusY, moved);
+    CONTEXT.moveSelectedElements(plusX, plusY, moved);
   }
 
   onDragEnd(moved: ArchMod) {
@@ -506,6 +603,57 @@ class ArchModCallbackImpl implements ArchModCallback {
     CONTEXT.recordHistory();
   }
 
+}
+
+// Common callback for ALL DividerLine instances.
+class DividerLineCallbackImpl implements DividerLineCallback {
+  onSelected(selected: DividerLine, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onSelected() : isMulti=${isMulti}`);
+    CONTEXT.onSelected(selected, isMulti);
+  }
+
+  onDeselected(deselected: DividerLine) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDeselected()`);
+    CONTEXT.onDeselected(deselected);
+  }
+
+  onEditing(editing: DividerLine, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onEditing() : isMulti=${isMulti}`);
+    CONTEXT.onSelected(editing, isMulti);
+  }
+
+  onEdited(edited: DividerLine) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onEdited()`);
+    CONTEXT.onDeselected(edited);
+    CONTEXT.recordHistory();
+  }
+
+  onDragStart(moved: DividerLine) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDragStart()`);
+    // NOP.
+  }
+
+  onDrag(moved: DividerLine, plusX: number, plusY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDrag() : plusX=${plusX}, plusY=${plusY}`);
+    CONTEXT.moveSelectedElements(plusX, plusY, moved);
+  }
+
+  onDragEnd(moved: DividerLine) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDragEnd()`);
+    CONTEXT.recordHistory();
+  }
+
+  onRaised(raised: DividerLine) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onRaised()`);
+    CONTEXT.raise(raised);
+    CONTEXT.recordHistory();
+  }
+
+  onLowered(lowered: DividerLine) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onLowered()`);
+    CONTEXT.lower(lowered);
+    CONTEXT.recordHistory();
+  }
 }
 
 // Entry point from HTML.
@@ -763,15 +911,7 @@ function registerGlobalCallbacks() {
       let posX: number = e.offsetX || 0;
       let posY: number = e.offsetY || 0;
 
-
-
-      let line = new DividerLine(CONTEXT.html, CONTEXT.svg)
-      line.setFromPoint(100, 100);
-      line.setToPoint(200, 300);
-      line.itxMode = DividerLineItxMode.EDITABLE;
-      line.render();
-
-
+      CONTEXT.addNewDividerLine(posX, posY);
 
       CONTEXT.recordHistory();
 
