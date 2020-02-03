@@ -505,6 +505,7 @@ class Context {
           break;
       }
     } );
+    this.outFrame.itxMode = ElementItxMode.EDITABLE;
   }
 
   public changeToItxMode() {
@@ -521,6 +522,7 @@ class Context {
           break;
       }
     } );
+    this.outFrame.itxMode = ElementItxMode.RIGID;
   }
 }
 const CONTEXT = new Context();
@@ -673,7 +675,7 @@ class DividerLineCallbackImpl implements DividerLineCallback {
   html.css("display", "none");
   CONTEXT.html = html;
 
-  let outFrame = new OutFrame(CONTEXT.svg);
+  let outFrame = new OutFrame(html, svg);
   outFrame.setCallback(new OutFrameCallbackImpl());
   outFrame.setXYWH(0, 0, DEFAULT_TOTAL_WIDTH, DEFAULT_TOTAL_HEIGHT);
   outFrame.render();

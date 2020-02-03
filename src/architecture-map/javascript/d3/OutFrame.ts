@@ -5,8 +5,12 @@ import * as ReactDOM from "react-dom";
 import { ColorResolver } from "./resolver/ColorResolver.ts";
 import { TraceLog } from "../util/TraceLog.ts";
 import { Def } from "../Def.ts";
+import { JQueryNode } from "../TypeDef.ts";
 import { D3Node } from "../TypeDef.ts";
 import { ColorSet } from "../Def.ts";
+import { Element } from "./Element";
+import { ElementItxMode } from "./Element";
+import { ElementJson } from "./Element";
 
 /**
  * Callback interface for OutFrame.
@@ -21,8 +25,8 @@ export interface OutFrameCallback {
 /**
  * Background out side frame class.
  */
-export class OutFrame {
-  private readonly TAG = "OutFrame";
+export class OutFrame extends Element {
+  public readonly TAG = "OutFrame";
 
   private readonly STROKE_WIDTH = 4;
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
@@ -33,10 +37,42 @@ export class OutFrame {
 
   /**
    * CONSTRUCTOR.
+   *
+   * @param html HTML root object.
    * @param svg SVG root object.
    */
-  constructor(private svg: D3Node.SVG) {
+  constructor(protected html: JQueryNode, protected svg: D3Node.SVG) {
+    super(html, svg);
     this.colorResolver = ColorSet.resolve(this.colorSet);
+  }
+
+  public serialize(): ElementJson {
+    // NOP.
+    return { [Def.KEY_CLASS]: this.TAG };
+  }
+
+  public selectSingleNoCallback() {
+    // NOP.
+  }
+
+  public selectMultiNoCallback() {
+    // NOP.
+  }
+
+  public deselectNoCallback() {
+    this.isEditing = false;
+  }
+
+  public resetStateNoCallback() {
+    this.isEditing = false;
+  }
+
+  public move(plusX: number, plusY: number) {
+    // NOP.
+  }
+
+  public delete() {
+    // NOP.
   }
 
   // Elements.
@@ -50,8 +86,16 @@ export class OutFrame {
   private width: number = 0;
   private height: number = 0;
 
-  // Static flags.
-  private isEditable: boolean = true;
+  private _itxMode: ElementItxMode = ElementItxMode.RIGID;
+      public set itxMode(mode: ElementItxMode) {
+        this._itxMode = mode;
+        if (mode != ElementItxMode.EDITABLE) {
+          this.isEditing = false;
+        }
+      }
+      public get itxMode(): ElementItxMode {
+        return this._itxMode;
+      }
 
   // Dynamic flags.
   private _isEditing: boolean = false;
@@ -59,12 +103,14 @@ export class OutFrame {
         return this._isEditing;
       }
       public set isEditing(editing: boolean) {
-        if (this.isEditable && editing) {
-          this.enableEditMode();
-        } else {
-          this.disableEditMode();
+        if (this.itxMode == ElementItxMode.EDITABLE) {
+          if (editing) {
+            this.enableEditMode();
+          } else {
+            this.disableEditMode();
+          }
+          this._isEditing = editing;
         }
-        this._isEditing = editing;
       }
   private _isSnapDragEnabled: boolean = false;
       public get isSnapDragEnabled(): boolean {
@@ -181,23 +227,25 @@ export class OutFrame {
   private registerCallbacks() {
     this.path.on("mouseover", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseover");
-        if (!this.isEditing) {
+        if (this.itxMode == ElementItxMode.EDITABLE && !this.isEditing) {
           this.isHighlight = true;
           this.recolor();
         }
     });
     this.path.on("mouseout", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseout");
-        if (!this.isEditing) {
+        if (this.itxMode == ElementItxMode.EDITABLE && !this.isEditing) {
           this.isHighlight = false;
           this.recolor();
         }
     });
 
-    this.path.on("dblclick", () => {
-        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:dblclick");
+    this.path.on("click", () => {
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:click");
 
-        this.isEditing = !this.isEditing;
+        if (this.itxMode == ElementItxMode.EDITABLE) {
+          this.isEditing = !this.isEditing;
+        }
 
         d3.event.stopPropagation();
     });
