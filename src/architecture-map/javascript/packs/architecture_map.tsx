@@ -1014,7 +1014,7 @@ function changeGlobalModeTo(mode: string) {
   switch (mode) {
     case GLOBAL_MODE_GOD:
       CONTEXT.changeToGodMode();
-      godModePanel.style.display = "";
+      godModePanel.style.display = "block";
       break;
 
     case GLOBAL_MODE_ITX:

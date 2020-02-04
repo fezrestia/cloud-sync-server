@@ -3,6 +3,8 @@
 import { Builder, ThenableWebDriver } from "selenium-webdriver";
 import * as chrome from "selenium-webdriver/chrome";
 
+import { TestDef } from "../TestDef";
+
 /**
  * Prepare web driver instance. Must be release it after test done.
  *
@@ -35,6 +37,7 @@ export function prepareWebDriver(isHeadless: boolean): ThenableWebDriver {
       .forBrowser("chrome")
       .setChromeOptions(options)
       .build();
+  (driver as any).setDownloadPath(TestDef.DOWNLOAD_PATH);
 
   return driver;
 }
