@@ -44,9 +44,10 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     };
   }
 
-  private genClickButton(label: string, callback: () => void ) {
+  private genClickButton(id: string, label: string, callback: () => void ) {
     return (
       <button
+          id={id}
           onClick={ (e: ReactMouseEvent) => {
             callback();
             e.stopPropagation();
@@ -125,6 +126,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
 
         {/* Context menu body. */}
         <div
+            id="context_menu_body"
             className="layer-child background-gray"
             style={menuStyle}
             onClick={ handleContextMenuClick }
@@ -134,6 +136,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
               <td className="no-wrap" >Module ID Label</td>
               <td className="no-wrap" >
                 <input
+                    id="input_label"
                     type="text"
                     size={32}
                     value={this.state.currentLabel}
@@ -147,35 +150,35 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Label Direction</td>
               <td className="no-wrap" >
-                {this.genClickButton("Horizontal",  () => { callback.changeLabelRotDeg(Def.DEG_HORIZONTAL) })}
-                {this.genClickButton("Vertical",    () => { callback.changeLabelRotDeg(Def.DEG_VERTICAL) })}
+                {this.genClickButton("label_rot_horizontal",  "Horizontal",  () => { callback.changeLabelRotDeg(Def.DEG_HORIZONTAL) })}
+                {this.genClickButton("label_rot_vertical",    "Vertical",    () => { callback.changeLabelRotDeg(Def.DEG_VERTICAL) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Clip Area</td>
               <td className="no-wrap" >
-                {this.genClickButton("None",          () => { callback.changeClipArea(ClipArea.NONE) })}
-                {this.genClickButton("Left-Top",      () => { callback.changeClipArea(ClipArea.LEFT_TOP) })}
-                {this.genClickButton("Right-Top",     () => { callback.changeClipArea(ClipArea.RIGHT_TOP) })}
-                {this.genClickButton("Left-Bottom",   () => { callback.changeClipArea(ClipArea.LEFT_BOTTOM) })}
-                {this.genClickButton("Right-Bottom",  () => { callback.changeClipArea(ClipArea.RIGHT_BOTTOM) })}
+                {this.genClickButton("clip_area_none",          "None",          () => { callback.changeClipArea(ClipArea.NONE) })}
+                {this.genClickButton("clip_area_left_top",      "Left-Top",      () => { callback.changeClipArea(ClipArea.LEFT_TOP) })}
+                {this.genClickButton("clip_area_right_top",     "Right-Top",     () => { callback.changeClipArea(ClipArea.RIGHT_TOP) })}
+                {this.genClickButton("clip_area_left_bottom",   "Left-Bottom",   () => { callback.changeClipArea(ClipArea.LEFT_BOTTOM) })}
+                {this.genClickButton("clip_area_right_bottom",  "Right-Bottom",  () => { callback.changeClipArea(ClipArea.RIGHT_BOTTOM) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
-                {this.genClickButton("Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
-                {this.genClickButton("Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
-                {this.genClickButton("Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
-                {this.genClickButton("Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
-                {this.genClickButton("Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
+                {this.genClickButton("color_set_gray",    "Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
+                {this.genClickButton("color_set_orange",  "Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
+                {this.genClickButton("color_set_green",   "Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
+                {this.genClickButton("color_set_blue",    "Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
+                {this.genClickButton("color_set_yellow",  "Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Z-Order</td>
               <td className="no-wrap" >
-                {this.genClickButton("to Front End",  () => { callback.moveToFrontEnd() })}
-                {this.genClickButton("to Back End",   () => { callback.moveToBackEnd() })}
+                {this.genClickButton("z_order_front", "to Front End",  () => { callback.moveToFrontEnd() })}
+                {this.genClickButton("z_order_back",  "to Back End",   () => { callback.moveToBackEnd() })}
               </td>
             </tr>
           </tbody></table>

@@ -526,6 +526,7 @@ class Context {
   }
 }
 const CONTEXT = new Context();
+(window as any).getContext = () => { return CONTEXT };
 
 // OutFrame callback implementation.
 class OutFrameCallbackImpl implements OutFrameCallback {
