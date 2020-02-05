@@ -8,7 +8,7 @@ import * as fs from "fs";
 
 import { TestDef } from "../TestDef";
 
-import { Def } from "../../src/architecture-map/javascript/Def";
+import { Def, ColorSet } from "../../src/architecture-map/javascript/Def";
 
 // ARGs. ([0] == "node", [1] == mocha, [2] == file name)
 const IS_HEADLESS = process.argv.some( (arg) => {
@@ -23,6 +23,7 @@ const DEFAULT_Y = 200;
 const DEFAULT_W = 120;
 const DEFAULT_H = 120;
 const MIN_SIZE_PIX = 16;
+const DRAG_DIFF = 10;
 
 
 
@@ -150,20 +151,8 @@ describe("Test Architecture Map Web", () => {
     assert.isFalse(await html.isDisplayed());
 
     // Check label change.
-    contextMenu = await openContextMenu(archMod);
     let MOD_LABEL = "MOD";
-    let inputLabel = await contextMenu.findElement(By.id("input_label"));
-    assert.isTrue(await inputLabel.isDisplayed());
-    await inputLabel.sendKeys(
-        Key.BACK_SPACE,
-        Key.BACK_SPACE,
-        Key.BACK_SPACE,
-        Key.BACK_SPACE,
-        Key.BACK_SPACE,
-        Key.BACK_SPACE,
-        Key.BACK_SPACE,
-        MOD_LABEL);
-    await closeContextMenu();
+    await changeLabel(archMod, LABEL, MOD_LABEL);
     assert.isTrue(await isArchModSelected(MOD_LABEL));
 
     archMod = await resetArchMod(archMod, MOD_LABEL);
@@ -215,11 +204,49 @@ describe("Test Architecture Map Web", () => {
     }
     assert.isTrue(isNoPin);
 
+    // Check ColorSet change.
+    await testColorSet(archMod, "color_set_orange", ColorSet.ORANGE);
+    await testColorSet(archMod, "color_set_green",  ColorSet.GREEN);
+    await testColorSet(archMod, "color_set_blue",   ColorSet.BLUE);
+    await testColorSet(archMod, "color_set_yellow", ColorSet.YELLOW);
+    await testColorSet(archMod, "color_set_gray",   ColorSet.GRAY);
 
+    await deleteArchMod(archMod, LABEL);
 
+    // Check Z-Order.
+    let one = await addNewArchMod();
+    await changeLabel(one, LABEL, "one");
+    let two = await addNewArchMod();
+    await changeLabel(two, LABEL, "two");
 
+    await selectArchMod(two, "two");
+    await drag(two, DEFAULT_W / 2 + DRAG_DIFF, DEFAULT_H / 2 + DRAG_DIFF);
+    await two.click(); // deselect.
 
+    await click(one, DEFAULT_W / 2 + DRAG_DIFF * 2, DEFAULT_H / 2 + DRAG_DIFF * 2); // click on overlap area.
+    assert.isFalse(await isArchModSelected("one"));
+    assert.isTrue(await isArchModSelected("two"));
+    await two.click(); // deselect.
 
+    await lowerArchMod(two);
+
+    await click(one, DEFAULT_W / 2 + DRAG_DIFF * 2, DEFAULT_H / 2 + DRAG_DIFF * 2); // click on overlap area.
+    assert.isTrue(await isArchModSelected("one"));
+    assert.isFalse(await isArchModSelected("two"));
+    await one.click(); // deselect.
+
+    await raiseArchMod(two);
+
+    await click(one, DEFAULT_W / 2 + DRAG_DIFF * 2, DEFAULT_H / 2 + DRAG_DIFF * 2); // click on overlap area.
+    assert.isFalse(await isArchModSelected("one"));
+    assert.isTrue(await isArchModSelected("two"));
+    await two.click(); // deselect.
+
+    await deleteArchMod(one, "one");
+    await deleteArchMod(two, "two");
+
+    // Check download JSON.
+    archMod = await addNewArchMod();
     // Download JSON.
     let curCount: number = getDownloadedFileFullPaths().length;
     let untilDownloadDone = new Condition("Failed to download", (driver: WebDriver) => {
@@ -229,7 +256,6 @@ describe("Test Architecture Map Web", () => {
     let jsonButton = await driver.findElement(By.id("download_json"));
     await jsonButton.click();
     await driver.wait(untilDownloadDone, TestDef.LOAD_TIMEOUT_MILLIS);
-
     // Check JSON.
     let actJson = loadLatestDownloadedJson();
     let actArchJson = (actJson as any)[Def.KEY_ARCHITECTURE_MAP];
@@ -250,7 +276,7 @@ describe("Test Architecture Map Web", () => {
            "color_set": "gray"
         }
     ];
-//    assert.deepEqual(actArchJson, expArchJson);
+    assert.deepEqual(actArchJson, expArchJson);
 
   } );
 
@@ -290,7 +316,6 @@ describe("Test Architecture Map Web", () => {
     assert.equal(rect.pinY, rect.y + rect.height - MIN_SIZE_PIX / 2);
 
     let lastRect;
-    let DRAG_DIFF = 10;
 
     // Check drag Left-Top grip.
     await drag(gripPin, -1 * rect.width, -1 * rect.height); // move pin to left-top limit.
@@ -350,6 +375,22 @@ describe("Test Architecture Map Web", () => {
 
   }
 
+  async function testColorSet(archMod: WebElement, buttonId: string, expColorSet: ColorSet) {
+    let contextMenu = await openContextMenu(archMod);
+    let button = await contextMenu.findElement(By.id(buttonId));
+    await button.click();
+
+    let polygon = await archMod.findElement(By.id("polygon_ArchMod"));
+    let stroke = await polygon.getAttribute("stroke");
+    let fill = await polygon.getAttribute("fill");
+
+    let resolver = ColorSet.resolve(expColorSet);
+    assert.equal(stroke, resolver.stroke);
+    assert.equal(fill, resolver.bg);
+
+    await closeContextMenu();
+  }
+
 
 
   it("END", async () => {
@@ -380,6 +421,20 @@ describe("Test Architecture Map Web", () => {
   async function resetArchMod(archMod: WebElement, label: string): Promise<WebElement> {
     await deleteArchMod(archMod, label);
     return await addNewArchMod();
+  }
+
+  async function changeLabel(archMod: WebElement, oldLabel: string, newLabel: string) {
+    await selectArchMod(archMod, oldLabel);
+    let contextMenu = await openContextMenu(archMod);
+
+    let inputLabel = await contextMenu.findElement(By.id("input_label"));
+
+    for (let i = 0; i <= oldLabel.length; i++) {
+      await inputLabel.sendKeys(Key.BACK_SPACE);
+    }
+    await inputLabel.sendKeys(newLabel);
+
+    await closeContextMenu();
   }
 
   async function changeToGodMode() {
@@ -426,6 +481,23 @@ describe("Test Architecture Map Web", () => {
 
   async function changeClipAreaToRightBottom(archMod: WebElement) {
     await changeClipAreaTo(archMod, "clip_area_right_bottom");
+  }
+
+  async function raiseArchMod(archMod: WebElement) {
+    await changeZOrder(archMod, "z_order_front");
+  }
+
+  async function lowerArchMod(archMod: WebElement) {
+    await changeZOrder(archMod, "z_order_back");
+  }
+
+  async function changeZOrder(archMod: WebElement, buttonId: string) {
+    archMod.click();
+    let contextMenu = await openContextMenu(archMod);
+    let button = await contextMenu.findElement(By.id(buttonId));
+    await button.click();
+    await closeContextMenu();
+    archMod.click();
   }
 
   // XY -1 means to calc center.
