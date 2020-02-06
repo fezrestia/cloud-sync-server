@@ -109,11 +109,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeToItxMode();
     // Default.
     assert.isFalse(await isSelected(archMod));
-    // Select.
-    await archMod.click();
+    await selectArchMod(archMod);
     assert.isTrue(await isSelected(archMod));
-    // Deselect.
-    await svg.click();
+    await deselectArchMod(archMod);
     assert.isFalse(await isSelected(archMod));
 
     const EDITOR_ID = "editor_plane";
@@ -121,12 +119,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeToGodMode();
     // Default.
     assert.isFalse(await isSelected(archMod));
-    // Select.
-    await archMod.click();
+    await selectArchMod(archMod);
     assert.isTrue(await isSelected(archMod));
     assert.isNotEmpty(await archMod.findElements(By.id(EDITOR_ID)));
-    // Deselect.
-    await svg.click();
+    await deselectArchMod(archMod);
     assert.isFalse(await isSelected(archMod));
     assert.isEmpty(await archMod.findElements(By.id(EDITOR_ID)));
 
@@ -134,8 +130,6 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   it("Drag ArchMod", async () => {
     let archMod = await addNewArchMod();
-    await archMod.click();
-
     let rect;
 
     // Drag to over top-left edge limit.
@@ -154,7 +148,6 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   it("Open/Close Context Menu", async () => {
     let archMod = await addNewArchMod();
-    await archMod.click(); // edit.
 
     // Check open context menu.
     assert.isFalse(await html.isDisplayed());
@@ -169,12 +162,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     assert.equal(contextMenuTop,  `${DEFAULT_Y + DEFAULT_H / 2}px`);
 
     // Check context menu close.
-    await closeContextMenu();
+    await closeContextMenu(archMod);
     assert.isEmpty(await html.findElements(By.id("context_menu_body")));
     assert.isFalse(await html.isDisplayed());
-
-    await archMod.click(); // deselect.
-    assert.isFalse(await isSelected(archMod));
 
   } );
 
@@ -184,7 +174,6 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
     await changeLabel(archMod, NEW_LABEL);
 
-    assert.isTrue(await isSelected(archMod));
     assert.equal(await getLabel(archMod), NEW_LABEL);
 
   } );
@@ -196,27 +185,17 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     let rect = await getArchModSize(archMod);
     let contextMenu;
 
-    await archMod.click(); // edit.
-
     // Default.
     let rot = await labelNode.getAttribute("transform");
     assert.equal(rot, `rotate(0,${rect.x + rect.width / 2},${rect.y + rect.height / 2})`);
 
     // Change to vertical.
-    contextMenu = await openContextMenu(archMod);
-    let rotVertical = await contextMenu.findElement(By.id("label_rot_vertical"));
-    await rotVertical.click();
-    await closeContextMenu();
-
+    await changeLabelRotToVertical(archMod);
     let rotV = await labelNode.getAttribute("transform");
     assert.equal(rotV, `rotate(270,${rect.x + rect.width / 2},${rect.y + rect.height / 2})`);
 
     // Change to horizontal.
-    contextMenu = await openContextMenu(archMod);
-    let rotHorizontal = await contextMenu.findElement(By.id("label_rot_horizontal"));
-    await rotHorizontal.click();
-    await closeContextMenu();
-
+    await changeLabelRotToHorizontal(archMod);
     let rotH = await labelNode.getAttribute("transform");
     assert.equal(rotH, `rotate(0,${rect.x + rect.width / 2},${rect.y + rect.height / 2})`);
 
@@ -224,32 +203,27 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   it("Check L-Shape Interaction", async () => {
     let archMod = await addNewArchMod();
-    await archMod.click(); // edit.
 
     // Default.
     assert.isEmpty(await archMod.findElements(By.id("grip_pin")));
 
     // Change to Left-Top.
     archMod = await resetArchMod(archMod);
-    await archMod.click(); // edit.
     await changeClipAreaToLeftTop(archMod);
     await testClipArea(archMod);
 
     // Change to Right-Top.
     archMod = await resetArchMod(archMod);
-    await archMod.click(); // edit.
     await changeClipAreaToRightTop(archMod);
     await testClipArea(archMod);
 
     // Change to Left-Bottom.
     archMod = await resetArchMod(archMod);
-    await archMod.click(); // edit.
     await changeClipAreaToLeftBottom(archMod);
     await testClipArea(archMod);
 
     // Change to Right-Bottom.
     archMod = await resetArchMod(archMod);
-    await archMod.click(); // edit.
     await changeClipAreaToRightBottom(archMod);
     await testClipArea(archMod);
 
@@ -261,6 +235,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   } );
 
   async function testClipArea(archMod: WebElement) {
+    await selectArchMod(archMod);
+
     let gripPin = await archMod.findElement(By.id("grip_pin"));
     assert.isNotNull(gripPin);
     let gripLeftTop = await archMod.findElement(By.id("grip_left_top"));
@@ -357,7 +333,6 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   it("Check ColorSet Change", async () => {
     let archMod = await addNewArchMod();
-    await archMod.click(); // edit.
 
     await testColorSet(archMod, "color_set_orange", ColorSet.ORANGE);
     await testColorSet(archMod, "color_set_green",  ColorSet.GREEN);
@@ -368,9 +343,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   } );
 
   async function testColorSet(archMod: WebElement, buttonId: string, expColorSet: ColorSet) {
-    let contextMenu = await openContextMenu(archMod);
-    let button = await contextMenu.findElement(By.id(buttonId));
-    await button.click();
+    await changeColorTo(archMod, buttonId);
 
     let polygon = await archMod.findElement(By.id("polygon_ArchMod"));
     let stroke = await polygon.getAttribute("stroke");
@@ -380,7 +353,6 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     assert.equal(stroke, resolver.stroke);
     assert.equal(fill, resolver.bg);
 
-    await closeContextMenu();
   }
 
   it("Check Change Z-Order", async () => {
@@ -390,9 +362,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeLabel(two, "two");
 
     // Make overlap and non-overlap area.
-    await selectArchMod(two);
     await drag(two, DEFAULT_W / 2 + DRAG_DIFF, DEFAULT_H / 2 + DRAG_DIFF);
-    await two.click(); // deselect.
 
     let overlapX = DEFAULT_W / 2 + DRAG_DIFF * 2;
     let overlapY = DEFAULT_H / 2 + DRAG_DIFF * 2;
@@ -400,40 +370,30 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await click(one, overlapX, overlapY);
     assert.isFalse(await isSelected(one));
     assert.isTrue(await isSelected(two));
-    await two.click(); // deselect.
+    await deselectArchMod(two);
 
     await lowerArchMod(two);
 
     await click(one, overlapX, overlapY);
     assert.isTrue(await isSelected(one));
     assert.isFalse(await isSelected(two));
-    await one.click(); // deselect.
+    await deselectArchMod(one);
 
     await raiseArchMod(two);
 
     await click(one, overlapX, overlapY);
     assert.isFalse(await isSelected(one));
     assert.isTrue(await isSelected(two));
-    await two.click(); // deselect.
+    await deselectArchMod(two);
 
   } );
 
   it("Check Download JSON", async () => {
     let archMod = await addNewArchMod();
 
-    // Downloaded condition.
-    let curCount = getDownloadedFileFullPaths().length;
-    let untilDownloadDone = new Condition("Failed to download", (driver: WebDriver) => {
-      let latestCount: number = getDownloadedFileFullPaths().length;
-      return latestCount  == (curCount + 1);
-    } );
-
-    let jsonButton = await driver.findElement(By.id("download_json"));
-    await jsonButton.click();
-    await driver.wait(untilDownloadDone, TestDef.LOAD_TIMEOUT_MILLIS);
+    let actJson = await getLatestJson();
 
     // Check JSON.
-    let actJson = loadLatestDownloadedJson();
     let actArchJson = (actJson as any)[Def.KEY_ARCHITECTURE_MAP];
     let expArchJson = [
         {
@@ -456,13 +416,94 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
+  it("Check UNDO/REDO History", async () => {
+    let history = [];
+
+    let one = await addNewArchMod();
+    history.push(await getLatestJson());
+
+    await drag(one, DEFAULT_W / 2 + DRAG_DIFF, DEFAULT_H / 2 + DRAG_DIFF);
+    history.push(await getLatestJson());
+
+    await changeLabel(one, "one");
+    history.push(await getLatestJson());
+
+    await changeLabelRotToVertical(one);
+    history.push(await getLatestJson());
+
+    await changeClipAreaToLeftTop(one);
+    history.push(await getLatestJson());
+
+    await selectArchMod(one); // edit
+    let gripPin = await one.findElement(By.id("grip_pin"));
+    await drag(gripPin, -1 * DRAG_DIFF, -1 * DRAG_DIFF);
+    await deselectArchMod(one);
+    history.push(await getLatestJson());
+
+    await changeColorTo(one, "color_set_green");
+    history.push(await getLatestJson());
+
+    let two = await addNewArchMod();
+    await changeLabel(two, "two");
+    history.push(await getLatestJson());
+
+    await lowerArchMod(two);
+    history.push(await getLatestJson());
+
+    await raiseArchMod(two);
+    history.push(await getLatestJson());
+
+    // Check there is NO same history.
+    for (let i = 0; i <= history.length - 2; i++) {
+      assert.notDeepEqual(history[i], history[i + 1]);
+    }
+
+    // UNDO.
+    await undo();
+    let undo1 = await getLatestJson();
+    assert.deepEqual(undo1, history[history.length - 1 - 1]);
+    for (let i = 0; i < history.length; i++) {
+      await undo();
+    }
+    let undoLast = await getLatestJson();
+    assert.deepEqual(undoLast, history[0]);
+
+    // REDO.
+    await redo();
+    let redo1 = await getLatestJson();
+    assert.deepEqual(redo1, history[1]);
+    for (let i = 0; i < history.length; i++) {
+      await redo();
+    }
+    let redoLast = await getLatestJson();
+    assert.deepEqual(redoLast, history[history.length - 1]);
+
+  } );
+
 
 
   //// UTIL FUNCTIONS ////////////////////////////////////////////////////////////////////////////
 
+  async function changeToGodMode() {
+    let godModeButton = await driver.findElement(By.id("god_mode"));
+    godModeButton.click();
+  }
+
+  async function changeToItxMode() {
+    let itxModeButton = await driver.findElement(By.id("itx_mode"));
+    itxModeButton.click();
+  }
+
   async function selectArchMod(archMod: WebElement) {
     let selected = await isSelected(archMod);
     if (!selected) {
+      await archMod.click();
+    }
+  }
+
+  async function deselectArchMod(archMod: WebElement) {
+    let selected = await isSelected(archMod);
+    if (selected) {
       await archMod.click();
     }
   }
@@ -493,10 +534,20 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     return await addNewArchMod();
   }
 
+  async function openContextMenu(archMod: WebElement): Promise<WebElement> {
+    await selectArchMod(archMod);
+    await contextClick(archMod);
+    return await html.findElement(By.id("context_menu_body"));
+  }
+
+  async function closeContextMenu(archMod: WebElement) {
+    await click(html, 0, 0);
+    await deselectArchMod(archMod);
+  }
+
   async function changeLabel(archMod: WebElement, newLabel: string) {
     let oldLabel = await getLabel(archMod);
 
-    await selectArchMod(archMod);
     let contextMenu = await openContextMenu(archMod);
     let inputLabel = await contextMenu.findElement(By.id("input_label"));
 
@@ -505,33 +556,30 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     }
     await inputLabel.sendKeys(newLabel);
 
-    await closeContextMenu();
+    await closeContextMenu(archMod);
   }
 
-  async function changeToGodMode() {
-    let godModeButton = await driver.findElement(By.id("god_mode"));
-    godModeButton.click();
+  async function changeLabelRotToHorizontal(archMod: WebElement) {
+    await changeLabelRotTo(archMod, "label_rot_horizontal");
   }
 
-  async function changeToItxMode() {
-    let itxModeButton = await driver.findElement(By.id("itx_mode"));
-    itxModeButton.click();
+  async function changeLabelRotToVertical(archMod: WebElement) {
+    await changeLabelRotTo(archMod, "label_rot_vertical");
   }
 
-  async function openContextMenu(archMod: WebElement): Promise<WebElement> {
-    await contextClick(archMod);
-    return await html.findElement(By.id("context_menu_body"));
-  }
+  async function changeLabelRotTo(archMod: WebElement, buttonId: string) {
+    let contextMenu = await openContextMenu(archMod);
+    let button = await contextMenu.findElement(By.id(buttonId));
+    await button.click();
+    await closeContextMenu(archMod);
 
-  async function closeContextMenu() {
-    await click(html, 0, 0);
   }
 
   async function changeClipAreaTo(archMod: WebElement, id: string) {
     let contextMenu = await openContextMenu(archMod);
     let button = await contextMenu.findElement(By.id(id));
     await button.click();
-    await closeContextMenu();
+    await closeContextMenu(archMod);
   }
 
   async function changeClipAreaToNone(archMod: WebElement) {
@@ -554,6 +602,14 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeClipAreaTo(archMod, "clip_area_right_bottom");
   }
 
+  async function changeColorTo(archMod: WebElement, buttonId: string) {
+    let contextMenu = await openContextMenu(archMod);
+    let button = await contextMenu.findElement(By.id(buttonId));
+    await button.click();
+    await closeContextMenu(archMod);
+
+  }
+
   async function raiseArchMod(archMod: WebElement) {
     await changeZOrder(archMod, "z_order_front");
   }
@@ -563,13 +619,31 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   }
 
   async function changeZOrder(archMod: WebElement, buttonId: string) {
-    await archMod.click();
     let contextMenu = await openContextMenu(archMod);
     let button = await contextMenu.findElement(By.id(buttonId));
     await button.click();
-    await closeContextMenu();
-    await archMod.click();
+    await closeContextMenu(archMod);
   }
+
+  async function undo() {
+    await driver.actions()
+        .keyDown(Key.CONTROL)
+        .keyDown("z")
+        .keyUp("z")
+        .keyUp(Key.CONTROL)
+        .perform();
+  }
+
+  async function redo() {
+    await driver.actions()
+        .keyDown(Key.CONTROL)
+        .keyDown("y")
+        .keyUp("y")
+        .keyUp(Key.CONTROL)
+        .perform();
+  }
+
+
 
   // XY -1 means to calc center.
   async function calcXY(element: WebElement, x: number, y: number): Promise<{ x: number, y: number }> {
@@ -617,9 +691,16 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   }
 
   async function drag(element: WebElement, offsetX: number, offsetY: number) {
+    let id = await element.getAttribute("id");
+    let isArchMod = id.startsWith("archmod_");
+
+    if (isArchMod) await selectArchMod(element);
+
     await driver.actions()
         .dragAndDrop(element, { x: offsetX, y: offsetY })
         .perform();
+
+    if (isArchMod) await deselectArchMod(element);
   }
 
   async function isExists(archMod: WebElement): Promise<boolean> {
@@ -671,6 +752,24 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     }
 
     return await driver.executeScript(inject, label);
+  }
+
+  async function getLatestJson(): Promise<object> {
+    // Downloaded condition.
+    let curCount = getDownloadedFileFullPaths().length;
+    let untilDownloadDone = new Condition("Failed to download", (driver: WebDriver) => {
+      let latestCount: number = getDownloadedFileFullPaths().length;
+      return latestCount  == (curCount + 1);
+    } );
+
+    let jsonButton = await driver.findElement(By.id("download_json"));
+    await jsonButton.click();
+    await driver.wait(untilDownloadDone, TestDef.LOAD_TIMEOUT_MILLIS);
+
+    await driver.sleep(500); // TODO: How to detect download is done safely ?
+
+    let actJson = loadLatestDownloadedJson();
+    return actJson;
   }
 
 
