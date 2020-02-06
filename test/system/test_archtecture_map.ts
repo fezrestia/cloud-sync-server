@@ -25,36 +25,45 @@ const DEFAULT_H = 120;
 const MIN_SIZE_PIX = 16;
 const DRAG_DIFF = 10;
 
+const LABEL = "ArchMod";
 
 
-//// E2E SYSTEM TEST ////
 
-describe("Test Architecture Map Web", () => {
+//// E2E SYSTEM TEST /////////////////////////////////////////////////////////////////////////////
+
+describe("Test Architecture Map Web SPA Interaction", () => {
   let driver: ThenableWebDriver;
-  let root: WebElement;
   let svg: WebElement;
   let html: WebElement;
 
-  before( () => {
-    cleanDownloadPath();
+  before( async () => {
     driver = prepareWebDriver(IS_HEADLESS);
   } );
 
-  after( () => {
+  beforeEach( async () => {
+    cleanDownloadPath();
+
+    await driver.get(TARGET_URL);
+
+    svg = await driver.findElement(By.id("svg_root"));
+    html = await driver.findElement(By.id("html_root"));
+
+  } );
+
+  afterEach( async () => {
+    // NOP.
+  } );
+
+  after( async () => {
+    cleanDownloadPath();
     releaseWebDriver(driver);
   } );
 
   it("Get Root", async () => {
-    await driver.get(TARGET_URL);
-
     let title = await driver.getTitle();
     assert.equal(title, "Architecture Map");
 
-    let divRoot = await driver.findElement(By.id("root"));
-    assert.isNotNull(divRoot);
-    let svg = await divRoot.findElement(By.id("svg_root"));
     assert.isNotNull(svg);
-    let html = await divRoot.findElement(By.id("html_root"));
     assert.isNotNull(html);
 
     let outFrame = await svg.findElement(By.id("out_frame"));
@@ -63,8 +72,6 @@ describe("Test Architecture Map Web", () => {
   } );
 
   it("Change Global Mode", async () => {
-    await driver.get(TARGET_URL);
-
     // Elements.
     let ui = driver.findElement(By.id("god_mode_ui"));
 
@@ -85,51 +92,73 @@ describe("Test Architecture Map Web", () => {
   } );
 
   it("Add New ArchMod", async () => {
-    await driver.get(TARGET_URL);
-
-    // Elements.
-    root = await driver.findElement(By.id("root"));
-    svg = await driver.findElement(By.id("svg_root"));
-    html = await driver.findElement(By.id("html_root"));
-    let contextMenu = null;
-    let editor = null;
-    let rect = null;
-
-    let LABEL = "ArchMod";
-
-    // Check Add/Delete.
     let archMod = await addNewArchMod();
+
     assert.isNotNull(archMod);
-    assert.isTrue(await isArchModExists(LABEL));
-    await deleteArchMod(archMod, LABEL);
-    assert.isFalse(await isArchModExists(LABEL));
+    assert.isTrue(await isExists(archMod));
 
-    archMod = await addNewArchMod();
-    // Check selection.
-    assert.isFalse(await isArchModSelected(LABEL));
+    await deleteArchMod(archMod);
+
+    assert.isFalse(await isExists(archMod));
+
+  } );
+
+  it("Select ArchMod", async () => {
+    let archMod = await addNewArchMod();
+
+    await changeToItxMode();
+    // Default.
+    assert.isFalse(await isSelected(archMod));
+    // Select.
     await archMod.click();
-    assert.isTrue(await isArchModSelected(LABEL));
+    assert.isTrue(await isSelected(archMod));
+    // Deselect.
     await svg.click();
-    assert.isFalse(await isArchModSelected(LABEL));
+    assert.isFalse(await isSelected(archMod));
 
-    // Check editing.
+    const EDITOR_ID = "editor_plane";
+
+    await changeToGodMode();
+    // Default.
+    assert.isFalse(await isSelected(archMod));
+    // Select.
     await archMod.click();
-    editor = await archMod.findElement(By.id("editor_plane"));
-    assert.isNotNull(editor);
+    assert.isTrue(await isSelected(archMod));
+    assert.isNotEmpty(await archMod.findElements(By.id(EDITOR_ID)));
+    // Deselect.
+    await svg.click();
+    assert.isFalse(await isSelected(archMod));
+    assert.isEmpty(await archMod.findElements(By.id(EDITOR_ID)));
 
-    // Check drag to top-left edge limit.
-    await drag(archMod, -1 * (DEFAULT_X + 1), -1 * (DEFAULT_Y + 1));
-    rect = await getArchModSize(LABEL);
+  } );
+
+  it("Drag ArchMod", async () => {
+    let archMod = await addNewArchMod();
+    await archMod.click();
+
+    let rect;
+
+    // Drag to over top-left edge limit.
+    await drag(archMod, -1 * (DEFAULT_X + DRAG_DIFF), -1 * (DEFAULT_Y + DRAG_DIFF));
+    rect = await getArchModSize(archMod);
     assert.equal(rect.x, 0);
     assert.equal(rect.y, 0);
+
+    // Drag to inner limit.
     await drag(archMod, DEFAULT_X, DEFAULT_Y);
-    rect = await getArchModSize(LABEL);
+    rect = await getArchModSize(archMod);
     assert.equal(rect.x, DEFAULT_X);
     assert.equal(rect.y, DEFAULT_Y);
 
-    // Check context menu open.
+  } );
+
+  it("Open/Close Context Menu", async () => {
+    let archMod = await addNewArchMod();
+    await archMod.click(); // edit.
+
+    // Check open context menu.
     assert.isFalse(await html.isDisplayed());
-    contextMenu = await openContextMenu(archMod);
+    let contextMenu = await openContextMenu(archMod);
     assert.isTrue(await html.isDisplayed());
     assert.isTrue(await contextMenu.isDisplayed());
 
@@ -141,121 +170,268 @@ describe("Test Architecture Map Web", () => {
 
     // Check context menu close.
     await closeContextMenu();
-    let isContextMenuRemoved = false;
-    try {
-      await html.findElement(By.id("context_menu_body"));
-    } catch (e) {
-      isContextMenuRemoved = true;
-    }
-    assert.isTrue(isContextMenuRemoved);
+    assert.isEmpty(await html.findElements(By.id("context_menu_body")));
     assert.isFalse(await html.isDisplayed());
 
-    // Check label change.
-    let MOD_LABEL = "MOD";
-    await changeLabel(archMod, LABEL, MOD_LABEL);
-    assert.isTrue(await isArchModSelected(MOD_LABEL));
+    await archMod.click(); // deselect.
+    assert.isFalse(await isSelected(archMod));
 
-    archMod = await resetArchMod(archMod, MOD_LABEL);
-    await selectArchMod(archMod, LABEL);
+  } );
 
-    // Check label rotate.
-    rect = await getArchModSize(LABEL);
-    let labelNode = await archMod.findElement(By.id(`text_${LABEL}`));
-    let rotate = await labelNode.getAttribute("transform");
-    assert.equal(rotate, `rotate(0,${rect.x + rect.width / 2},${rect.y + rect.height / 2})`);
+  it("Change Label", async () => {
+    let archMod = await addNewArchMod();
+    let NEW_LABEL = "NEW_LABEL";
+
+    await changeLabel(archMod, NEW_LABEL);
+
+    assert.isTrue(await isSelected(archMod));
+    assert.equal(await getLabel(archMod), NEW_LABEL);
+
+  } );
+
+  it("Change Label Rotate", async () => {
+    let archMod = await addNewArchMod();
+    let label = await getLabel(archMod);
+    let labelNode = await archMod.findElement(By.id(`text_${label}`));
+    let rect = await getArchModSize(archMod);
+    let contextMenu;
+
+    await archMod.click(); // edit.
+
+    // Default.
+    let rot = await labelNode.getAttribute("transform");
+    assert.equal(rot, `rotate(0,${rect.x + rect.width / 2},${rect.y + rect.height / 2})`);
+
+    // Change to vertical.
     contextMenu = await openContextMenu(archMod);
     let rotVertical = await contextMenu.findElement(By.id("label_rot_vertical"));
     await rotVertical.click();
     await closeContextMenu();
+
     let rotV = await labelNode.getAttribute("transform");
     assert.equal(rotV, `rotate(270,${rect.x + rect.width / 2},${rect.y + rect.height / 2})`);
+
+    // Change to horizontal.
     contextMenu = await openContextMenu(archMod);
     let rotHorizontal = await contextMenu.findElement(By.id("label_rot_horizontal"));
     await rotHorizontal.click();
     await closeContextMenu();
+
     let rotH = await labelNode.getAttribute("transform");
     assert.equal(rotH, `rotate(0,${rect.x + rect.width / 2},${rect.y + rect.height / 2})`);
 
-    // Check L-shape ITX.
-    archMod = await resetArchMod(archMod, LABEL);
-    await selectArchMod(archMod, LABEL);
-    await changeClipAreaToLeftTop(archMod);
-    await testClipArea(archMod, LABEL);
-    archMod = await resetArchMod(archMod, LABEL);
-    await selectArchMod(archMod, LABEL);
-    await changeClipAreaToRightTop(archMod);
-    await testClipArea(archMod, LABEL);
-    archMod = await resetArchMod(archMod, LABEL);
-    await selectArchMod(archMod, LABEL);
-    await changeClipAreaToLeftBottom(archMod);
-    await testClipArea(archMod, LABEL);
-    archMod = await resetArchMod(archMod, LABEL);
-    await selectArchMod(archMod, LABEL);
-    await changeClipAreaToRightBottom(archMod);
-    await testClipArea(archMod, LABEL);
-    // Currently, gripPin is on right-bottom edge, so contextClick can be handled.
-    await selectArchMod(archMod, LABEL);
-    await changeClipAreaToNone(archMod);
-    let isNoPin = false
-    try {
-      await archMod.findElement(By.id("grip_pin"));
-    } catch (e) {
-      isNoPin = true;
-    }
-    assert.isTrue(isNoPin);
+  } );
 
-    // Check ColorSet change.
+  it("Check L-Shape Interaction", async () => {
+    let archMod = await addNewArchMod();
+    await archMod.click(); // edit.
+
+    // Default.
+    assert.isEmpty(await archMod.findElements(By.id("grip_pin")));
+
+    // Change to Left-Top.
+    archMod = await resetArchMod(archMod);
+    await archMod.click(); // edit.
+    await changeClipAreaToLeftTop(archMod);
+    await testClipArea(archMod);
+
+    // Change to Right-Top.
+    archMod = await resetArchMod(archMod);
+    await archMod.click(); // edit.
+    await changeClipAreaToRightTop(archMod);
+    await testClipArea(archMod);
+
+    // Change to Left-Bottom.
+    archMod = await resetArchMod(archMod);
+    await archMod.click(); // edit.
+    await changeClipAreaToLeftBottom(archMod);
+    await testClipArea(archMod);
+
+    // Change to Right-Bottom.
+    archMod = await resetArchMod(archMod);
+    await archMod.click(); // edit.
+    await changeClipAreaToRightBottom(archMod);
+    await testClipArea(archMod);
+
+    // Change to None.
+    // Currently, gripPin is on right-bottom edge, so contextClick can be handled.
+    await changeClipAreaToNone(archMod);
+    assert.isEmpty(await archMod.findElements(By.id("grip_pin")));
+
+  } );
+
+  async function testClipArea(archMod: WebElement) {
+    let gripPin = await archMod.findElement(By.id("grip_pin"));
+    assert.isNotNull(gripPin);
+    let gripLeftTop = await archMod.findElement(By.id("grip_left_top"));
+    assert.isNotNull(gripLeftTop);
+    let gripRightTop = await archMod.findElement(By.id("grip_right_top"));
+    assert.isNotNull(gripRightTop);
+    let gripLeftBottom = await archMod.findElement(By.id("grip_left_bottom"));
+    assert.isNotNull(gripLeftBottom);
+    let gripRightBottom = await archMod.findElement(By.id("grip_right_bottom"));
+    assert.isNotNull(gripRightBottom);
+
+    let rect = await getArchModSize(archMod);
+
+    // Check pin drag to Top-Left.
+    await drag(gripPin, -1 * rect.width, -1 * rect.height);
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.pinX, rect.x + MIN_SIZE_PIX / 2);
+    assert.equal(rect.pinY, rect.y + MIN_SIZE_PIX / 2);
+    // Check pin drag to Top-Right.
+    await drag(gripPin, rect.width, -1 * rect.height);
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.pinX, rect.x + rect.width - MIN_SIZE_PIX / 2);
+    assert.equal(rect.pinY, rect.y + MIN_SIZE_PIX / 2);
+    // Check pin drag to Bottom-Left.
+    await drag(gripPin, -1 * rect.width, rect.height);
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.pinX, rect.x + MIN_SIZE_PIX / 2);
+    assert.equal(rect.pinY, rect.y + rect.height - MIN_SIZE_PIX / 2);
+    // Check pin drag to Bottom-Right.
+    await drag(gripPin, rect.width, rect.height);
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.pinX, rect.x + rect.width - MIN_SIZE_PIX / 2);
+    assert.equal(rect.pinY, rect.y + rect.height - MIN_SIZE_PIX / 2);
+
+    let lastRect;
+
+    // Check drag Left-Top grip.
+    await drag(gripPin, -1 * rect.width, -1 * rect.height); // move pin to left-top limit.
+    lastRect = await getArchModSize(archMod);
+    await drag(gripLeftTop, DRAG_DIFF, DRAG_DIFF);
+    rect = await getArchModSize(archMod);
+    assert.deepEqual(rect, {
+        x: lastRect.x + DRAG_DIFF,
+        y: lastRect.y + DRAG_DIFF,
+        width: lastRect.width - DRAG_DIFF,
+        height: lastRect.height - DRAG_DIFF,
+        pinX: lastRect.pinX + DRAG_DIFF,
+        pinY: lastRect.pinY + DRAG_DIFF,
+    } );
+
+    // Check drag Right-Top grip.
+    await drag(gripPin, rect.width, -1 * rect.height); // move pin to right-top limit.
+    lastRect = await getArchModSize(archMod);
+    await drag(gripRightTop, -1 * DRAG_DIFF, DRAG_DIFF);
+    rect = await getArchModSize(archMod);
+    assert.deepEqual(rect, {
+        x: lastRect.x,
+        y: lastRect.y + DRAG_DIFF,
+        width: lastRect.width - DRAG_DIFF,
+        height: lastRect.height - DRAG_DIFF,
+        pinX: lastRect.pinX - DRAG_DIFF,
+        pinY: lastRect.pinY + DRAG_DIFF,
+    } );
+
+    // Check drag Left-Bottom grip.
+    await drag(gripPin, -1 * rect.width, rect.height); // move pin to left-bottom limit.
+    lastRect = await getArchModSize(archMod);
+    await drag(gripLeftBottom, DRAG_DIFF, -1 * DRAG_DIFF);
+    rect = await getArchModSize(archMod);
+    assert.deepEqual(rect, {
+        x: lastRect.x + DRAG_DIFF,
+        y: lastRect.y,
+        width: lastRect.width - DRAG_DIFF,
+        height: lastRect.height - DRAG_DIFF,
+        pinX: lastRect.pinX + DRAG_DIFF,
+        pinY: lastRect.pinY - DRAG_DIFF,
+    } );
+
+    // Check drag Right-Bottom grip.
+    await drag(gripPin, rect.width, rect.height); // move pin to right-bottom limit.
+    lastRect = await getArchModSize(archMod);
+    await drag(gripRightBottom, -1 * DRAG_DIFF, -1 * DRAG_DIFF);
+    rect = await getArchModSize(archMod);
+    assert.deepEqual(rect, {
+        x: lastRect.x,
+        y: lastRect.y,
+        width: lastRect.width - DRAG_DIFF,
+        height: lastRect.height - DRAG_DIFF,
+        pinX: lastRect.pinX - DRAG_DIFF,
+        pinY: lastRect.pinY - DRAG_DIFF,
+    } );
+
+  }
+
+  it("Check ColorSet Change", async () => {
+    let archMod = await addNewArchMod();
+    await archMod.click(); // edit.
+
     await testColorSet(archMod, "color_set_orange", ColorSet.ORANGE);
     await testColorSet(archMod, "color_set_green",  ColorSet.GREEN);
     await testColorSet(archMod, "color_set_blue",   ColorSet.BLUE);
     await testColorSet(archMod, "color_set_yellow", ColorSet.YELLOW);
     await testColorSet(archMod, "color_set_gray",   ColorSet.GRAY);
 
-    await deleteArchMod(archMod, LABEL);
+  } );
 
-    // Check Z-Order.
+  async function testColorSet(archMod: WebElement, buttonId: string, expColorSet: ColorSet) {
+    let contextMenu = await openContextMenu(archMod);
+    let button = await contextMenu.findElement(By.id(buttonId));
+    await button.click();
+
+    let polygon = await archMod.findElement(By.id("polygon_ArchMod"));
+    let stroke = await polygon.getAttribute("stroke");
+    let fill = await polygon.getAttribute("fill");
+
+    let resolver = ColorSet.resolve(expColorSet);
+    assert.equal(stroke, resolver.stroke);
+    assert.equal(fill, resolver.bg);
+
+    await closeContextMenu();
+  }
+
+  it("Check Change Z-Order", async () => {
     let one = await addNewArchMod();
-    await changeLabel(one, LABEL, "one");
+    await changeLabel(one, "one");
     let two = await addNewArchMod();
-    await changeLabel(two, LABEL, "two");
+    await changeLabel(two, "two");
 
-    await selectArchMod(two, "two");
+    // Make overlap and non-overlap area.
+    await selectArchMod(two);
     await drag(two, DEFAULT_W / 2 + DRAG_DIFF, DEFAULT_H / 2 + DRAG_DIFF);
     await two.click(); // deselect.
 
-    await click(one, DEFAULT_W / 2 + DRAG_DIFF * 2, DEFAULT_H / 2 + DRAG_DIFF * 2); // click on overlap area.
-    assert.isFalse(await isArchModSelected("one"));
-    assert.isTrue(await isArchModSelected("two"));
+    let overlapX = DEFAULT_W / 2 + DRAG_DIFF * 2;
+    let overlapY = DEFAULT_H / 2 + DRAG_DIFF * 2;
+
+    await click(one, overlapX, overlapY);
+    assert.isFalse(await isSelected(one));
+    assert.isTrue(await isSelected(two));
     await two.click(); // deselect.
 
     await lowerArchMod(two);
 
-    await click(one, DEFAULT_W / 2 + DRAG_DIFF * 2, DEFAULT_H / 2 + DRAG_DIFF * 2); // click on overlap area.
-    assert.isTrue(await isArchModSelected("one"));
-    assert.isFalse(await isArchModSelected("two"));
+    await click(one, overlapX, overlapY);
+    assert.isTrue(await isSelected(one));
+    assert.isFalse(await isSelected(two));
     await one.click(); // deselect.
 
     await raiseArchMod(two);
 
-    await click(one, DEFAULT_W / 2 + DRAG_DIFF * 2, DEFAULT_H / 2 + DRAG_DIFF * 2); // click on overlap area.
-    assert.isFalse(await isArchModSelected("one"));
-    assert.isTrue(await isArchModSelected("two"));
+    await click(one, overlapX, overlapY);
+    assert.isFalse(await isSelected(one));
+    assert.isTrue(await isSelected(two));
     await two.click(); // deselect.
 
-    await deleteArchMod(one, "one");
-    await deleteArchMod(two, "two");
+  } );
 
-    // Check download JSON.
-    archMod = await addNewArchMod();
-    // Download JSON.
-    let curCount: number = getDownloadedFileFullPaths().length;
+  it("Check Download JSON", async () => {
+    let archMod = await addNewArchMod();
+
+    // Downloaded condition.
+    let curCount = getDownloadedFileFullPaths().length;
     let untilDownloadDone = new Condition("Failed to download", (driver: WebDriver) => {
       let latestCount: number = getDownloadedFileFullPaths().length;
       return latestCount  == (curCount + 1);
     } );
+
     let jsonButton = await driver.findElement(By.id("download_json"));
     await jsonButton.click();
     await driver.wait(untilDownloadDone, TestDef.LOAD_TIMEOUT_MILLIS);
+
     // Check JSON.
     let actJson = loadLatestDownloadedJson();
     let actArchJson = (actJson as any)[Def.KEY_ARCHITECTURE_MAP];
@@ -280,125 +456,13 @@ describe("Test Architecture Map Web", () => {
 
   } );
 
-  async function testClipArea(archMod: WebElement, label: string) {
-    let gripPin = await archMod.findElement(By.id("grip_pin"));
-    assert.isNotNull(gripPin);
-    let gripLeftTop = await archMod.findElement(By.id("grip_left_top"));
-    assert.isNotNull(gripLeftTop);
-    let gripRightTop = await archMod.findElement(By.id("grip_right_top"));
-    assert.isNotNull(gripRightTop);
-    let gripLeftBottom = await archMod.findElement(By.id("grip_left_bottom"));
-    assert.isNotNull(gripLeftBottom);
-    let gripRightBottom = await archMod.findElement(By.id("grip_right_bottom"));
-    assert.isNotNull(gripRightBottom);
-
-    let rect = await getArchModSize(label);
-
-    // Check pin drag to Top-Left.
-    await drag(gripPin, -1 * rect.width, -1 * rect.height);
-    rect = await getArchModSize(label);
-    assert.equal(rect.pinX, rect.x + MIN_SIZE_PIX / 2);
-    assert.equal(rect.pinY, rect.y + MIN_SIZE_PIX / 2);
-    // Check pin drag to Top-Right.
-    await drag(gripPin, rect.width, -1 * rect.height);
-    rect = await getArchModSize(label);
-    assert.equal(rect.pinX, rect.x + rect.width - MIN_SIZE_PIX / 2);
-    assert.equal(rect.pinY, rect.y + MIN_SIZE_PIX / 2);
-    // Check pin drag to Bottom-Left.
-    await drag(gripPin, -1 * rect.width, rect.height);
-    rect = await getArchModSize(label);
-    assert.equal(rect.pinX, rect.x + MIN_SIZE_PIX / 2);
-    assert.equal(rect.pinY, rect.y + rect.height - MIN_SIZE_PIX / 2);
-    // Check pin drag to Bottom-Right.
-    await drag(gripPin, rect.width, rect.height);
-    rect = await getArchModSize(label);
-    assert.equal(rect.pinX, rect.x + rect.width - MIN_SIZE_PIX / 2);
-    assert.equal(rect.pinY, rect.y + rect.height - MIN_SIZE_PIX / 2);
-
-    let lastRect;
-
-    // Check drag Left-Top grip.
-    await drag(gripPin, -1 * rect.width, -1 * rect.height); // move pin to left-top limit.
-    lastRect = await getArchModSize(label);
-    await drag(gripLeftTop, DRAG_DIFF, DRAG_DIFF);
-    rect = await getArchModSize(label);
-    assert.deepEqual(rect, {
-        x: lastRect.x + DRAG_DIFF,
-        y: lastRect.y + DRAG_DIFF,
-        width: lastRect.width - DRAG_DIFF,
-        height: lastRect.height - DRAG_DIFF,
-        pinX: lastRect.pinX + DRAG_DIFF,
-        pinY: lastRect.pinY + DRAG_DIFF,
-    } );
-
-    // Check drag Right-Top grip.
-    await drag(gripPin, rect.width, -1 * rect.height); // move pin to right-top limit.
-    lastRect = await getArchModSize(label);
-    await drag(gripRightTop, -1 * DRAG_DIFF, DRAG_DIFF);
-    rect = await getArchModSize(label);
-    assert.deepEqual(rect, {
-        x: lastRect.x,
-        y: lastRect.y + DRAG_DIFF,
-        width: lastRect.width - DRAG_DIFF,
-        height: lastRect.height - DRAG_DIFF,
-        pinX: lastRect.pinX - DRAG_DIFF,
-        pinY: lastRect.pinY + DRAG_DIFF,
-    } );
-
-    // Check drag Left-Bottom grip.
-    await drag(gripPin, -1 * rect.width, rect.height); // move pin to left-bottom limit.
-    lastRect = await getArchModSize(label);
-    await drag(gripLeftBottom, DRAG_DIFF, -1 * DRAG_DIFF);
-    rect = await getArchModSize(label);
-    assert.deepEqual(rect, {
-        x: lastRect.x + DRAG_DIFF,
-        y: lastRect.y,
-        width: lastRect.width - DRAG_DIFF,
-        height: lastRect.height - DRAG_DIFF,
-        pinX: lastRect.pinX + DRAG_DIFF,
-        pinY: lastRect.pinY - DRAG_DIFF,
-    } );
-
-    // Check drag Right-Bottom grip.
-    await drag(gripPin, rect.width, rect.height); // move pin to right-bottom limit.
-    lastRect = await getArchModSize(label);
-    await drag(gripRightBottom, -1 * DRAG_DIFF, -1 * DRAG_DIFF);
-    rect = await getArchModSize(label);
-    assert.deepEqual(rect, {
-        x: lastRect.x,
-        y: lastRect.y,
-        width: lastRect.width - DRAG_DIFF,
-        height: lastRect.height - DRAG_DIFF,
-        pinX: lastRect.pinX - DRAG_DIFF,
-        pinY: lastRect.pinY - DRAG_DIFF,
-    } );
-
-  }
-
-  async function testColorSet(archMod: WebElement, buttonId: string, expColorSet: ColorSet) {
-    let contextMenu = await openContextMenu(archMod);
-    let button = await contextMenu.findElement(By.id(buttonId));
-    await button.click();
-
-    let polygon = await archMod.findElement(By.id("polygon_ArchMod"));
-    let stroke = await polygon.getAttribute("stroke");
-    let fill = await polygon.getAttribute("fill");
-
-    let resolver = ColorSet.resolve(expColorSet);
-    assert.equal(stroke, resolver.stroke);
-    assert.equal(fill, resolver.bg);
-
-    await closeContextMenu();
-  }
 
 
+  //// UTIL FUNCTIONS ////////////////////////////////////////////////////////////////////////////
 
-  it("END", async () => {
-  } );
-
-  async function selectArchMod(archMod: WebElement, label: string) {
-    let isSelected = await isArchModSelected(label);
-    if (!isSelected) {
+  async function selectArchMod(archMod: WebElement) {
+    let selected = await isSelected(archMod);
+    if (!selected) {
       await archMod.click();
     }
   }
@@ -410,23 +474,30 @@ describe("Test Architecture Map Web", () => {
     return await svg.findElement(By.id("archmod_ArchMod"));
   }
 
-  async function deleteArchMod(archMod: WebElement, label: string) {
-    await selectArchMod(archMod, label);
+  async function getLabel(archMod: WebElement): Promise<string> {
+    let id = await archMod.getAttribute("id");
+    let label = id.replace(/^archmod\_/, '');
+    return label;
+  }
+
+  async function deleteArchMod(archMod: WebElement) {
+    await selectArchMod(archMod);
     await driver.actions()
         .keyDown(Key.DELETE)
         .keyUp(Key.DELETE)
         .perform();
   }
 
-  async function resetArchMod(archMod: WebElement, label: string): Promise<WebElement> {
-    await deleteArchMod(archMod, label);
+  async function resetArchMod(archMod: WebElement): Promise<WebElement> {
+    await deleteArchMod(archMod);
     return await addNewArchMod();
   }
 
-  async function changeLabel(archMod: WebElement, oldLabel: string, newLabel: string) {
-    await selectArchMod(archMod, oldLabel);
-    let contextMenu = await openContextMenu(archMod);
+  async function changeLabel(archMod: WebElement, newLabel: string) {
+    let oldLabel = await getLabel(archMod);
 
+    await selectArchMod(archMod);
+    let contextMenu = await openContextMenu(archMod);
     let inputLabel = await contextMenu.findElement(By.id("input_label"));
 
     for (let i = 0; i <= oldLabel.length; i++) {
@@ -492,12 +563,12 @@ describe("Test Architecture Map Web", () => {
   }
 
   async function changeZOrder(archMod: WebElement, buttonId: string) {
-    archMod.click();
+    await archMod.click();
     let contextMenu = await openContextMenu(archMod);
     let button = await contextMenu.findElement(By.id(buttonId));
     await button.click();
     await closeContextMenu();
-    archMod.click();
+    await archMod.click();
   }
 
   // XY -1 means to calc center.
@@ -551,26 +622,40 @@ describe("Test Architecture Map Web", () => {
         .perform();
   }
 
-  async function isArchModExists(label: string): Promise<boolean> {
+  async function isExists(archMod: WebElement): Promise<boolean> {
+    let label;
+    try {
+      label = await getLabel(archMod);
+    } catch(e) {
+      // Not exist already.
+      return false;
+    }
+
     let inject = (label: string): boolean => {
       return (window as any).getContext().allElements.some( (element: any) => {
         return element.TAG == "ArchMod" && element.label == label;
       } );
     };
+
     return await driver.executeScript(inject, label);
   }
 
-  async function isArchModSelected(label: string): Promise<boolean> {
+  async function isSelected(archMod: WebElement): Promise<boolean> {
+    let label = await getLabel(archMod);
+
     let inject = (label: string): boolean => {
       return (window as any).getContext().selectedElements.some( (element: any) => {
         return element.TAG == "ArchMod" && element.label == label;
       } );
     };
+
     return await driver.executeScript(inject, label);
   }
 
-  async function getArchModSize(label: string)
+  async function getArchModSize(archMod: WebElement)
       : Promise<{ x: number, y: number, width: number, height: number, pinX: number, pinY: number}> {
+    let label = await getLabel(archMod);
+
     let inject = (label: string) => {
       let target: any = (window as any).getContext().allElements.find( (element: any) => {
         return element.TAG == "ArchMod" && element.label == label;
@@ -584,6 +669,7 @@ describe("Test Architecture Map Web", () => {
           pinY: target.pinY,
       };
     }
+
     return await driver.executeScript(inject, label);
   }
 
@@ -603,16 +689,12 @@ function getDownloadedFileFullPaths(): string[] {
 }
 
 function cleanDownloadPath() {
-  console.log("## cleanDownloadPath() : E");
-
   let fullPaths = getDownloadedFileFullPaths();
 
   fullPaths.forEach( (fullPath: string) => {
     fs.unlinkSync(fullPath);
-    console.log(`## DEL: ${fullPath}`);
+    console.log(`    ## Clean Download Path : DEL=${fullPath}`);
   } );
-
-  console.log("## cleanDownloadPath() : X");
 }
 
 function loadLatestDownloadedJson(): object {
