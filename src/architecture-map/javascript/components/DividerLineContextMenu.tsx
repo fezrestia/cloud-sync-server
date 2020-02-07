@@ -32,9 +32,10 @@ export class DividerLineContextMenu extends React.Component<Props, State> {
     };
   }
 
-  private genClickButton(label: string, callback: () => void ) {
+  private genClickButton(id: string, label: string, callback: () => void ) {
     return (
       <button
+          id={id}
           onClick={ (e: ReactMouseEvent) => {
             callback();
             e.stopPropagation();
@@ -78,6 +79,7 @@ export class DividerLineContextMenu extends React.Component<Props, State> {
 
         {/* Context menu body. */}
         <div
+            id="context_menu_body"
             className="layer-child background-gray"
             style={menuStyle}
             onClick={ handleContextMenuClick }
@@ -86,18 +88,18 @@ export class DividerLineContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
-                {this.genClickButton("Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
-                {this.genClickButton("Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
-                {this.genClickButton("Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
-                {this.genClickButton("Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
-                {this.genClickButton("Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
+                {this.genClickButton("color_set_gray",    "Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
+                {this.genClickButton("color_set_orange",  "Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
+                {this.genClickButton("color_set_green",   "Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
+                {this.genClickButton("color_set_blue",    "Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
+                {this.genClickButton("color_set_yellow",  "Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Z-Order</td>
               <td className="no-wrap" >
-                {this.genClickButton("to Front End",  () => { callback.moveToFrontEnd() })}
-                {this.genClickButton("to Back End",   () => { callback.moveToBackEnd() })}
+                {this.genClickButton("z_order_front", "to Front End",  () => { callback.moveToFrontEnd() })}
+                {this.genClickButton("z_order_back", "to Back End",   () => { callback.moveToBackEnd() })}
               </td>
             </tr>
           </tbody></table>

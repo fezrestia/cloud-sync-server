@@ -27,6 +27,8 @@ export abstract class Element {
   abstract set itxMode(mode: ElementItxMode);
   abstract get itxMode(): ElementItxMode;
 
+  abstract get label(): string;
+
   /**
    * CONSTRUCTOR.
    *

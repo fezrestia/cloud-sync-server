@@ -35,6 +35,10 @@ export class OutFrame extends Element {
   private readonly ROOT_ID = "out_frame";
   private readonly GRIP_ID_RIGHT_BOTTOM = "grip_right_bottom";
 
+  public get label(): string {
+    return this.ROOT_ID;
+  }
+
   /**
    * CONSTRUCTOR.
    *

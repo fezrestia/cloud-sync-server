@@ -59,8 +59,8 @@
     "test": "./node_modules/.bin/jest",
     "test:coverage": "./node_modules/.bin/jest --coverage",
     "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.tsx'",
-    "test:system": "mocha --require ts-node/register test/system/*.ts --timeout 30000",
-    "test:system-headless": "mocha --require ts-node/register test/system/*.ts --headless --timeout 30000",
+    "test:system": "mocha --require ts-node/register test/system/*.ts --timeout 60000",
+    "test:system-headless": "mocha --require ts-node/register test/system/*.ts --headless --timeout 60000",
     "start:dev": "webpack-dev-server"
   },
   "author": "",

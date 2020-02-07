@@ -90,6 +90,8 @@ export class DividerLine extends Element {
   public static readonly TAG = "DividerLine";
   public readonly TAG = DividerLine.TAG;
 
+  private static countId: number = 0;
+
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
   private readonly MIN_SIZE_PIX = 16;
   private readonly DEFAULT_WIDTH = 4;
@@ -197,6 +199,14 @@ export class DividerLine extends Element {
       this.colorSet = this.colorSet; // Load defaut
       this._currentState = new DividerLine.IdleState(this);
       this.width = this.DEFAULT_WIDTH;
+
+      this._label = String(DividerLine.countId);
+      DividerLine.countId++;
+  }
+
+  private _label: string;
+  public get label(): string {
+    return this._label;
   }
 
   private _currentState: DividerLineState;
@@ -352,10 +362,12 @@ export class DividerLine extends Element {
    */
   public render() {
     this.root = this.svg.append("g")
+        .attr("id", `dividerline_${this._label}`)
         .datum(this);
 
     // Line path.
     this.path = this.root.append("path")
+        .attr("id", "path")
         .attr("fill", "none");
 
     this.relayout();
@@ -528,7 +540,8 @@ export class DividerLine extends Element {
     if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "enableEditMode()");
     if (this.editor != null) return;
 
-    this.editor = this.root.append("g");
+    this.editor = this.root.append("g")
+        .attr("id", "editor_plane");
 
     this.addEditGrip(this.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
     this.addEditGrip(this.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);

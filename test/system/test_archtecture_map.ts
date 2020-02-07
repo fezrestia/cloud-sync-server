@@ -24,7 +24,6 @@ const DEFAULT_W = 120;
 const DEFAULT_H = 120;
 const MIN_SIZE_PIX = 16;
 const DRAG_DIFF = 10;
-
 const LABEL = "ArchMod";
 
 
@@ -35,6 +34,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   let driver: ThenableWebDriver;
   let svg: WebElement;
   let html: WebElement;
+
+  //// TEST LIFE-CYCLE ///////////////////////////////////////////////////////////////////////////
 
   before( async () => {
     driver = prepareWebDriver(IS_HEADLESS);
@@ -58,6 +59,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     cleanDownloadPath();
     releaseWebDriver(driver);
   } );
+
+  /////////////////////////////////////////////////////////////////////////// TEST LIFE-CYCLE ////
+
+  //// TEST CASE /////////////////////////////////////////////////////////////////////////////////
 
   it("Get Root", async () => {
     let title = await driver.getTitle();
@@ -97,7 +102,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     assert.isNotNull(archMod);
     assert.isTrue(await isExists(archMod));
 
-    await deleteArchMod(archMod);
+    await deleteElement(archMod);
 
     assert.isFalse(await isExists(archMod));
 
@@ -109,9 +114,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeToItxMode();
     // Default.
     assert.isFalse(await isSelected(archMod));
-    await selectArchMod(archMod);
+    await select(archMod);
     assert.isTrue(await isSelected(archMod));
-    await deselectArchMod(archMod);
+    await deselect(archMod);
     assert.isFalse(await isSelected(archMod));
 
     const EDITOR_ID = "editor_plane";
@@ -119,10 +124,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeToGodMode();
     // Default.
     assert.isFalse(await isSelected(archMod));
-    await selectArchMod(archMod);
+    await select(archMod);
     assert.isTrue(await isSelected(archMod));
     assert.isNotEmpty(await archMod.findElements(By.id(EDITOR_ID)));
-    await deselectArchMod(archMod);
+    await deselect(archMod);
     assert.isFalse(await isSelected(archMod));
     assert.isEmpty(await archMod.findElements(By.id(EDITOR_ID)));
 
@@ -235,7 +240,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   } );
 
   async function testClipArea(archMod: WebElement) {
-    await selectArchMod(archMod);
+    await select(archMod);
 
     let gripPin = await archMod.findElement(By.id("grip_pin"));
     assert.isNotNull(gripPin);
@@ -334,15 +339,15 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   it("Check ColorSet Change", async () => {
     let archMod = await addNewArchMod();
 
-    await testColorSet(archMod, "color_set_orange", ColorSet.ORANGE);
-    await testColorSet(archMod, "color_set_green",  ColorSet.GREEN);
-    await testColorSet(archMod, "color_set_blue",   ColorSet.BLUE);
-    await testColorSet(archMod, "color_set_yellow", ColorSet.YELLOW);
-    await testColorSet(archMod, "color_set_gray",   ColorSet.GRAY);
+    await testArchModColorSet(archMod, "color_set_orange", ColorSet.ORANGE);
+    await testArchModColorSet(archMod, "color_set_green",  ColorSet.GREEN);
+    await testArchModColorSet(archMod, "color_set_blue",   ColorSet.BLUE);
+    await testArchModColorSet(archMod, "color_set_yellow", ColorSet.YELLOW);
+    await testArchModColorSet(archMod, "color_set_gray",   ColorSet.GRAY);
 
   } );
 
-  async function testColorSet(archMod: WebElement, buttonId: string, expColorSet: ColorSet) {
+  async function testArchModColorSet(archMod: WebElement, buttonId: string, expColorSet: ColorSet) {
     await changeColorTo(archMod, buttonId);
 
     let polygon = await archMod.findElement(By.id("polygon_ArchMod"));
@@ -370,26 +375,195 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await click(one, overlapX, overlapY);
     assert.isFalse(await isSelected(one));
     assert.isTrue(await isSelected(two));
-    await deselectArchMod(two);
+    await deselect(two);
 
-    await lowerArchMod(two);
+    await lower(two);
 
     await click(one, overlapX, overlapY);
     assert.isTrue(await isSelected(one));
     assert.isFalse(await isSelected(two));
-    await deselectArchMod(one);
+    await deselect(one);
 
-    await raiseArchMod(two);
+    await raise(two);
 
     await click(one, overlapX, overlapY);
     assert.isFalse(await isSelected(one));
     assert.isTrue(await isSelected(two));
-    await deselectArchMod(two);
+    await deselect(two);
+
+  } );
+
+  it("Add New Divider Line", async () => {
+    const ID = "dividerline";
+
+    let line0 = await addNewDividerLine();
+    assert.isNotNull(line0);
+    let label0 = await getLabel(line0);
+    assert.equal(label0, "0");
+    await deleteElement(line0);
+    assert.isEmpty(await driver.findElements(By.id(`${ID}_0`)));
+
+    let line1 = await addNewDividerLine();
+    assert.isNotNull(line1);
+    let label1 = await getLabel(line1);
+    assert.equal(label1, "1");
+    let line2 = await addNewDividerLine();
+    assert.isNotNull(line2);
+    let label2 = await getLabel(line2);
+    assert.equal(label2, "2");
+
+    assert.isNotEmpty(await driver.findElements(By.id(`${ID}_2`)));
+    assert.isNotEmpty(await driver.findElements(By.id(`${ID}_1`)));
+    await deleteElement(line2);
+    assert.isEmpty(await driver.findElements(By.id(`${ID}_2`)));
+    assert.isNotEmpty(await driver.findElements(By.id(`${ID}_1`)));
+    await deleteElement(line1);
+    assert.isEmpty(await driver.findElements(By.id(`${ID}_2`)));
+    assert.isEmpty(await driver.findElements(By.id(`${ID}_1`)));
+
+  } );
+
+  it("Select Divider Line", async () => {
+    let line = await addNewDividerLine();
+
+    await line.click();
+    assert.isTrue(await isSelected(line));
+
+    await line.click();
+    assert.isFalse(await isSelected(line));
+
+  } );
+
+  it("Divider Line Context Menu Open/Close", async () => {
+    let line = await addNewDividerLine();
+
+    await changeToItxMode();
+
+    await line.click();
+    assert.isEmpty(await line.findElements(By.id("editor_plane")));
+    await contextClick(line);
+    assert.isEmpty(await html.findElements(By.id("context_menu_body")));
+
+    await changeToGodMode();
+
+    await line.click();
+    assert.isNotEmpty(await line.findElements(By.id("editor_plane")));
+    await contextClick(line);
+    assert.isNotEmpty(await html.findElements(By.id("context_menu_body")));
+
+  } );
+
+  it("Drag Divider Line", async () => {
+    let d;
+    let fromX;
+    let fromY;
+    let toX;
+    let toY;
+
+    let line = await addNewDividerLine();
+    let path = await line.findElement(By.id("path"));
+
+    d = await path.getAttribute("d");
+    fromX = DEFAULT_X;
+    fromY = DEFAULT_Y;
+    toX = DEFAULT_X + DEFAULT_W;
+    toY = DEFAULT_Y + DEFAULT_H;
+    assert.equal(d, `M${fromX},${fromY}L${toX},${toY}`);
+
+    await line.click();
+    await drag(line, DRAG_DIFF, DRAG_DIFF);
+
+    d = await path.getAttribute("d");
+    fromX += DRAG_DIFF;
+    fromY += DRAG_DIFF;
+    toX += DRAG_DIFF;
+    toY += DRAG_DIFF;
+    assert.equal(d, `M${fromX},${fromY}L${toX},${toY}`);
+
+  } );
+
+  it("Edit Divider Line", async () => {
+    let line = await addNewDividerLine();
+    let path = await line.findElement(By.id("path"));
+
+    await select(line); // edit
+    assert.isNotEmpty(await line.findElements(By.id("editor_plane")));
+
+    let fromGrip = await line.findElement(By.id("from_grip"));
+    let toGrip = await line.findElement(By.id("to_grip"));
+
+    await drag(fromGrip, DRAG_DIFF, DRAG_DIFF * 2);
+    await drag(toGrip, DRAG_DIFF * 2, DRAG_DIFF);
+
+    let fromX = DEFAULT_X + DRAG_DIFF;
+    let fromY = DEFAULT_Y + DRAG_DIFF * 2;
+    let toX = DEFAULT_X + DEFAULT_W + DRAG_DIFF * 2;
+    let toY = DEFAULT_Y + DEFAULT_H + DRAG_DIFF;
+
+    let d = await path.getAttribute("d");
+    assert.equal(d, `M${fromX},${fromY}L${toX},${toY}`);
+
+    await deselect(line); // cancel
+    assert.isEmpty(await line.findElements(By.id("editor_plane")));
+
+  } );
+
+  it("Change Divider Line Color Set", async () => {
+    let line = await addNewDividerLine();
+
+    await testDividerLineColorSet(line, "color_set_orange", ColorSet.ORANGE);
+    await testDividerLineColorSet(line, "color_set_green",  ColorSet.GREEN);
+    await testDividerLineColorSet(line, "color_set_blue",   ColorSet.BLUE);
+    await testDividerLineColorSet(line, "color_set_yellow", ColorSet.YELLOW);
+    await testDividerLineColorSet(line, "color_set_gray",   ColorSet.GRAY);
+
+  } );
+
+  async function testDividerLineColorSet(line: WebElement, buttonId: string, expColorSet: ColorSet) {
+    await changeColorTo(line, buttonId);
+
+    let path = await line.findElement(By.id("path"));
+    let stroke = await path.getAttribute("stroke");
+
+    let resolver = ColorSet.resolve(expColorSet);
+    assert.equal(stroke, resolver.bg);
+
+  }
+
+  it("Change Divider Line Z-Order", async () => {
+    let one = await addNewDividerLine();
+    let two = await addNewDividerLine();
+
+    // Make overlap and non-overlap area.
+    await drag(two, DEFAULT_W / 2 + DRAG_DIFF, DEFAULT_H / 2 + DRAG_DIFF);
+
+    let overlapX = DEFAULT_W / 2 + DRAG_DIFF * 2;
+    let overlapY = DEFAULT_H / 2 + DRAG_DIFF * 2;
+
+    await click(one, overlapX, overlapY);
+    assert.isFalse(await isSelected(one));
+    assert.isTrue(await isSelected(two));
+    await deselect(two);
+
+    await lower(two);
+
+    await click(one, overlapX, overlapY);
+    assert.isTrue(await isSelected(one));
+    assert.isFalse(await isSelected(two));
+    await deselect(one);
+
+    await raise(two);
+
+    await click(one, overlapX, overlapY);
+    assert.isFalse(await isSelected(one));
+    assert.isTrue(await isSelected(two));
+    await deselect(two);
 
   } );
 
   it("Check Download JSON", async () => {
     let archMod = await addNewArchMod();
+    let line = await addNewDividerLine();
 
     let actJson = await getLatestJson();
 
@@ -397,19 +571,30 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     let actArchJson = (actJson as any)[Def.KEY_ARCHITECTURE_MAP];
     let expArchJson = [
         {
-          "class": "ArchMod",
-           "label": LABEL,
-           "dimens": {
-             "x": DEFAULT_X,
-             "y": DEFAULT_Y,
-             "width": DEFAULT_W,
-             "height": DEFAULT_H,
-             "pin_x": DEFAULT_X + DEFAULT_W / 2,
-             "pin_y": DEFAULT_Y + DEFAULT_H / 2,
-             "label_rot_deg": 0
+          [Def.KEY_CLASS]: "ArchMod",
+          [Def.KEY_LABEL]: LABEL,
+          [Def.KEY_DIMENS]: {
+             [Def.KEY_X]: DEFAULT_X,
+             [Def.KEY_Y]: DEFAULT_Y,
+             [Def.KEY_WIDTH]: DEFAULT_W,
+             [Def.KEY_HEIGHT]: DEFAULT_H,
+             [Def.KEY_PIN_X]: DEFAULT_X + DEFAULT_W / 2,
+             [Def.KEY_PIN_Y]: DEFAULT_Y + DEFAULT_H / 2,
+             [Def.KEY_LABEL_ROT_DEG]: 0
            },
-           "clip_area": "none",
-           "color_set": "gray"
+           [Def.KEY_CLIP_AREA]: "none",
+           [Def.KEY_COLOR_SET]: "gray"
+        },
+        {
+          [Def.KEY_CLASS]: "DividerLine",
+          [Def.KEY_DIMENS]: {
+              [Def.KEY_FROM_X]: DEFAULT_X,
+              [Def.KEY_FROM_Y]: DEFAULT_Y,
+              [Def.KEY_TO_X]: DEFAULT_X + DEFAULT_W,
+              [Def.KEY_TO_Y]: DEFAULT_Y + DEFAULT_H,
+              [Def.KEY_WIDTH]: 4,
+          },
+          [Def.KEY_COLOR_SET]: "gray",
         }
     ];
     assert.deepEqual(actArchJson, expArchJson);
@@ -434,10 +619,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeClipAreaToLeftTop(one);
     history.push(await getLatestJson());
 
-    await selectArchMod(one); // edit
+    await select(one); // edit
     let gripPin = await one.findElement(By.id("grip_pin"));
     await drag(gripPin, -1 * DRAG_DIFF, -1 * DRAG_DIFF);
-    await deselectArchMod(one);
+    await deselect(one);
     history.push(await getLatestJson());
 
     await changeColorTo(one, "color_set_green");
@@ -447,10 +632,34 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeLabel(two, "two");
     history.push(await getLatestJson());
 
-    await lowerArchMod(two);
+    await lower(two);
     history.push(await getLatestJson());
 
-    await raiseArchMod(two);
+    await raise(two);
+    history.push(await getLatestJson());
+
+    let line = await addNewDividerLine();
+    history.push(await getLatestJson());
+
+    await drag(line, DEFAULT_W, -1 * DEFAULT_H);
+    history.push(await getLatestJson());
+
+    await select(line); //edit
+    let fromGrip = await line.findElement(By.id("from_grip"));
+    await drag(fromGrip, -1 * DRAG_DIFF, -1 * DRAG_DIFF);
+    await deselect(line);
+    history.push(await getLatestJson());
+
+    await select(line); //edit
+    let toGrip = await line.findElement(By.id("to_grip"));
+    await drag(toGrip, DRAG_DIFF, DRAG_DIFF);
+    await deselect(line);
+    history.push(await getLatestJson());
+
+    await changeColorTo(line, "color_set_blue");
+    history.push(await getLatestJson());
+
+    await lower(line);
     history.push(await getLatestJson());
 
     // Check there is NO same history.
@@ -480,9 +689,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
+  ///////////////////////////////////////////////////////////////////////////////// TEST CASE ////
 
-
-  //// UTIL FUNCTIONS ////////////////////////////////////////////////////////////////////////////
+  //// DRIVER-DEPENDENT UTIL FUNCTIONS ///////////////////////////////////////////////////////////
 
   async function changeToGodMode() {
     let godModeButton = await driver.findElement(By.id("god_mode"));
@@ -494,17 +703,31 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     itxModeButton.click();
   }
 
-  async function selectArchMod(archMod: WebElement) {
-    let selected = await isSelected(archMod);
+  async function isSelectable(element: WebElement): Promise<boolean> {
+    let id = await element.getAttribute("id");
+    if (id.startsWith("archmod_")) return true;
+    if (id.startsWith("dividerline_")) return true;
+    return false;
+  }
+
+  async function select(element: WebElement) {
+    let selected = await isSelected(element);
     if (!selected) {
-      await archMod.click();
+      let id = await element.getAttribute("id");
+      if (id.startsWith("archmod_")) {
+        // May be L-Shaped, if center is empty, element.click() does not hit. So, click pin pos.
+        let size = await getArchModSize(element);
+        await click(element, size.pinX - size.x, size.pinY - size.y);
+      } else {
+        await element.click();
+      }
     }
   }
 
-  async function deselectArchMod(archMod: WebElement) {
-    let selected = await isSelected(archMod);
+  async function deselect(element: WebElement) {
+    let selected = await isSelected(element);
     if (selected) {
-      await archMod.click();
+      await element.click();
     }
   }
 
@@ -515,34 +738,53 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     return await svg.findElement(By.id("archmod_ArchMod"));
   }
 
-  async function getLabel(archMod: WebElement): Promise<string> {
-    let id = await archMod.getAttribute("id");
-    let label = id.replace(/^archmod\_/, '');
+  async function resetArchMod(archMod: WebElement): Promise<WebElement> {
+    await deleteElement(archMod);
+    return await addNewArchMod();
+  }
+
+  async function addNewDividerLine(): Promise<WebElement> {
+    let addButton = await driver.findElement(By.id("add_dividerline"));
+    await addButton.click();
+    await click(html, DEFAULT_X, DEFAULT_Y);
+
+    let label = await getLatestAddedElementLabel();
+    return await svg.findElement(By.id(`dividerline_${label}`));
+  }
+
+  async function getLatestAddedElementLabel(): Promise<string> {
+    let inject = (): string => {
+      let allElements = (window as any).getContext().allElements;
+      return allElements[allElements.length - 1].label;
+    };
+
+    return await driver.executeScript(inject);
+  }
+
+  async function getLabel(element: WebElement): Promise<string> {
+    let label = await element.getAttribute("id");
+    label = label.replace(/^archmod\_/, '');
+    label = label.replace(/^dividerline\_/, '');
     return label;
   }
 
-  async function deleteArchMod(archMod: WebElement) {
-    await selectArchMod(archMod);
+  async function deleteElement(element: WebElement) {
+    await select(element);
     await driver.actions()
         .keyDown(Key.DELETE)
         .keyUp(Key.DELETE)
         .perform();
   }
 
-  async function resetArchMod(archMod: WebElement): Promise<WebElement> {
-    await deleteArchMod(archMod);
-    return await addNewArchMod();
-  }
-
-  async function openContextMenu(archMod: WebElement): Promise<WebElement> {
-    await selectArchMod(archMod);
-    await contextClick(archMod);
+  async function openContextMenu(element: WebElement): Promise<WebElement> {
+    await select(element);
+    await contextClick(element);
     return await html.findElement(By.id("context_menu_body"));
   }
 
-  async function closeContextMenu(archMod: WebElement) {
+  async function closeContextMenu(element: WebElement) {
     await click(html, 0, 0);
-    await deselectArchMod(archMod);
+    await deselect(element);
   }
 
   async function changeLabel(archMod: WebElement, newLabel: string) {
@@ -602,27 +844,27 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeClipAreaTo(archMod, "clip_area_right_bottom");
   }
 
-  async function changeColorTo(archMod: WebElement, buttonId: string) {
-    let contextMenu = await openContextMenu(archMod);
+  async function changeColorTo(element: WebElement, buttonId: string) {
+    let contextMenu = await openContextMenu(element);
     let button = await contextMenu.findElement(By.id(buttonId));
     await button.click();
-    await closeContextMenu(archMod);
+    await closeContextMenu(element);
 
   }
 
-  async function raiseArchMod(archMod: WebElement) {
-    await changeZOrder(archMod, "z_order_front");
+  async function raise(element: WebElement) {
+    await changeZOrder(element, "z_order_front");
   }
 
-  async function lowerArchMod(archMod: WebElement) {
-    await changeZOrder(archMod, "z_order_back");
+  async function lower(element: WebElement) {
+    await changeZOrder(element, "z_order_back");
   }
 
-  async function changeZOrder(archMod: WebElement, buttonId: string) {
-    let contextMenu = await openContextMenu(archMod);
+  async function changeZOrder(element: WebElement, buttonId: string) {
+    let contextMenu = await openContextMenu(element);
     let button = await contextMenu.findElement(By.id(buttonId));
     await button.click();
-    await closeContextMenu(archMod);
+    await closeContextMenu(element);
   }
 
   async function undo() {
@@ -691,22 +933,19 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   }
 
   async function drag(element: WebElement, offsetX: number, offsetY: number) {
-    let id = await element.getAttribute("id");
-    let isArchMod = id.startsWith("archmod_");
+    let selectable = await isSelectable(element);
 
-    if (isArchMod) await selectArchMod(element);
-
+    if (selectable) await select(element);
     await driver.actions()
         .dragAndDrop(element, { x: offsetX, y: offsetY })
         .perform();
-
-    if (isArchMod) await deselectArchMod(element);
+    if (selectable) await deselect(element);
   }
 
-  async function isExists(archMod: WebElement): Promise<boolean> {
+  async function isExists(element: WebElement): Promise<boolean> {
     let label;
     try {
-      label = await getLabel(archMod);
+      label = await getLabel(element);
     } catch(e) {
       // Not exist already.
       return false;
@@ -714,19 +953,19 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
     let inject = (label: string): boolean => {
       return (window as any).getContext().allElements.some( (element: any) => {
-        return element.TAG == "ArchMod" && element.label == label;
+        return element.label == label;
       } );
     };
 
     return await driver.executeScript(inject, label);
   }
 
-  async function isSelected(archMod: WebElement): Promise<boolean> {
-    let label = await getLabel(archMod);
+  async function isSelected(element: WebElement): Promise<boolean> {
+    let label = await getLabel(element);
 
     let inject = (label: string): boolean => {
       return (window as any).getContext().selectedElements.some( (element: any) => {
-        return element.TAG == "ArchMod" && element.label == label;
+        return element.label == label;
       } );
     };
 
@@ -766,15 +1005,21 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await jsonButton.click();
     await driver.wait(untilDownloadDone, TestDef.LOAD_TIMEOUT_MILLIS);
 
-    await driver.sleep(500); // TODO: How to detect download is done safely ?
+    // Downloaded file name has timestamp with sec order.
+    // So, if download button is clicked multiple in 1 sec,
+    // same file name will be downloaded and overwrite existing one.
+    // After then, file count is not incremented, and wait condition is stuck -> timeout.
+    await driver.sleep(1000);
 
     let actJson = loadLatestDownloadedJson();
     return actJson;
   }
 
-
+  /////////////////////////////////////////////////////////// DRIVER-DEPENDENT UTIL FUNCTIONS ////
 
 } );
+
+//// STATIC UTIL FUNCTIONS ///////////////////////////////////////////////////////////////////////
 
 function getDownloadedFileFullPaths(): string[] {
   let fullPaths: string[] = [];
@@ -804,4 +1049,6 @@ function loadLatestDownloadedJson(): object {
   let json = JSON.parse(jsonString);
   return json;
 }
+
+/////////////////////////////////////////////////////////////////////// STATIC UTIL FUNCTIONS ////
 
