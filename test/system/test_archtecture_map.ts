@@ -24,6 +24,7 @@ const DEFAULT_W = 120;
 const DEFAULT_H = 120;
 const MIN_SIZE_PIX = 16;
 const DRAG_DIFF = 10;
+const SNAP_DRAG_DIFF = Def.SNAP_STEP_PIX + 1;
 const LABEL = "ArchMod";
 
 
@@ -149,6 +150,21 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     assert.equal(rect.x, DEFAULT_X);
     assert.equal(rect.y, DEFAULT_Y);
 
+    // Drag with snap.
+    rect = await getArchModSize(archMod);
+    let expX = rect.x + SNAP_DRAG_DIFF;
+    let expY = rect.y + SNAP_DRAG_DIFF;
+    let snapX = expX - expX % Def.SNAP_STEP_PIX;
+    let snapY = expY - expY % Def.SNAP_STEP_PIX;
+    assert.notEqual(expX, snapX);
+    assert.notEqual(expY, snapY);
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(archMod, SNAP_DRAG_DIFF, SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.x, snapX);
+    assert.equal(rect.y, snapY);
+
   } );
 
   it("Open/Close Context Menu", async () => {
@@ -253,23 +269,45 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     let gripRightBottom = await archMod.findElement(By.id("grip_right_bottom"));
     assert.isNotNull(gripRightBottom);
 
-    let rect = await getArchModSize(archMod);
+    let rect;
+    let expX;
+    let expY;
+    let snapX;
+    let snapY;
+
+    // Check pin drag snap.
+    rect = await getArchModSize(archMod);
+    expX = rect.pinX + SNAP_DRAG_DIFF;
+    expY = rect.pinY + SNAP_DRAG_DIFF;
+    snapX = expX - expX % Def.SNAP_STEP_PIX;
+    snapY = expY - expY % Def.SNAP_STEP_PIX;
+    assert.notEqual(expX, snapX);
+    assert.notEqual(expY, snapY);
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(gripPin, SNAP_DRAG_DIFF, SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.pinX, snapX);
+    assert.equal(rect.pinY, snapY);
 
     // Check pin drag to Top-Left.
     await drag(gripPin, -1 * rect.width, -1 * rect.height);
     rect = await getArchModSize(archMod);
     assert.equal(rect.pinX, rect.x + MIN_SIZE_PIX / 2);
     assert.equal(rect.pinY, rect.y + MIN_SIZE_PIX / 2);
+
     // Check pin drag to Top-Right.
     await drag(gripPin, rect.width, -1 * rect.height);
     rect = await getArchModSize(archMod);
     assert.equal(rect.pinX, rect.x + rect.width - MIN_SIZE_PIX / 2);
     assert.equal(rect.pinY, rect.y + MIN_SIZE_PIX / 2);
+
     // Check pin drag to Bottom-Left.
     await drag(gripPin, -1 * rect.width, rect.height);
     rect = await getArchModSize(archMod);
     assert.equal(rect.pinX, rect.x + MIN_SIZE_PIX / 2);
     assert.equal(rect.pinY, rect.y + rect.height - MIN_SIZE_PIX / 2);
+
     // Check pin drag to Bottom-Right.
     await drag(gripPin, rect.width, rect.height);
     rect = await getArchModSize(archMod);
@@ -291,6 +329,19 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         pinX: lastRect.pinX + DRAG_DIFF,
         pinY: lastRect.pinY + DRAG_DIFF,
     } );
+    // Check snap drag.
+    expX = rect.x - SNAP_DRAG_DIFF;
+    expY = rect.y - SNAP_DRAG_DIFF;
+    snapX = expX - expX % Def.SNAP_STEP_PIX;
+    snapY = expY - expY % Def.SNAP_STEP_PIX;
+    assert.notEqual(expX, snapX);
+    assert.notEqual(expY, snapY);
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(gripLeftTop, -1 * SNAP_DRAG_DIFF, -1 * SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.x, snapX);
+    assert.equal(rect.y, snapY);
 
     // Check drag Right-Top grip.
     await drag(gripPin, rect.width, -1 * rect.height); // move pin to right-top limit.
@@ -305,6 +356,19 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         pinX: lastRect.pinX - DRAG_DIFF,
         pinY: lastRect.pinY + DRAG_DIFF,
     } );
+    // Check snap drag.
+    expX = rect.x + rect.width + SNAP_DRAG_DIFF;
+    expY = rect.y - SNAP_DRAG_DIFF;
+    snapX = expX - expX % Def.SNAP_STEP_PIX;
+    snapY = expY - expY % Def.SNAP_STEP_PIX;
+    assert.notEqual(expX, snapX);
+    assert.notEqual(expY, snapY);
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(gripRightTop, SNAP_DRAG_DIFF, -1 * SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.x + rect.width, snapX);
+    assert.equal(rect.y, snapY);
 
     // Check drag Left-Bottom grip.
     await drag(gripPin, -1 * rect.width, rect.height); // move pin to left-bottom limit.
@@ -319,6 +383,19 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         pinX: lastRect.pinX + DRAG_DIFF,
         pinY: lastRect.pinY - DRAG_DIFF,
     } );
+    // Check snap drag.
+    expX = rect.x - SNAP_DRAG_DIFF;
+    expY = rect.y + rect.height + SNAP_DRAG_DIFF;
+    snapX = expX - expX % Def.SNAP_STEP_PIX;
+    snapY = expY - expY % Def.SNAP_STEP_PIX;
+    assert.notEqual(expX, snapX);
+    assert.notEqual(expY, snapY);
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(gripLeftBottom, -1 * SNAP_DRAG_DIFF, SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.x, snapX);
+    assert.equal(rect.y + rect.height, snapY);
 
     // Check drag Right-Bottom grip.
     await drag(gripPin, rect.width, rect.height); // move pin to right-bottom limit.
@@ -333,6 +410,19 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         pinX: lastRect.pinX - DRAG_DIFF,
         pinY: lastRect.pinY - DRAG_DIFF,
     } );
+    // Check snap drag.
+    expX = rect.x + rect.width + SNAP_DRAG_DIFF;
+    expY = rect.y + rect.height + SNAP_DRAG_DIFF;
+    snapX = expX - expX % Def.SNAP_STEP_PIX;
+    snapY = expY - expY % Def.SNAP_STEP_PIX;
+    assert.notEqual(expX, snapX);
+    assert.notEqual(expY, snapY);
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(gripRightBottom, SNAP_DRAG_DIFF, SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+    rect = await getArchModSize(archMod);
+    assert.equal(rect.x + rect.width, snapX);
+    assert.equal(rect.y + rect.height, snapY);
 
   }
 
@@ -480,11 +570,28 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     toY += DRAG_DIFF;
     assert.equal(d, `M${fromX},${fromY}L${toX},${toY}`);
 
+    // Check snap drag.
+    let expFromX = fromX + SNAP_DRAG_DIFF;
+    let expFromY = fromY + SNAP_DRAG_DIFF;
+    let snapFromX = expFromX - expFromX % Def.SNAP_STEP_PIX;
+    let snapFromY = expFromY - expFromY % Def.SNAP_STEP_PIX;
+    let snapToX = toX + snapFromX - fromX;
+    let snapToY = toY + snapFromY - fromY;
+    assert.notEqual(expFromX, snapFromX);
+    assert.notEqual(expFromY, snapFromY);
+    await line.click();
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(line, SNAP_DRAG_DIFF, SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+    d = await path.getAttribute("d");
+    assert.equal(d, `M${snapFromX},${snapFromY}L${snapToX},${snapToY}`);
+
   } );
 
   it("Edit Divider Line", async () => {
     let line = await addNewDividerLine();
     let path = await line.findElement(By.id("path"));
+    let d;
 
     await select(line); // edit
     assert.isNotEmpty(await line.findElements(By.id("editor_plane")));
@@ -500,8 +607,26 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     let toX = DEFAULT_X + DEFAULT_W + DRAG_DIFF * 2;
     let toY = DEFAULT_Y + DEFAULT_H + DRAG_DIFF;
 
-    let d = await path.getAttribute("d");
+    d = await path.getAttribute("d");
     assert.equal(d, `M${fromX},${fromY}L${toX},${toY}`);
+
+    // Snap drag.
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(fromGrip, -1 * SNAP_DRAG_DIFF, -1 * SNAP_DRAG_DIFF);
+    await drag(toGrip, SNAP_DRAG_DIFF, SNAP_DRAG_DIFF);
+    await driver.actions().keyUp(Key.ALT).perform();
+
+    let expFromX = fromX - SNAP_DRAG_DIFF;
+    let expFromY = fromY - SNAP_DRAG_DIFF;
+    let snapFromX = expFromX - expFromX % Def.SNAP_STEP_PIX;
+    let snapFromY = expFromY - expFromY % Def.SNAP_STEP_PIX;
+    let expToX = toX + SNAP_DRAG_DIFF;
+    let expToY = toY + SNAP_DRAG_DIFF;
+    let snapToX = expToX - expToX % Def.SNAP_STEP_PIX;
+    let snapToY = expToY - expToY % Def.SNAP_STEP_PIX;
+
+    d = await path.getAttribute("d");
+    assert.equal(d, `M${snapFromX},${snapFromY}L${snapToX},${snapToY}`);
 
     await deselect(line); // cancel
     assert.isEmpty(await line.findElements(By.id("editor_plane")));
