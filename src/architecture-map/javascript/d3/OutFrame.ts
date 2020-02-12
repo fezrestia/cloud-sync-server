@@ -22,6 +22,13 @@ export interface OutFrameCallback {
 
 }
 
+export interface OutFrameJson {
+  [Def.KEY_X]: number,
+  [Def.KEY_Y]: number,
+  [Def.KEY_WIDTH]: number,
+  [Def.KEY_HEIGHT]: number,
+}
+
 /**
  * Background out side frame class.
  */

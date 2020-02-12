@@ -12,6 +12,7 @@ import { DividerLineCallback } from "../d3/DividerLine";
 import { DividerLineJson } from "../d3/DividerLine";
 import { OutFrame } from "../d3/OutFrame";
 import { OutFrameCallback } from "../d3/OutFrame";
+import { OutFrameJson } from "../d3/OutFrame";
 import { TraceLog } from "../util/TraceLog.ts";
 import { ColorSet } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
@@ -35,13 +36,6 @@ const GLOBAL_MODE_LABEL_ID = "global_mode_label";
 const GLOBAL_MODE_ITX = "ITX";
 const GLOBAL_MODE_GOD = "GOD";
 const GOD_MODE_UI_ID = "god_mode_ui";
-
-interface OutFrameJson {
-  [Def.KEY_X]: number,
-  [Def.KEY_Y]: number,
-  [Def.KEY_WIDTH]: number,
-  [Def.KEY_HEIGHT]: number,
-}
 
 interface ArchitectureMapJson {
   [Def.KEY_VERSION]: string,

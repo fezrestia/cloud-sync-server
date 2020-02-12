@@ -26,6 +26,9 @@ const MIN_SIZE_PIX = 16;
 const DRAG_DIFF = 10;
 const SNAP_DRAG_DIFF = Def.SNAP_STEP_PIX + 1;
 const LABEL = "ArchMod";
+const DEFAULT_OUT_FRAME_W = 640;
+const DEFAULT_OUT_FRAME_H = 640;
+const DEFAULT_OUT_FRAME_STROKE_WIDTH = 4;
 
 
 
@@ -94,6 +97,49 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     // Change to GOD.
     await changeToGodMode();
     assert.isTrue(await ui.isDisplayed());
+
+  } );
+
+  it("Edit OutFrame", async () => {
+    let outFrame = await driver.findElement(By.id("out_frame"));
+    let path = await outFrame.findElement(By.tagName("path"));
+    let gripId = "grip_right_bottom";
+
+    // Check ITX mode.
+    await changeToItxMode();
+    await selectOutFrame();
+    assert.isEmpty(await driver.findElements(By.id(gripId)));
+
+    // Check GOD mode.
+    await changeToGodMode();
+    await selectOutFrame();
+    let grip = await driver.findElement(By.id(gripId));
+    assert.isNotNull(grip);
+
+    let x = DEFAULT_OUT_FRAME_STROKE_WIDTH / 2;
+    let y = DEFAULT_OUT_FRAME_STROKE_WIDTH / 2;
+    let w = DEFAULT_OUT_FRAME_W - DEFAULT_OUT_FRAME_STROKE_WIDTH;
+    let h = DEFAULT_OUT_FRAME_H - DEFAULT_OUT_FRAME_STROKE_WIDTH;
+    let d;
+    let expD = (): string => {
+      return `M${x},${y}L${x + w},${y}L${x + w},${y + h}L${x},${y + h}L${x},${y}`;
+    };
+
+    d = await path.getAttribute("d");
+    assert.equal(d, expD());
+
+    // Check size change.
+    await drag(grip, DRAG_DIFF, DRAG_DIFF);
+
+    w += DRAG_DIFF;
+    h += DRAG_DIFF;
+
+    d = await path.getAttribute("d");
+    assert.equal(d, expD());
+
+    // Cancel edit.
+    await deselectOutFrame();
+    assert.isEmpty(await driver.findElements(By.id(gripId)));
 
   } );
 
@@ -692,9 +738,15 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
     let actJson = await getLatestJson();
 
-    // Check JSON.
-    let actArchJson = (actJson as any)[Def.KEY_ARCHITECTURE_MAP];
-    let expArchJson = [
+    let expJson = {
+      [Def.KEY_VERSION]: Def.VAL_VERSION,
+      [Def.KEY_OUT_FRAME]: {
+        [Def.KEY_X]: 0,
+        [Def.KEY_Y]: 0,
+        [Def.KEY_WIDTH]: DEFAULT_OUT_FRAME_W,
+        [Def.KEY_HEIGHT]: DEFAULT_OUT_FRAME_H,
+      },
+      [Def.KEY_ARCHITECTURE_MAP]: [
         {
           [Def.KEY_CLASS]: "ArchMod",
           [Def.KEY_LABEL]: LABEL,
@@ -705,10 +757,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
              [Def.KEY_HEIGHT]: DEFAULT_H,
              [Def.KEY_PIN_X]: DEFAULT_X + DEFAULT_W / 2,
              [Def.KEY_PIN_Y]: DEFAULT_Y + DEFAULT_H / 2,
-             [Def.KEY_LABEL_ROT_DEG]: 0
+             [Def.KEY_LABEL_ROT_DEG]: 0,
            },
            [Def.KEY_CLIP_AREA]: "none",
-           [Def.KEY_COLOR_SET]: "gray"
+           [Def.KEY_COLOR_SET]: "gray",
         },
         {
           [Def.KEY_CLASS]: "DividerLine",
@@ -720,14 +772,19 @@ describe("Test Architecture Map Web SPA Interaction", () => {
               [Def.KEY_WIDTH]: 4,
           },
           [Def.KEY_COLOR_SET]: "gray",
-        }
-    ];
-    assert.deepEqual(actArchJson, expArchJson);
+        },
+      ],
+    };
+
+    assert.deepEqual(actJson, expJson);
 
   } );
 
   it("Check UNDO/REDO History", async () => {
     let history = [];
+
+    await resizeOutFrame(DRAG_DIFF, DRAG_DIFF);
+    history.push(await getLatestJson());
 
     let one = await addNewArchMod();
     history.push(await getLatestJson());
@@ -826,6 +883,23 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   async function changeToItxMode() {
     let itxModeButton = await driver.findElement(By.id("itx_mode"));
     itxModeButton.click();
+  }
+
+  async function selectOutFrame() {
+    let outFrame = await driver.findElement(By.id("out_frame"));
+    await click(outFrame, 0, 0);
+  }
+
+  async function deselectOutFrame() {
+    await svg.click();
+  }
+
+  async function resizeOutFrame(x: number, y: number) {
+    await selectOutFrame();
+    let outFrame = await driver.findElement(By.id("out_frame"));
+    let grip = await outFrame.findElement(By.id("grip_right_bottom"));
+    await drag(grip, DRAG_DIFF, DRAG_DIFF);
+    await deselectOutFrame();
   }
 
   async function isSelectable(element: WebElement): Promise<boolean> {
