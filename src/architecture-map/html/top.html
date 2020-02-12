@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Architecture Map</title>
+    <title>Interactive Architecture Map</title>
   </head>
   <body>
-    <h3>Architecture Map : TOP</h3>
+    <h3>Interactive Architecture Map</h3>
 
     <table><tbody>
       <tr>
+        <td class="no-border" >
+          <strong>Global Mode : <span id="global_mode_label" ></span></strong>
+          <br>
+          <button id="god_mode" class=fixed-button" onClick="onGodModeClicked();" >GOD</button>
+          <button id="itx_mode" class=fixed-button" onClick="onItxModeClicked();" >ITX</button>
+        </td>
         <td class="no-border" >
           <strong>Save/Load JSON</strong>
           <br>
@@ -26,17 +32,7 @@
         </td>
       </tr>
     </tbody></table>
-    <br>
-    <table><tbody>
-      <tr>
-        <td class="no-border" >
-          <strong>Global Mode : <span id="global_mode_label" ></span></strong>
-          <br>
-          <button id="god_mode" class=fixed-button" onClick="onGodModeClicked();" >GOD</button>
-          <button id="itx_mode" class=fixed-button" onClick="onItxModeClicked();" >ITX</button>
-        </td>
-      </tr>
-    </tbody></table>
+
     <div id="god_mode_ui" style="display: none;" >
       <br>
       <table ><tbody>

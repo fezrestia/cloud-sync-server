@@ -70,7 +70,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   it("Get Root", async () => {
     let title = await driver.getTitle();
-    assert.equal(title, "Architecture Map");
+    assert.equal(title, "Interactive Architecture Map");
 
     assert.isNotNull(svg);
     assert.isNotNull(html);
