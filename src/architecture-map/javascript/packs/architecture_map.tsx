@@ -269,7 +269,8 @@ class Context {
 
           let {fromX, fromY, toX, toY} = line.getFromToXY();
 
-          if (minX < fromX && minY < fromY && minX < toX && minY < toY) {
+          if (minX < fromX && fromX < maxX && minY < fromY && fromY < maxY
+              && minX < toX && toX < maxX && minY < toY && toY < maxY) {
             if (!this.selectedElements.includes(line)) {
               line.selectMultiNoCallback();
               this.onMultiSelected(line);

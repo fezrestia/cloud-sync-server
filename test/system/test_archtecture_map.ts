@@ -1,7 +1,7 @@
 // System Test for Architecture Map Web.
 
 import { prepareWebDriver, releaseWebDriver } from "./web_driver_loader";
-import { WebDriver, ThenableWebDriver, By, WebElement, Condition, Key } from "selenium-webdriver";
+import { WebDriver, ThenableWebDriver, By, WebElement, Condition, Key, Button } from "selenium-webdriver";
 import { describe, before, after, it } from "mocha";
 import { assert } from "chai";
 import * as fs from "fs";
@@ -570,6 +570,66 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
+  it("Brush Select Divider Line", async () => {
+    let line = await addNewDividerLine();
+
+    // Brush all with no-control key.
+    await dragAndDrop(
+        svg,
+        DEFAULT_X - DRAG_DIFF, // FROM X.
+        DEFAULT_Y - DRAG_DIFF, // FROM Y.
+        DEFAULT_X + DEFAULT_W + DRAG_DIFF, // TO X.
+        DEFAULT_Y + DEFAULT_H + DRAG_DIFF); // TO Y.
+    assert.isFalse(await isSelected(line));
+
+    // Brush all.
+    await driver.actions()
+        .keyDown(Key.CONTROL)
+        .perform();
+    await dragAndDrop(
+        svg,
+        DEFAULT_X - DRAG_DIFF, // FROM X.
+        DEFAULT_Y - DRAG_DIFF, // FROM Y.
+        DEFAULT_X + DEFAULT_W + DRAG_DIFF, // TO X.
+        DEFAULT_Y + DEFAULT_H + DRAG_DIFF); // TO Y.
+    await driver.actions()
+        .keyUp(Key.CONTROL)
+        .perform();
+    assert.isTrue(await isSelected(line));
+    await deselect(line); // cancel
+
+    // Brush FROM only.
+    await driver.actions()
+        .keyDown(Key.CONTROL)
+        .perform();
+    await dragAndDrop(
+        svg,
+        DEFAULT_X - DRAG_DIFF, // FROM X.
+        DEFAULT_Y - DRAG_DIFF, // FROM Y.
+        DEFAULT_X + DRAG_DIFF, // TO X.
+        DEFAULT_Y + DRAG_DIFF); // TO Y.
+    await driver.actions()
+        .keyUp(Key.CONTROL)
+        .perform();
+    assert.isFalse(await isSelected(line));
+
+    // Brush TO only.
+    await driver.actions()
+        .keyDown(Key.CONTROL)
+        .perform();
+    await dragAndDrop(
+        svg,
+        DEFAULT_X + DEFAULT_W - DRAG_DIFF, // FROM X.
+        DEFAULT_Y + DEFAULT_H - DRAG_DIFF, // FROM Y.
+        DEFAULT_X + DEFAULT_W + DRAG_DIFF, // TO X.
+        DEFAULT_Y + DEFAULT_H + DRAG_DIFF); // TO Y.
+    await driver.actions()
+        .keyUp(Key.CONTROL)
+        .perform();
+    assert.isFalse(await isSelected(line));
+
+  } );
+
   it("Divider Line Context Menu Open/Close", async () => {
     let line = await addNewDividerLine();
 
@@ -1128,6 +1188,27 @@ describe("Test Architecture Map Web SPA Interaction", () => {
             y: xy.y,
         } )
         .contextClick()
+        .perform();
+  }
+
+  // X-Y coordinates based on TOP-LEFT.
+  async function dragAndDrop(element: WebElement, fromX: number, fromY: number, toX: number, toY: number) {
+    let fromXY = await calcXY(element, fromX, fromY);
+    let toXY = await calcXY(element, toX, toY);
+
+    await driver.actions()
+        .move( { // Move to FROM X-Y.
+            origin: element,
+            x: fromXY.x,
+            y: fromXY.y,
+        } )
+        .press(Button.LEFT)
+        .move( { // Move to TO X-Y.
+            origin: element,
+            x: toXY.x,
+            y: toXY.y,
+        } )
+        .release(Button.LEFT)
         .perform();
   }
 
