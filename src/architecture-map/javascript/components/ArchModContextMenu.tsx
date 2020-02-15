@@ -69,8 +69,10 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onBackgroundClicked()");
       e.stopPropagation();
 
-      if (this.props.label != this.state.currentLabel) {
-        this.props.callback.onLabelChanged(this.props.label, this.state.currentLabel);
+      // Correction.
+      let newLabel = this.state.currentLabel.trim();
+      if (this.props.label != newLabel) {
+        this.props.callback.onLabelChanged(this.props.label, newLabel);
       }
 
       this.props.callback.close();
@@ -87,9 +89,6 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       e.stopPropagation();
 
       let newLabel = e.target.value;
-
-      // Correction.
-      newLabel = newLabel.trim();
 
       let isOk = false;
       if (this.props.label == newLabel) {

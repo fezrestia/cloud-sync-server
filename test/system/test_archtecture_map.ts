@@ -237,11 +237,18 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   it("Change Label", async () => {
     let archMod = await addNewArchMod();
+
     let NEW_LABEL = "NEW_LABEL";
-
     await changeLabel(archMod, NEW_LABEL);
-
     assert.equal(await getLabel(archMod), NEW_LABEL);
+
+    let INPUT_SPACE = "Input  Space";
+    await changeLabel(archMod, INPUT_SPACE);
+    assert.equal(await getLabel(archMod), INPUT_SPACE);
+
+    let TAIL_SPACE = "Tail Space  ";
+    await changeLabel(archMod, TAIL_SPACE);
+    assert.equal(await getLabel(archMod), TAIL_SPACE.trim());
 
   } );
 
