@@ -986,6 +986,8 @@ export class ArchMod extends Element {
     this.text.attr("y", labelY);
     this.text.attr("transform", `rotate(${this.labelRotDeg},${labelX},${labelY})`);
 
+    this.updateTextLayout();
+
     // Grips.
     if (this.editor != null) {
       let ltGrip = this.editor.select(`#${this.GRIP_ID_LEFT_TOP}`);
@@ -1028,8 +1030,34 @@ export class ArchMod extends Element {
     this.polygon
         .attr("id", Util.getElementId("polygon", this.label));
     this.text
-        .attr("id", Util.getElementId("text", this.label))
-        .text(this.label);
+        .attr("id", Util.getElementId("text", this.label));
+
+    this.updateTextLayout();
+
+  }
+
+  private updateTextLayout() {
+    this.text.text(null);
+
+    let labelX = this.text.attr("x");
+    let labelY = this.text.attr("y");
+
+    let lines: string[] = this.label.split("\n");
+    let startDY = -1 * (lines.length - 1) / 2;
+
+    lines.forEach( (line: string, i: number) => {
+      let dy = (startDY + i) * 1.2;
+      dy = Math.round(dy * 10);
+      dy = dy / 10;
+
+      this.text.append("tspan")
+          .attr("x", labelX)
+          .attr("y", labelY)
+          .attr("dy", `${dy}em`)
+          .attr("text-anchor", "middle")
+          .text(line);
+    } );
+
   }
 
   private ContextMenuCallbackImpl = class implements ArchModContextMenuCallback {

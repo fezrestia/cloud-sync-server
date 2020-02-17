@@ -2,8 +2,8 @@ import * as React from "react";
 
 import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
-import { ReactInputChangeEvent } from "../TypeDef.ts";
-import { ReactKeyboardInputEvent } from "../TypeDef.ts";
+import { ReactTextAreaChangeEvent } from "../TypeDef.ts";
+import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
@@ -84,7 +84,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       // NOP.
     };
 
-    let handleLabelChanged = (e: ReactInputChangeEvent) => {
+    let handleLabelChanged = (e: ReactTextAreaChangeEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onLabelChanged()");
       e.stopPropagation();
 
@@ -107,7 +107,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       } );
     };
 
-    let handleKeyDownUp = (e: ReactKeyboardInputEvent) => {
+    let handleKeyDownUp = (e: ReactKeyboardTextAreaEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onKeyDown/Up()");
       e.stopPropagation();
     }
@@ -134,10 +134,10 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Module ID Label</td>
               <td className="no-wrap" >
-                <input
+                <textarea
                     id="input_label"
-                    type="text"
-                    size={32}
+                    cols={32}
+                    rows={3}
                     value={this.state.currentLabel}
                     onChange={ handleLabelChanged }
                     onKeyDown={ handleKeyDownUp }

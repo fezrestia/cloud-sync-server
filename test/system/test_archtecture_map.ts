@@ -250,6 +250,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await changeLabel(archMod, TAIL_SPACE);
     assert.equal(await getLabel(archMod), TAIL_SPACE.trim());
 
+    let INCLUDE_CRLF = "Include\n\nCRLF\n\n";
+    await changeLabel(archMod, INCLUDE_CRLF);
+    assert.equal(await getLabel(archMod), "Include\n\nCRLF");
+
   } );
 
   it("Change Label Rotate", async () => {

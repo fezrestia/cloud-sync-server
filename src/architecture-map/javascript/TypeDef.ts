@@ -4,7 +4,9 @@ import * as $ from "jquery";
 
 export type ReactMouseEvent = React.MouseEvent<HTMLElement, MouseEvent>;
 export type ReactInputChangeEvent = React.ChangeEvent<HTMLInputElement>;
+export type ReactTextAreaChangeEvent = React.ChangeEvent<HTMLTextAreaElement>;
 export type ReactKeyboardInputEvent = React.KeyboardEvent<HTMLInputElement>;
+export type ReactKeyboardTextAreaEvent = React.KeyboardEvent<HTMLTextAreaElement>;
 
 export namespace D3Node {
   export type SVG = d3.Selection<SVGSVGElement, any, HTMLElement, any>;
