@@ -23,6 +23,7 @@ interface State {
 export interface ArchModContextMenuCallback {
   close(): void;
   changeLabelRotDeg(rotDeg: number): void;
+  changeLabelAlign(align: string): void;
   changeClipArea(clipArea: ClipArea): void;
   changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
@@ -151,6 +152,16 @@ export class ArchModContextMenu extends React.Component<Props, State> {
               <td className="no-wrap" >
                 {this.genClickButton("label_rot_horizontal",  "Horizontal",  () => { callback.changeLabelRotDeg(Def.DEG_HORIZONTAL) })}
                 {this.genClickButton("label_rot_vertical",    "Vertical",    () => { callback.changeLabelRotDeg(Def.DEG_VERTICAL) })}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Label Align</td>
+              <td className="no-wrap" >
+                {this.genClickButton("label_align_top",     "Top",      () => { callback.changeLabelAlign("top") })}
+                <br/>
+                {this.genClickButton("label_align_middle",  "Middle",   () => { callback.changeLabelAlign("middle") })}
+                <br/>
+                {this.genClickButton("label_align_bottom",  "Bottom",   () => { callback.changeLabelAlign("bottom") })}
               </td>
             </tr>
             <tr>

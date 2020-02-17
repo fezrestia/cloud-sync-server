@@ -54,6 +54,7 @@ export interface ArchModJson {
       [Def.KEY_PIN_X]: number,
       [Def.KEY_PIN_Y]: number,
       [Def.KEY_LABEL_ROT_DEG]: number,
+      [Def.KEY_LABEL_ALIGN]: string,
   },
   [Def.KEY_CLIP_AREA]: string,
   [Def.KEY_COLOR_SET]: string,
@@ -100,6 +101,7 @@ export class ArchMod extends Element {
 
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
   private readonly MIN_SIZE_PIX = 16;
+  private readonly LABEL_ALIGN_MARGIN = 16;
 
   private readonly GRIP_ID_LEFT_TOP = "grip_left_top";
   private readonly GRIP_ID_RIGHT_TOP = "grip_right_top";
@@ -251,6 +253,7 @@ export class ArchMod extends Element {
             [Def.KEY_PIN_X]: this.pinX,
             [Def.KEY_PIN_Y]: this.pinY,
             [Def.KEY_LABEL_ROT_DEG]: this.labelRotDeg,
+            [Def.KEY_LABEL_ALIGN]: this.labelAlign,
         },
         [Def.KEY_CLIP_AREA]: this.clipArea,
         [Def.KEY_COLOR_SET]: this.colorSet,
@@ -275,7 +278,8 @@ export class ArchMod extends Element {
         json[Def.KEY_DIMENS][Def.KEY_HEIGHT],
         json[Def.KEY_DIMENS][Def.KEY_PIN_X],
         json[Def.KEY_DIMENS][Def.KEY_PIN_Y],
-        json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG]);
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN]);
     archMod.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
     archMod.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
     return archMod;
@@ -293,6 +297,7 @@ export class ArchMod extends Element {
   private width: number = 0;
   private height: number = 0;
   private labelRotDeg: number = 0;
+  private labelAlign: string = "middle";
   private pinX: number = 0;
   private pinY: number = 0;
 
@@ -343,7 +348,7 @@ export class ArchMod extends Element {
     if (this.pinX == 0) pinX = x + width / 2;
     if (this.pinY == 0) pinY = y + height / 2;
 
-    this.setDimens(x, y, width, height, pinX, pinY, null);
+    this.setDimens(x, y, width, height, pinX, pinY, null, null);
   }
 
   /**
@@ -363,6 +368,7 @@ export class ArchMod extends Element {
    * @param pinX
    * @param pinY
    * @param labelRotDeg
+   * @param labelAlign
    */
   public setDimens(
       x: number|null,
@@ -371,7 +377,8 @@ export class ArchMod extends Element {
       height: number|null,
       pinX: number|null,
       pinY: number|null,
-      labelRotDeg: number|null) {
+      labelRotDeg: number|null,
+      labelAlign: string|null) {
     if (x != null) this.x = x;
     if (y != null) this.y = y;
     if (width != null) this.width = width;
@@ -379,6 +386,7 @@ export class ArchMod extends Element {
     if (pinX != null) this.pinX = pinX;
     if (pinY != null) this.pinY = pinY;
     if (labelRotDeg != null) this.labelRotDeg = labelRotDeg;
+    if (labelAlign != null) this.labelAlign = labelAlign;
   }
 
   /**
@@ -922,8 +930,45 @@ export class ArchMod extends Element {
     let labelY: number = 0;
     switch (this.clipArea) {
       case ClipArea.NONE:
-        labelX = centerX;
-        labelY = centerY;
+        switch (this.labelRotDeg) {
+          case Def.DEG_HORIZONTAL:
+            switch (this.labelAlign) {
+              case "top":
+                labelX = centerX;
+                labelY = top + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelX = centerX;
+                labelY = bottom - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelX = centerX;
+                labelY = centerY;
+                break;
+            }
+            break;
+
+          case Def.DEG_VERTICAL:
+            switch (this.labelAlign) {
+              case "top":
+                labelX = left + this.LABEL_ALIGN_MARGIN;
+                labelY = centerY;
+                break;
+              case "bottom":
+                labelX = right - this.LABEL_ALIGN_MARGIN;
+                labelY = centerY;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelX = centerX;
+                labelY = centerY;
+                break;
+            }
+            break;
+        }
         break;
 
       case ClipArea.LEFT_TOP:
@@ -986,7 +1031,7 @@ export class ArchMod extends Element {
     this.text.attr("y", labelY);
     this.text.attr("transform", `rotate(${this.labelRotDeg},${labelX},${labelY})`);
 
-    this.updateTextLayout();
+    this.updateLabelLayout();
 
     // Grips.
     if (this.editor != null) {
@@ -1032,18 +1077,32 @@ export class ArchMod extends Element {
     this.text
         .attr("id", Util.getElementId("text", this.label));
 
-    this.updateTextLayout();
+    this.updateLabelLayout();
 
   }
 
-  private updateTextLayout() {
+  private updateLabelLayout() {
     this.text.text(null);
 
     let labelX = this.text.attr("x");
     let labelY = this.text.attr("y");
 
     let lines: string[] = this.label.split("\n");
-    let startDY = -1 * (lines.length - 1) / 2;
+
+    let startDY: number;
+    switch (this.labelAlign) {
+      case "top":
+        startDY = 0;
+        break;
+      case "bottom":
+        startDY = -1 * (lines.length - 1);
+        break;
+      case "middle":
+        // Fall-through.
+      default:
+        startDY = -1 * (lines.length - 1) / 2;
+        break;
+    }
 
     lines.forEach( (line: string, i: number) => {
       let dy = (startDY + i) * 1.2;
@@ -1075,6 +1134,10 @@ export class ArchMod extends Element {
 
     changeLabelRotDeg(rotDeg: number) {
       this.target.rotateLabel(rotDeg);
+    }
+
+    changeLabelAlign(align: string) {
+      this.target.alignLabel(align);
     }
 
     changeClipArea(clipArea: ClipArea) {
@@ -1137,6 +1200,12 @@ export class ArchMod extends Element {
   private rotateLabel(rotDeg: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `rotateLabel() : rotDeg=${rotDeg}`);
     this.labelRotDeg = rotDeg;
+    this.relayout();
+  }
+
+  private alignLabel(align: string) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `alignLabel() : align=${align}`);
+    this.labelAlign = align;
     this.relayout();
   }
 

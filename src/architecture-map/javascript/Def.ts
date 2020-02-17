@@ -22,6 +22,7 @@ export class Def {
   public static readonly KEY_PIN_X = "pin_x";
   public static readonly KEY_PIN_Y = "pin_y";
   public static readonly KEY_LABEL_ROT_DEG = "label_rot_deg";
+  public static readonly KEY_LABEL_ALIGN = "label_align";
   public static readonly KEY_CLIP_AREA = "clip_area";
   public static readonly KEY_COLOR_SET = "color_set";
 

@@ -822,13 +822,14 @@ describe("Test Architecture Map Web SPA Interaction", () => {
           [Def.KEY_CLASS]: "ArchMod",
           [Def.KEY_LABEL]: LABEL,
           [Def.KEY_DIMENS]: {
-             [Def.KEY_X]: DEFAULT_X,
-             [Def.KEY_Y]: DEFAULT_Y,
-             [Def.KEY_WIDTH]: DEFAULT_W,
-             [Def.KEY_HEIGHT]: DEFAULT_H,
-             [Def.KEY_PIN_X]: DEFAULT_X + DEFAULT_W / 2,
-             [Def.KEY_PIN_Y]: DEFAULT_Y + DEFAULT_H / 2,
-             [Def.KEY_LABEL_ROT_DEG]: 0,
+            [Def.KEY_X]: DEFAULT_X,
+            [Def.KEY_Y]: DEFAULT_Y,
+            [Def.KEY_WIDTH]: DEFAULT_W,
+            [Def.KEY_HEIGHT]: DEFAULT_H,
+            [Def.KEY_PIN_X]: DEFAULT_X + DEFAULT_W / 2,
+            [Def.KEY_PIN_Y]: DEFAULT_Y + DEFAULT_H / 2,
+            [Def.KEY_LABEL_ROT_DEG]: 0,
+            [Def.KEY_LABEL_ALIGN]: "middle",
            },
            [Def.KEY_CLIP_AREA]: "none",
            [Def.KEY_COLOR_SET]: "gray",
@@ -836,11 +837,11 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         {
           [Def.KEY_CLASS]: "DividerLine",
           [Def.KEY_DIMENS]: {
-              [Def.KEY_FROM_X]: DEFAULT_X,
-              [Def.KEY_FROM_Y]: DEFAULT_Y,
-              [Def.KEY_TO_X]: DEFAULT_X + DEFAULT_W,
-              [Def.KEY_TO_Y]: DEFAULT_Y + DEFAULT_H,
-              [Def.KEY_WIDTH]: 4,
+            [Def.KEY_FROM_X]: DEFAULT_X,
+            [Def.KEY_FROM_Y]: DEFAULT_Y,
+            [Def.KEY_TO_X]: DEFAULT_X + DEFAULT_W,
+            [Def.KEY_TO_Y]: DEFAULT_Y + DEFAULT_H,
+            [Def.KEY_WIDTH]: 4,
           },
           [Def.KEY_COLOR_SET]: "gray",
         },
@@ -867,6 +868,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     history.push(await getLatestJson());
 
     await changeLabelRotToVertical(one);
+    history.push(await getLatestJson());
+
+    await changeLabelAlignTo(one, "top");
     history.push(await getLatestJson());
 
     await changeClipAreaToLeftTop(one);
@@ -1083,6 +1087,31 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     let contextMenu = await openContextMenu(archMod);
     let button = await contextMenu.findElement(By.id(buttonId));
     await button.click();
+    await closeContextMenu(archMod);
+
+  }
+
+  async function changeLabelAlignTo(archMod: WebElement, align: string) {
+    let contextMenu = await openContextMenu(archMod);
+
+    let buttonId: string;
+    switch (align) {
+      case "top":
+        buttonId = "label_align_top";
+        break;
+      case "bottom":
+        buttonId = "label_align_bottom";
+        break;
+      case "middle":
+        // Fall-through.
+      default:
+        buttonId = "label_align_middle";
+        break;
+    }
+
+    let button = await contextMenu.findElement(By.id(buttonId));
+    await button.click();
+
     await closeContextMenu(archMod);
 
   }
