@@ -116,13 +116,17 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     let grip = await driver.findElement(By.id(gripId));
     assert.isNotNull(grip);
 
-    let x = DEFAULT_OUT_FRAME_STROKE_WIDTH / 2;
-    let y = DEFAULT_OUT_FRAME_STROKE_WIDTH / 2;
-    let w = DEFAULT_OUT_FRAME_W - DEFAULT_OUT_FRAME_STROKE_WIDTH;
-    let h = DEFAULT_OUT_FRAME_H - DEFAULT_OUT_FRAME_STROKE_WIDTH;
+    let x = 0;
+    let y = 0;
+    let w = DEFAULT_OUT_FRAME_W;
+    let h = DEFAULT_OUT_FRAME_H;
     let d;
     let expD = (): string => {
-      return `M${x},${y}L${x + w},${y}L${x + w},${y + h}L${x},${y + h}L${x},${y}`;
+      let pX = DEFAULT_OUT_FRAME_STROKE_WIDTH / 2;
+      let pY = DEFAULT_OUT_FRAME_STROKE_WIDTH / 2;
+      let pW = w - DEFAULT_OUT_FRAME_STROKE_WIDTH;
+      let pH = h - DEFAULT_OUT_FRAME_STROKE_WIDTH;
+      return `M${pX},${pY}L${pX + pW},${pY}L${pX + pW},${pY + pH}L${pX},${pY + pH}L${pX},${pY}`;
     };
 
     d = await path.getAttribute("d");
@@ -130,12 +134,21 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
     // Check size change.
     await drag(grip, DRAG_DIFF, DRAG_DIFF);
-
     w += DRAG_DIFF;
     h += DRAG_DIFF;
-
     d = await path.getAttribute("d");
     assert.equal(d, expD());
+
+    // Check snap drag size change.
+    await driver.actions().keyDown(Key.ALT).perform();
+    await drag(grip, SNAP_DRAG_DIFF, SNAP_DRAG_DIFF);
+    w += SNAP_DRAG_DIFF;
+    w = Math.floor(w / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
+    h += SNAP_DRAG_DIFF;
+    h = Math.floor(h / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
+    d = await path.getAttribute("d");
+    assert.equal(d, expD());
+    await driver.actions().keyUp(Key.ALT).perform();
 
     // Cancel edit.
     await deselectOutFrame();

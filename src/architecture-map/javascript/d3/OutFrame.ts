@@ -123,13 +123,6 @@ export class OutFrame extends Element {
           this._isEditing = editing;
         }
       }
-  private _isSnapDragEnabled: boolean = false;
-      public get isSnapDragEnabled(): boolean {
-        return this._isSnapDragEnabled;
-      }
-      public set isSnapDragEnabled(isEnabled: boolean) {
-        this._isSnapDragEnabled = isEnabled;
-      }
   private isHighlight: boolean = false;
 
   // Color resolver functions.
@@ -303,6 +296,8 @@ export class OutFrame extends Element {
           .on("drag", () => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
+              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+
               let origWidth = d3.event.target.origWidth;
               let origHeight = d3.event.target.origHeight;
 
@@ -319,7 +314,7 @@ export class OutFrame extends Element {
                   this.height = origHeight + dy;
 
                   // Snapping.
-                  if (this.isSnapDragEnabled) {
+                  if (isSnapDragEnabled) {
                     this.width = Math.floor(this.width / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
                     this.height = Math.floor(this.height / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
                   }
