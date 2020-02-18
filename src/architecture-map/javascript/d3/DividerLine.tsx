@@ -580,6 +580,7 @@ export class DividerLine extends Element {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
               let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+              let isRadialSnapEnabled = d3.event.sourceEvent.shiftKey;
 
               let origFromPoint = d3.event.target.origFromPoint;
               let origToPoint = d3.event.target.origToPoint;
@@ -587,15 +588,44 @@ export class DividerLine extends Element {
               let dx = d3.event.x - d3.event.target.startX;
               let dy = d3.event.y - d3.event.target.startY;
 
+              // cX/cY = Center Point
+              // pX/pY = Snap Point
+              let calcRadialSnapXY = (cX: number, cY: number, pX: number, pY: number)
+                  : { x: number, y: number } => {
+                let x = pX - cX;
+                let y = pY - cY;
+                let r = Math.sqrt(x * x + y * y);
+                let rawRad = Math.atan2(y, x); // [-PI, +PI]
+                let radStep = Math.round(rawRad / Def.RADIAL_SNAP_STEP_RAD);
+                let snapRad = radStep * Def.RADIAL_SNAP_STEP_RAD;
+
+                let newX = Math.round(r * Math.cos(snapRad));
+                let newY = Math.round(r * Math.sin(snapRad));
+
+                return {
+                  x: cX + newX,
+                  y: cY + newY,
+                };
+              };
+
               switch (id) {
                 case this.GRIP_ID_FROM: {
                   this.fromPoint = new Point(origFromPoint.x + dx, origFromPoint.y + dy);
 
                   // Snapping.
                   if (isSnapDragEnabled) {
-                    let snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
-                    let snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
-                    this.fromPoint = new Point(this.fromPoint.x - snapX, this.fromPoint.y - snapY);
+                    if (isRadialSnapEnabled) {
+                      let snappedXY = calcRadialSnapXY(
+                          this.toPoint.x,
+                          this.toPoint.y,
+                          this.fromPoint.x,
+                          this.fromPoint.y);
+                      this.fromPoint = new Point(snappedXY.x, snappedXY.y);
+                    } else {
+                      let snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
+                      let snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
+                      this.fromPoint = new Point(this.fromPoint.x - snapX, this.fromPoint.y - snapY);
+                    }
                   }
                 }
                 break;
@@ -605,9 +635,18 @@ export class DividerLine extends Element {
 
                   // Snapping.
                   if (isSnapDragEnabled) {
-                    let snapX = this.toPoint.x % Def.SNAP_STEP_PIX;
-                    let snapY = this.toPoint.y % Def.SNAP_STEP_PIX;
-                    this.toPoint = new Point(this.toPoint.x - snapX, this.toPoint.y - snapY);
+                    if (isRadialSnapEnabled) {
+                      let snappedXY = calcRadialSnapXY(
+                          this.fromPoint.x,
+                          this.fromPoint.y,
+                          this.toPoint.x,
+                          this.toPoint.y);
+                      this.toPoint = new Point(snappedXY.x, snappedXY.y);
+                    } else {
+                      let snapX = this.toPoint.x % Def.SNAP_STEP_PIX;
+                      let snapY = this.toPoint.y % Def.SNAP_STEP_PIX;
+                      this.toPoint = new Point(this.toPoint.x - snapX, this.toPoint.y - snapY);
+                    }
                   }
                 }
                 break;

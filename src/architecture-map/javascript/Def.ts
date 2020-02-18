@@ -5,6 +5,7 @@ export class Def {
   public static readonly DEG_VERTICAL = 270;
 
   public static readonly SNAP_STEP_PIX = 8;
+  public static readonly RADIAL_SNAP_STEP_RAD = Math.PI * 2 / 24; // 15 deg
 
   public static readonly KEY_VERSION = "version";
   public static readonly VAL_VERSION = "2";
