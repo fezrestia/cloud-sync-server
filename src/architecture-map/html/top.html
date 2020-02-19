@@ -2,9 +2,10 @@
 <html>
   <head>
     <title>Interactive Architecture Map</title>
+    <!-- PLACE_HOLDER_HEAD -->
   </head>
   <body>
-    <h3>Interactive Architecture Map</h3>
+    <h3>Interactive Architecture Map <!-- PLACE_HOLDER_TITLE --></h3>
 
     <table><tbody>
       <tr>
@@ -23,6 +24,7 @@
             <label id="upload_json_label_hidden" class="layer-child" for="upload_json_input" ></label>
             <input id="upload_json_input" type="file" accept=".json" onChange="onLoadJsonClicked(event)" />
           </form>
+          <!-- PLACE_HOLDER_POST_JSON -->
         </td>
         <td class="no-border" >
           <strong>Save as Image</strong>
@@ -54,6 +56,7 @@
       <div id="html_root" class="layer-child" ></div>
     </div>
 
+    <!-- PLACE_HOLDER_LOAD_SCRIPT -->
     <script>
       onload = function() {
         onArchitectureMapTopLoaded();

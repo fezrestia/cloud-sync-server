@@ -975,6 +975,38 @@ function getExportFileNameBase(): string {
   target.value = ""; // Clear to trigger next input callback with same path.
 };
 
+(window as any).postJsonTo = (url: string) => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "postJsonTo()");
+  console.log(`## URL=${url}`);
+
+  let button = event!.target as HTMLButtonElement;
+
+  // Dim UI.
+  button.disabled = true;
+
+  let serialized: ArchitectureMapJson = CONTEXT.serializeToJson();
+  let jsonStr = JSON.stringify(serialized, null, 2);
+
+  let xhr = new XMLHttpRequest();
+  xhr.onload = (e: Event) => {
+    if (xhr.readyState === 4) { // DONE
+      if (xhr.status === 200) { // HTTP:OK
+        alert("OK");
+      } else { // HTTP:NG
+        alert(`${xhr.status} [${xhr.statusText}] ${xhr.responseText}`);
+      }
+
+      // Recover UI.
+      button.disabled = false;
+    }
+  };
+
+  xhr.open("POST", url);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(jsonStr);
+
+};
+
 (window as any).onSaveSvgClicked = (event: Event) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSaveSvgClicked()");
 
