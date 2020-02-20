@@ -656,7 +656,9 @@ class DividerLineCallbackImpl implements DividerLineCallback {
 }
 
 // Entry point from HTML.
-(window as any).onArchitectureMapTopLoaded = () => {
+(window as any).onArchitectureMapLoaded = (
+    defaultGlobalMode: string = GLOBAL_MODE_GOD,
+    defaultLoadJson: string|null = null) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onArchitectureMapTopLoaded()");
 
   let root: JQueryNode = $(`#${ROOT_ID}`);
@@ -680,7 +682,14 @@ class DividerLineCallbackImpl implements DividerLineCallback {
   registerGlobalCallbacks();
 
   // Default global mode.
-  changeGlobalModeTo(GLOBAL_MODE_GOD);
+  changeGlobalModeTo(defaultGlobalMode);
+
+  // Load JSON.
+  if (defaultLoadJson != null) {
+    let serialized: ArchitectureMapJson = JSON.parse(defaultLoadJson);
+    CONTEXT.deserializeFromJson(serialized);
+    CONTEXT.resetAllState();
+  }
 }
 
 function prepareBrushLayer() {

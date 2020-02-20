@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Interactive Architecture Map</title>
+    <!-- PLACE_HOLDER_HEAD -->
+  </head>
+  <body>
+    <h3>Interactive Architecture Map <!-- PLACE_HOLDER_TITLE --></h3>
+
+    <!-- for compatibility -->
+    <span id="global_mode_label" style="display: none;" ></span>
+
+    <strong>Save as Image</strong>
+    <button class="fixed-button" onClick="onSaveSvgClicked();" >SVG</button>
+    <button class="fixed-button" onClick="onSavePngClicked();" >PNG</button>
+
+    <!-- for compatibility -->
+    <div id="god_mode_ui" style="display: none;" ></div>
+
+    <hr>
+
+    <div id="root" class="layer-parent" >
+      <svg id="svg_root" class="layer-child" ></svg>
+      <div id="html_root" class="layer-child" ></div>
+    </div>
+
+    <!-- PLACE_HOLDER_LOAD_SCRIPT -->
+    <script>
+      let DEFAULT_LOAD_JSON = null;
+
+      /** PLACE_HOLDER_BEFORE_SCRIPT **/
+
+      onload = function() {
+        onArchitectureMapLoaded(
+            "ITX",
+            DEFAULT_LOAD_JSON);
+      };
+    </script>
+  </body>
+</html>

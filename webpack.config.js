@@ -92,8 +92,13 @@ module.exports = (env, argv) => {
         chunks: ["entry"],
       } ),
       new HtmlWebpackPlugin( {
-        template: "src/architecture-map/html/top.html",
-        filename: "architecture_map.html",
+        template: "src/architecture-map/html/view.html",
+        filename: "architecture_map_view.html",
+        chunks: ["architecture_map"],
+      } ),
+      new HtmlWebpackPlugin( {
+        template: "src/architecture-map/html/edit.html",
+        filename: "architecture_map_edit.html",
         chunks: ["architecture_map"],
       } ),
       new CopyWebpackPlugin( [
