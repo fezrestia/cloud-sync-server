@@ -58,8 +58,14 @@
 
     <!-- PLACE_HOLDER_LOAD_SCRIPT -->
     <script>
+      let DEFAULT_LOAD_JSON = null;
+
+      /** PLACE_HOLDER_BEFORE_SCRIPT **/
+
       onload = function() {
-        onArchitectureMapLoaded();
+        onArchitectureMapLoaded(
+            'GOD',
+            DEFAULT_LOAD_JSON);
       };
     </script>
   </body>
