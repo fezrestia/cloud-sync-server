@@ -52,14 +52,17 @@ export class OutFrame extends Element {
    * @param html HTML root object.
    * @param svg SVG root object.
    */
-  constructor(protected html: JQueryNode, protected svg: D3Node.SVG) {
-    super(html, svg);
+  constructor(html: JQueryNode, svg: D3Node.SVG) {
+    super(0, html, svg); // Dummy UID.
     this.colorResolver = ColorSet.resolve(this.colorSet);
   }
 
   public serialize(): ElementJson {
     // NOP.
-    return { [Def.KEY_CLASS]: this.TAG };
+    return {
+      [Def.KEY_UID]: this.uid,
+      [Def.KEY_CLASS]: this.TAG,
+    };
   }
 
   // @Override

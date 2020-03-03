@@ -48,6 +48,16 @@ interface ArchitectureMapJson {
 
 // Current interaction context.
 class Context {
+
+  public elementUids: number[] = [0]; // 0 is OutFrame UID.
+
+  public genNewElementUid(): number {
+    let max: number = Math.max.apply(null, this.elementUids);
+    let newUid = max + 1;
+    this.elementUids.push(newUid);
+    return newUid;
+  }
+
   // Root nodes.
   public root!: JQueryNode;
   public svg!: D3Node.SVG;
@@ -173,14 +183,37 @@ class Context {
     } );
   }
 
+  private validateAndCacheElementUid(element: Element) {
+    let uid = element.uid;
+
+    if (!uid) {
+      // NG. UID is not set. May be ArchitectureMapJson version is old.
+      uid = this.genNewElementUid();
+      (element as any).uid = uid;
+      return;
+    }
+
+    if (this.elementUids.includes(uid)) {
+      // NG. UID is not unique.
+      console.log(`#### ERROR: Element UID = ${uid} is not Unique.`);
+      alert(`Element UID is NOT Unique.\nLabel = ${element.label}\nUID = ${uid}`);
+      return;
+    }
+
+    // OK.
+    this.elementUids.push(uid);
+  }
+
   private deserializeArchMod(json: ArchModJson): ArchMod {
     let archMod = ArchMod.deserialize(this.html, this.svg, json);
+    this.validateAndCacheElementUid(archMod);
     this.renderArchMod(archMod);
     return archMod;
   }
 
   public addNewArchMod(label: string, x: number, y: number, width: number, height: number) {
-    let archMod = new ArchMod(this.html, this.svg, label);
+    let uid = this.genNewElementUid();
+    let archMod = new ArchMod(uid, this.html, this.svg, label);
     archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
     this.renderArchMod(archMod);
   }
@@ -203,12 +236,14 @@ class Context {
 
   private deserializeDividerLine(json: DividerLineJson): DividerLine {
     let line = DividerLine.deserialize(this.html, this.svg, json);
+    this.validateAndCacheElementUid(line);
     this.renderDividerLine(line);
     return line;
   }
 
   public addNewDividerLine(fromX: number, fromY: number) {
-    let line = new DividerLine(this.html, this.svg);
+    let uid = this.genNewElementUid();
+    let line = new DividerLine(uid, this.html, this.svg);
     line.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
     this.renderDividerLine(line);
   }
@@ -231,12 +266,14 @@ class Context {
 
   private deserializeConnector(json: ConnectorJson): Connector {
     let connector = Connector.deserialize(this.html, this.svg, json);
+    this.validateAndCacheElementUid(connector);
     this.renderConnector(connector);
     return connector;
   }
 
   public addNewConnector(fromX: number, fromY: number) {
-    let connector = new Connector(this.html, this.svg);
+    let uid = this.genNewElementUid();
+    let connector = new Connector(uid, this.html, this.svg);
     connector.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
     this.renderConnector(connector);
   }
@@ -259,10 +296,12 @@ class Context {
 
   public addElementToTop(element: Element) {
     this.allElements.push(element);
+    this.elementUids.push(element.uid);
   }
 
   public addElementToBottom(element: Element) {
     this.allElements.unshift(element);
+    this.elementUids.unshift(element.uid);
   }
 
   public removeElement(element: Element) {
@@ -272,6 +311,13 @@ class Context {
       return;
     }
     this.allElements.splice(index, 1);
+
+    let uidIndex = this.elementUids.indexOf(element.uid);
+    if (index < 0) {
+      TraceLog.e(TAG, `## Element UID of ${element.serialize()} is NOT existing.`);
+      return;
+    }
+    this.elementUids.splice(uidIndex, 1);
   }
 
   // @param selection area 4-edge.
@@ -406,6 +452,7 @@ class Context {
     } );
     this.allElements.length = 0;
     this.selectedElements.length = 0;
+    this.elementUids = [0];
   }
 
   public copyToClipBoard() {
@@ -424,6 +471,8 @@ class Context {
     this.resetAllState();
 
     this.clipboard.forEach( (serialized: ElementJson) => {
+      serialized[Def.KEY_UID] = this.genNewElementUid();
+
       let element: Element;
       let json;
 

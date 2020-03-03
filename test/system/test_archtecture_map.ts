@@ -849,6 +849,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
       },
       [Def.KEY_ARCHITECTURE_MAP]: [
         {
+          [Def.KEY_UID]: 1,
           [Def.KEY_CLASS]: "ArchMod",
           [Def.KEY_LABEL]: LABEL,
           [Def.KEY_DIMENS]: {
@@ -865,6 +866,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
            [Def.KEY_COLOR_SET]: "gray",
         },
         {
+          [Def.KEY_UID]: 2,
           [Def.KEY_CLASS]: "DividerLine",
           [Def.KEY_DIMENS]: {
             [Def.KEY_FROM_X]: DEFAULT_X,

@@ -40,6 +40,7 @@ export interface DividerLineCallback {
  * DividerLine serialized JSON interface.
  */
 export interface DividerLineJson {
+  [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
   [Def.KEY_DIMENS]: {
       [Def.KEY_FROM_X]: number,
@@ -190,18 +191,19 @@ export class DividerLine extends Element {
   /**
    * CONSTRUCTOR.
    *
+   * @param uid Element unique ID.
    * @param html HTML root view. Used for non-svg contents like as pop-up window.
    * @param svg SVG root object.
    */
-  constructor(html: JQueryNode, svg: D3Node.SVG) {
-      super(html, svg);
+  constructor(uid: number, html: JQueryNode, svg: D3Node.SVG) {
+    super(uid, html, svg);
 
-      this.colorSet = this.colorSet; // Load defaut
-      this._currentState = new DividerLine.IdleState(this);
-      this.width = this.DEFAULT_WIDTH;
+    this.colorSet = this.colorSet; // Load defaut
+    this._currentState = new DividerLine.IdleState(this);
+    this.width = this.DEFAULT_WIDTH;
 
-      this._label = String(DividerLine.countId);
-      DividerLine.countId++;
+    this._label = String(DividerLine.countId);
+    DividerLine.countId++;
   }
 
   private _label: string;
@@ -234,6 +236,7 @@ export class DividerLine extends Element {
    */
   public serialize(): DividerLineJson {
     let jsonObj = {
+        [Def.KEY_UID]: this.uid,
         [Def.KEY_CLASS]: DividerLine.TAG,
         [Def.KEY_DIMENS]: {
             [Def.KEY_FROM_X]: this.fromPoint.x,
@@ -256,7 +259,10 @@ export class DividerLine extends Element {
    * @return DividerLine.
    */
   public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: DividerLineJson): DividerLine {
-    let divLine = new DividerLine(html, svg);
+    let divLine = new DividerLine(
+        json[Def.KEY_UID],
+        html,
+        svg);
     divLine.setDimens(
         new Point(json[Def.KEY_DIMENS][Def.KEY_FROM_X], json[Def.KEY_DIMENS][Def.KEY_FROM_Y]),
         new Point(json[Def.KEY_DIMENS][Def.KEY_TO_X], json[Def.KEY_DIMENS][Def.KEY_TO_Y]),

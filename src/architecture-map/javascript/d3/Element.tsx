@@ -6,6 +6,7 @@ import { JQueryNode } from "../TypeDef.ts";
  * Serialized JSON object interface.
  */
 export interface ElementJson {
+  [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
 }
 
@@ -32,10 +33,11 @@ export abstract class Element {
   /**
    * CONSTRUCTOR.
    *
+   * @param uid Element unique ID to identify Element in whole ArchitectureMap.
    * @param html HTML root view. Used for non-svg contents like as pop-up window.
    * @param svg SVG root object.
    */
-  constructor(protected html: JQueryNode, protected svg: D3Node.SVG) {
+  constructor(public readonly uid: number, protected html: JQueryNode, protected svg: D3Node.SVG) {
     // NOP.
   }
 

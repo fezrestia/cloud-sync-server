@@ -44,6 +44,7 @@ export interface ArchModCallback {
  * ArchMod serialized JSON interface.
  */
 export interface ArchModJson {
+  [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
   [Def.KEY_LABEL]: string,
   [Def.KEY_DIMENS]: {
@@ -200,17 +201,19 @@ export class ArchMod extends Element {
 
   /**
    * CONSTRUCTOR.
+   *
+   * @param uid Element unique ID.
    * @param html HTML root view. Used for non-svg contents like as pop-up window.
    * @param svg SVG root object.
    * @param label Module ID.
    */
-  constructor(html: JQueryNode, svg: D3Node.SVG, label: string) {
-      super(html, svg);
+  constructor(uid: number, html: JQueryNode, svg: D3Node.SVG, label: string) {
+    super(uid, html, svg);
 
-      this._label = label;
-      this.colorSet = this.colorSet; // Load defaut
+    this._label = label;
+    this.colorSet = this.colorSet; // Load defaut
 
-      this._currentState = new ArchMod.IdleState(this);
+    this._currentState = new ArchMod.IdleState(this);
   }
 
   private _currentState: ArchModState;
@@ -243,6 +246,7 @@ export class ArchMod extends Element {
    */
   public serialize(): ArchModJson {
     let jsonObj = {
+        [Def.KEY_UID]: this.uid,
         [Def.KEY_CLASS]: ArchMod.TAG,
         [Def.KEY_LABEL]: this.label,
         [Def.KEY_DIMENS]: {
@@ -264,13 +268,18 @@ export class ArchMod extends Element {
   /**
    * Deserlialize ArchMod object from JSON object.
    *
+   * @param uid Element unique ID.
    * @param html HTML root node.
    * @param svg SVG root node.
    * @param json JSON object.
    * @return ArchMod.
    */
   public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: ArchModJson): ArchMod {
-    let archMod = new ArchMod(html, svg, json[Def.KEY_LABEL]);
+    let archMod = new ArchMod(
+        json[Def.KEY_UID],
+        html,
+        svg,
+        json[Def.KEY_LABEL]);
     archMod.setDimens(
         json[Def.KEY_DIMENS][Def.KEY_X],
         json[Def.KEY_DIMENS][Def.KEY_Y],
