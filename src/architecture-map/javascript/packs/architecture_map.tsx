@@ -10,6 +10,9 @@ import { ArchModJson } from "../d3/ArchMod";
 import { DividerLine } from "../d3/DividerLine";
 import { DividerLineCallback } from "../d3/DividerLine";
 import { DividerLineJson } from "../d3/DividerLine";
+import { Connector } from "../d3/Connector";
+import { ConnectorCallback } from "../d3/Connector";
+import { ConnectorJson } from "../d3/Connector";
 import { OutFrame } from "../d3/OutFrame";
 import { OutFrameCallback } from "../d3/OutFrame";
 import { OutFrameJson } from "../d3/OutFrame";
@@ -69,6 +72,7 @@ class Context {
   // State flags.
   public isAddNewArchModMode: boolean = false;
   public isAddNewDividerLineMode: boolean = false;
+  public isAddNewConnectorMode: boolean = false;
   public globalMode: string = GLOBAL_MODE_GOD;
 
   // Selected list.
@@ -151,6 +155,11 @@ class Context {
           deserialized = this.deserializeDividerLine(json);
           break;
 
+        case Connector.TAG:
+          json = element as ConnectorJson;
+          deserialized = this.deserializeConnector(json);
+          break;
+
         default:
           TraceLog.e(TAG, `Unexpected Element:`);
           console.log(element);
@@ -220,6 +229,34 @@ class Context {
     this.addElementToTop(line);
   }
 
+  private deserializeConnector(json: ConnectorJson): Connector {
+    let connector = Connector.deserialize(this.html, this.svg, json);
+    this.renderConnector(connector);
+    return connector;
+  }
+
+  public addNewConnector(fromX: number, fromY: number) {
+    let connector = new Connector(this.html, this.svg);
+    connector.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
+    this.renderConnector(connector);
+  }
+
+  private renderConnector(connector: Connector) {
+    connector.setCallback(new ConnectorCallbackImpl());
+
+    switch (this.globalMode) {
+      case GLOBAL_MODE_GOD:
+        connector.itxMode = ElementItxMode.EDITABLE;
+        break;
+      case GLOBAL_MODE_ITX:
+        connector.itxMode = ElementItxMode.RIGID;
+        break;
+    }
+
+    connector.render();
+    this.addElementToTop(connector);
+  }
+
   public addElementToTop(element: Element) {
     this.allElements.push(element);
   }
@@ -246,7 +283,7 @@ class Context {
 
     this.allElements.forEach( (element: Element) => {
       switch (element.TAG) {
-        case ArchMod.TAG:
+        case ArchMod.TAG: {
           let archMod = element as ArchMod;
 
           let {x, y, width, height} = archMod.getXYWH();
@@ -262,9 +299,10 @@ class Context {
               this.onDeselected(archMod);
             }
           }
-          break;
+        }
+        break;
 
-        case DividerLine.TAG:
+        case DividerLine.TAG: {
           let line = element as DividerLine;
 
           let {fromX, fromY, toX, toY} = line.getFromToXY();
@@ -281,7 +319,28 @@ class Context {
               this.onDeselected(line);
             }
           }
-          break;
+        }
+        break;
+
+        case Connector.TAG: {
+          let connector = element as Connector;
+
+          let {fromX, fromY, toX, toY} = connector.getFromToXY();
+
+          if (minX < fromX && fromX < maxX && minY < fromY && fromY < maxY
+              && minX < toX && toX < maxX && minY < toY && toY < maxY) {
+            if (!this.selectedElements.includes(connector)) {
+              connector.select();
+              this.onMultiSelected(connector);
+            }
+          } else {
+            if (this.selectedElements.includes(connector)) {
+              connector.deselect();
+              this.onDeselected(connector);
+            }
+          }
+        }
+        break;
 
         default:
           TraceLog.e(TAG, `## Element=${element.serialize()} is NOT existing.`);
@@ -391,6 +450,17 @@ class Context {
           element = this.deserializeDividerLine(json);
           break;
 
+        case Connector.TAG:
+          json = serialized as ConnectorJson;
+
+          json[Def.KEY_DIMENS][Def.KEY_FROM_X] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_FROM_Y] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_TO_X] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_TO_Y] += COPY_PASTE_SLIDE_DIFF;
+
+          element = this.deserializeConnector(json);
+          break;
+
         default:
           TraceLog.e(TAG, `Unexpected Element:`);
           console.log(serialized);
@@ -498,6 +568,9 @@ class Context {
         case DividerLine.TAG:
           element.itxMode = ElementItxMode.EDITABLE;
           break;
+        case Connector.TAG:
+          element.itxMode = ElementItxMode.EDITABLE;
+          break;
       }
     } );
     this.outFrame.itxMode = ElementItxMode.EDITABLE;
@@ -513,6 +586,9 @@ class Context {
           element.itxMode = ElementItxMode.SELECTABLE;
           break;
         case DividerLine.TAG:
+          element.itxMode = ElementItxMode.RIGID;
+          break;
+        case Connector.TAG:
           element.itxMode = ElementItxMode.RIGID;
           break;
       }
@@ -651,6 +727,59 @@ class DividerLineCallbackImpl implements DividerLineCallback {
 
   onHistoricalChanged(line: DividerLine) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onHistoricalChanged()`);
+    CONTEXT.recordHistory();
+  }
+}
+
+// Common callback for ALL Connector instances.
+class ConnectorCallbackImpl implements ConnectorCallback {
+  onSelected(selected: Connector, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onSelected() : isMulti=${isMulti}`);
+    CONTEXT.onSelected(selected, isMulti);
+  }
+
+  onDeselected(deselected: Connector) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onDeselected()`);
+    CONTEXT.onDeselected(deselected);
+  }
+
+  onEditing(editing: Connector, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onEditing() : isMulti=${isMulti}`);
+    CONTEXT.onSelected(editing, isMulti);
+  }
+
+  onEdited(edited: Connector) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onEdited()`);
+    CONTEXT.onDeselected(edited);
+  }
+
+  onDragStart(moved: Connector) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onDragStart()`);
+    // NOP.
+  }
+
+  onDrag(moved: Connector, plusX: number, plusY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onDrag() : plusX=${plusX}, plusY=${plusY}`);
+    CONTEXT.moveSelectedElements(plusX, plusY, moved);
+  }
+
+  onDragEnd(moved: Connector) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onDragEnd()`);
+    // NOP.
+  }
+
+  onRaised(raised: Connector) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onRaised()`);
+    CONTEXT.raise(raised);
+  }
+
+  onLowered(lowered: Connector) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onLowered()`);
+    CONTEXT.lower(lowered);
+  }
+
+  onHistoricalChanged(connector: Connector) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onHistoricalChanged()`);
     CONTEXT.recordHistory();
   }
 }
@@ -896,7 +1025,7 @@ function registerGlobalCallbacks() {
 
     CONTEXT.isAddNewArchModMode = true;
   }
-}
+};
 
 (window as any).onAddNewDividerLineClicked = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewDividerLineClicked()");
@@ -910,7 +1039,7 @@ function registerGlobalCallbacks() {
   } else {
     // Prepare add mode.
 
-    CONTEXT. resetAllState();
+    CONTEXT.resetAllState();
 
     CONTEXT.html.css("display", "block");
     CONTEXT.html.css("background-color", "#AAAAAAAA");
@@ -930,7 +1059,41 @@ function registerGlobalCallbacks() {
 
     CONTEXT.isAddNewDividerLineMode = true;
   }
-}
+};
+
+(window as any).onAddNewConnectorClicked = () => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewConnectorClicked()");
+
+  if (CONTEXT.isAddNewConnectorMode) {
+    // Finish add mode.
+
+    resetHtmlRoot();
+    CONTEXT.isAddNewConnectorMode = false;
+
+  } else {
+    // Prepare add mode.
+
+    CONTEXT.resetAllState();
+
+    CONTEXT.html.css("display", "block");
+    CONTEXT.html.css("background-color", "#AAAAAAAA");
+
+    CONTEXT.html.on("click", (e: JQuery.Event) => {
+      let posX: number = e.offsetX || 0;
+      let posY: number = e.offsetY || 0;
+
+      CONTEXT.addNewConnector(posX, posY);
+
+      CONTEXT.recordHistory();
+
+      // Finish add mode.
+      resetHtmlRoot();
+      CONTEXT.isAddNewConnectorMode = false;
+    } );
+
+    CONTEXT.isAddNewConnectorMode = true;
+  }
+};
 
 function resetHtmlRoot() {
   CONTEXT.html.css("display", "none");
