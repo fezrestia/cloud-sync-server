@@ -158,7 +158,7 @@ class Context {
       }
 
       // Load as selected state.
-      deserialized.selectMultiNoCallback();
+      deserialized.select();
       this.onMultiSelected(deserialized);
 
     } );
@@ -253,12 +253,12 @@ class Context {
 
           if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
             if (!this.selectedElements.includes(archMod)) {
-              archMod.selectMultiNoCallback();
+              archMod.select();
               this.onMultiSelected(archMod);
             }
           } else {
             if (this.selectedElements.includes(archMod)) {
-              archMod.deselectNoCallback();
+              archMod.deselect();
               this.onDeselected(archMod);
             }
           }
@@ -272,12 +272,12 @@ class Context {
           if (minX < fromX && fromX < maxX && minY < fromY && fromY < maxY
               && minX < toX && toX < maxX && minY < toY && toY < maxY) {
             if (!this.selectedElements.includes(line)) {
-              line.selectMultiNoCallback();
+              line.select();
               this.onMultiSelected(line);
             }
           } else {
             if (this.selectedElements.includes(line)) {
-              line.deselectNoCallback();
+              line.deselect();
               this.onDeselected(line);
             }
           }
@@ -305,7 +305,7 @@ class Context {
   public resetAllStateExceptFor(except: Element|null) {
     this.allElements.forEach( (element: Element) => {
       if (except == element) return;
-      element.resetStateNoCallback();
+      element.resetState();
       this.onDeselected(element);
     } );
 
@@ -398,7 +398,7 @@ class Context {
       }
 
       // Paste as selected state.
-      element.selectMultiNoCallback();
+      element.select();
       this.onMultiSelected(element);
 
     } );

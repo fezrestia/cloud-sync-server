@@ -62,15 +62,13 @@ export class OutFrame extends Element {
     return { [Def.KEY_CLASS]: this.TAG };
   }
 
-  public selectSingleNoCallback() {
+  // @Override
+  public select() {
     // NOP.
   }
 
-  public selectMultiNoCallback() {
-    // NOP.
-  }
-
-  public deselectNoCallback() {
+  // @Override
+  public deselect() {
     this.isEditing = false;
   }
 

@@ -47,34 +47,24 @@ export abstract class Element {
   abstract serialize(): ElementJson;
 
   /**
-   * Reset state to idle.
-   */
-  abstract resetState(): void;
-
-  /**
    * Render.
    */
   abstract render(): void;
 
   /**
-   * Select this Element as single selection.
+   * Select this Element with NO callback.
    */
-  abstract selectSingleNoCallback(): void;
+  abstract select(): void;
 
   /**
-   * Select this Element as multi selection.
+   * Deselected this Element with NO callback.
    */
-  abstract selectMultiNoCallback(): void;
+  abstract deselect(): void;
 
   /**
-   * Deselected by other UI. Callback is NOT invoked.
+   * Reset state to idle with NO callback.
    */
-  abstract deselectNoCallback(): void;
-
-  /**
-   * Reset state to idle with NO callback invocation.
-   */
-  abstract resetStateNoCallback(): void;
+  abstract resetState(): void;
 
   /**
    * Move this Element with X-Y diff.

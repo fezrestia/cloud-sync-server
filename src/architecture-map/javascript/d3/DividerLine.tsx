@@ -66,7 +66,7 @@ class DividerLineState {
   exit() {
   }
 
-  onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
+  onLeftClicked(clickX: number, clickY: number, withCtrl: boolean = false) {
   }
 
   onRightClicked(clickX: number, clickY: number) {
@@ -351,13 +351,6 @@ export class DividerLine extends Element {
   }
 
   /**
-   * Reset state to idle.
-   */
-  public resetState() {
-    this.currentState.reset();
-  }
-
-  /**
    * Render.
    */
   public render() {
@@ -385,39 +378,22 @@ export class DividerLine extends Element {
     }
   }
 
-  /**
-   * Select this DividerLine as single selection.
-   */
-  public selectSingleNoCallback() {
-    this.selectNoCallback(false);
-  }
-
-  /**
-   * Select this DividerLine as multi selection.
-   */
-  public selectMultiNoCallback() {
-    this.selectNoCallback(true);
-  }
-
-  private selectNoCallback(isMulti: boolean) {
+  // @Override
+  public select() {
     this.runNoCallback( () => {
-      this.currentState.onLeftClicked(0, 0, isMulti);
+      this.currentState.onLeftClicked(0, 0);
     } );
   }
 
-  /**
-   * Deselected by other UI. Callback is NOT invoked.
-   */
-  public deselectNoCallback() {
+  // @Override
+  public deselect() {
     this.runNoCallback( () => {
       this.currentState.onCanceled();
     } );
   }
 
-  /**
-   * Reset state without callback invocation.
-   */
-  public resetStateNoCallback() {
+  // @Override
+  public resetState() {
     this.runNoCallback( () => {
       this.currentState.reset();
     } );
@@ -799,7 +775,7 @@ export class DividerLine extends Element {
    */
   public delete() {
     if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, `moveToBackEnd()`);
-    this.resetStateNoCallback();
+    this.resetState();
     this.root.remove();
   }
 
