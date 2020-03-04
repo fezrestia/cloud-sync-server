@@ -84,6 +84,9 @@ class Context {
   public isAddNewConnectorMode: boolean = false;
   public globalMode: string = GLOBAL_MODE_GOD;
 
+  // Connector related.
+  public connectorBaseArchMod: ArchMod|null = null;
+
   // Selected list.
   private readonly selectedElements: Element[] = [];
 
@@ -269,10 +272,10 @@ class Context {
     return connector;
   }
 
-  public addNewConnector(fromX: number, fromY: number) {
+  public addNewConnector(fromArchMod: ArchMod, toArchMod: ArchMod) {
     let uid = this.genNewElementUid();
     let connector = new Connector(uid, this.html, this.svg);
-    connector.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
+    connector.setFromToArchMod(fromArchMod, toArchMod);
     this.renderConnector(connector);
   }
 
@@ -366,25 +369,9 @@ class Context {
         }
         break;
 
-        case Connector.TAG: {
-          let connector = element as Connector;
-
-          let {fromX, fromY, toX, toY} = connector.getFromToXY();
-
-          if (minX < fromX && fromX < maxX && minY < fromY && fromY < maxY
-              && minX < toX && toX < maxX && minY < toY && toY < maxY) {
-            if (!this.selectedElements.includes(connector)) {
-              connector.select();
-              this.onMultiSelected(connector);
-            }
-          } else {
-            if (this.selectedElements.includes(connector)) {
-              connector.deselect();
-              this.onDeselected(connector);
-            }
-          }
-        }
-        break;
+        case Connector.TAG:
+          // NOP.
+          break;
 
         default:
           TraceLog.e(TAG, `## Element=${element.serialize()} is NOT existing.`);
@@ -395,8 +382,28 @@ class Context {
 
   public moveSelectedElements(plusX: number, plusY: number, except: Element) {
     this.selectedElements.forEach( (element: Element) => {
-      if (element == except) return;
-      element.move(plusX, plusY);
+      if (element.TAG == Connector.TAG) return;
+
+      if (element != except) {
+        element.move(plusX, plusY);
+      }
+
+      if (element.TAG == ArchMod.TAG) {
+        let archMod = element as ArchMod;
+        this.updateConnectorsRelatedTo(archMod);
+      }
+
+    } );
+  }
+
+  public updateConnectorsRelatedTo(archMod: ArchMod) {
+    this.allElements.forEach( (element: Element) => {
+      if (element.TAG == Connector.TAG) {
+        let connector = element as Connector;
+        if (connector.isConnected(archMod.uid)) {
+          connector.updateConnectionPoints();
+        }
+      }
     } );
   }
 
@@ -438,6 +445,19 @@ class Context {
     this.selectedElements.forEach( (selected: Element) => {
       selected.delete();
       this.removeElement(selected);
+
+      if (selected.TAG == ArchMod.TAG) {
+        this.allElements.forEach( (element) => {
+          if (element.TAG == Connector.TAG) {
+            let connector = element as Connector;
+            if (connector.isConnected(selected.uid)) {
+              connector.delete();
+              this.removeElement(connector);
+            }
+          }
+        } );
+      }
+
     } );
     this.selectedElements.length = 0;
 
@@ -457,6 +477,10 @@ class Context {
     if (this.clipboard.length != 0) this.clipboard.length = 0; // Clear all.
 
     this.selectedElements.forEach( (selected: Element) => {
+
+      // TODO: Consider to copy/paste Connector.
+      if (selected.TAG == Connector.TAG) return;
+
       this.clipboard.push(selected.serialize());
     } );
 
@@ -497,16 +521,9 @@ class Context {
           element = this.deserializeDividerLine(json);
           break;
 
-        case Connector.TAG:
-          json = serialized as ConnectorJson;
 
-          json[Def.KEY_DIMENS][Def.KEY_FROM_X] += COPY_PASTE_SLIDE_DIFF;
-          json[Def.KEY_DIMENS][Def.KEY_FROM_Y] += COPY_PASTE_SLIDE_DIFF;
-          json[Def.KEY_DIMENS][Def.KEY_TO_X] += COPY_PASTE_SLIDE_DIFF;
-          json[Def.KEY_DIMENS][Def.KEY_TO_Y] += COPY_PASTE_SLIDE_DIFF;
+        // TODO: Consider Connector copy/paste.
 
-          element = this.deserializeConnector(json);
-          break;
 
         default:
           TraceLog.e(TAG, `Unexpected Element:`);
@@ -642,6 +659,12 @@ class Context {
     } );
     this.outFrame.itxMode = ElementItxMode.RIGID;
   }
+
+  public queryElementUid(uid: number): Element {
+    let hit = CONTEXT.allElements.find( (element: Element) => element.uid == uid );
+    if (hit == undefined) throw new Error(`UID = ${uid} is NOT Hit.`);
+    return hit;
+  }
 }
 const CONTEXT = new Context();
 (window as any).getContext = () => { return CONTEXT };
@@ -669,11 +692,37 @@ class ArchModCallbackImpl implements ArchModCallback {
   onSelected(selected: ArchMod, isMulti: boolean) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSelected() : ${selected.label}, isMulti=${isMulti}`);
     CONTEXT.onSelected(selected, isMulti);
+
+    if (CONTEXT.isAddNewConnectorMode) {
+      if (CONTEXT.connectorBaseArchMod != null) {
+        let fromArchMod = CONTEXT.connectorBaseArchMod;
+        let toArchMod = selected;
+
+        if (fromArchMod.uid == toArchMod.uid) {
+          // NOP. Same one.
+        } else {
+          // Add new connector.
+          CONTEXT.addNewConnector(fromArchMod, toArchMod);
+          CONTEXT.recordHistory();
+        }
+
+        // Finish add mode.
+        finishAddNewConnectorMode();
+      } else {
+        // Select base.
+        CONTEXT.connectorBaseArchMod = selected;
+      }
+    }
   }
 
   onDeselected(deselected: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDeselected() : ${deselected.label}`);
     CONTEXT.onDeselected(deselected);
+
+    if (CONTEXT.isAddNewConnectorMode) {
+      // Finish add mode.
+      finishAddNewConnectorMode();
+    }
   }
 
   onEditing(editing: ArchMod, isMulti: boolean) {
@@ -722,6 +771,16 @@ class ArchModCallbackImpl implements ArchModCallback {
   onHistoricalChanged(archMod: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onHistoricalChanged() : label=${archMod.label}`);
     CONTEXT.recordHistory();
+  }
+
+  onSizeChanged(archMod: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSizeChanged() : label=${archMod.label}`);
+    CONTEXT.updateConnectorsRelatedTo(archMod);
+  }
+
+  onClipAreaChanged(archMod: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onClipAreaChanged() : label=${archMod.label}`);
+    CONTEXT.updateConnectorsRelatedTo(archMod);
   }
 }
 
@@ -829,6 +888,10 @@ class ConnectorCallbackImpl implements ConnectorCallback {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onHistoricalChanged()`);
     CONTEXT.recordHistory();
   }
+
+  queryArchMod(uid: number): ArchMod {
+    return CONTEXT.queryElementUid(uid) as ArchMod;
+  }
 }
 
 // Entry point from HTML.
@@ -935,6 +998,7 @@ function registerGlobalCallbacks() {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeydown() : key=${event.key}`);
     event.stopPropagation();
 
+    let isHandledByGodMode = true;
     if (CONTEXT.globalMode == GLOBAL_MODE_GOD) {
       switch (event.key) {
         case "Control":
@@ -977,19 +1041,37 @@ function registerGlobalCallbacks() {
           }
           break;
 
-        // DEBUG LOG.
-        case "d":
-          TraceLog.d(TAG, "#### DEBUG LOG ####");
-          TraceLog.d(TAG, "CONTEXT =");
-          console.log(CONTEXT);
-          TraceLog.d(TAG, "###################");
-          break;
-
         default:
-          // Other key event should be ignored and should not call preventDefault().
-          return;
+          isHandledByGodMode = false;
+          break;
       }
+    }
 
+    // for BOTH mode.
+    let isHandledByBothMode = true;
+    switch (event.key) {
+      case "Esc":
+        // fall-through.
+      case "Escape":
+        if (CONTEXT.isAddNewConnectorMode) {
+          finishAddNewConnectorMode();
+        }
+        break;
+
+      // DEBUG LOG.
+      case "d":
+        TraceLog.d(TAG, "#### DEBUG LOG ####");
+        TraceLog.d(TAG, "CONTEXT =");
+        console.log(CONTEXT);
+        TraceLog.d(TAG, "###################");
+        break;
+
+      default:
+        isHandledByBothMode = false;
+        break;
+    }
+
+    if (isHandledByGodMode || isHandledByBothMode) {
       event.preventDefault();
     }
   };
@@ -1112,39 +1194,42 @@ function registerGlobalCallbacks() {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewConnectorClicked()");
 
   if (CONTEXT.isAddNewConnectorMode) {
-    // Finish add mode.
-
-    resetHtmlRoot();
-    CONTEXT.isAddNewConnectorMode = false;
-
+    // Cancel add mode.
+    finishAddNewConnectorMode();
   } else {
     // Prepare add mode.
-
-    CONTEXT.resetAllState();
-
-    CONTEXT.html.css("display", "block");
-    CONTEXT.html.css("background-color", "#AAAAAAAA");
-
-    CONTEXT.html.on("click", (e: JQuery.Event) => {
-      let posX: number = e.offsetX || 0;
-      let posY: number = e.offsetY || 0;
-
-      CONTEXT.addNewConnector(posX, posY);
-
-      CONTEXT.recordHistory();
-
-      // Finish add mode.
-      resetHtmlRoot();
-      CONTEXT.isAddNewConnectorMode = false;
-    } );
-
-    CONTEXT.isAddNewConnectorMode = true;
+    prepareAddNewConnectorMode();
   }
 };
+
+function prepareAddNewConnectorMode() {
+  CONTEXT.resetAllState();
+
+  CONTEXT.html.css("display", "block");
+  CONTEXT.html.css("background-color", "#AAAAAAAA");
+  CONTEXT.html.css("pointer-events", "none");
+
+  CONTEXT.isAddNewConnectorMode = true;
+  CONTEXT.connectorBaseArchMod = null;
+
+  CONTEXT.changeToItxMode();
+
+}
+
+function finishAddNewConnectorMode() {
+  resetHtmlRoot();
+
+  CONTEXT.isAddNewConnectorMode = false;
+  CONTEXT.connectorBaseArchMod = null;
+
+  CONTEXT.changeToGodMode();
+
+}
 
 function resetHtmlRoot() {
   CONTEXT.html.css("display", "none");
   CONTEXT.html.css("background-color", "");
+  CONTEXT.html.css("pointer-events", "auto");
   CONTEXT.html.off("click");
 }
 

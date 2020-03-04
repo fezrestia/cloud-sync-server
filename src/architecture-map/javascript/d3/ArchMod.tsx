@@ -38,6 +38,11 @@ export interface ArchModCallback {
   onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string): void;
 
   onHistoricalChanged(archMod: ArchMod): void;
+
+  onSizeChanged(archMod: ArchMod): void;
+
+  onClipAreaChanged(archMod: ArchMod): void;
+
 }
 
 /**
@@ -441,6 +446,67 @@ export class ArchMod extends Element {
   }
 
   /**
+   * Get default connection point list.
+   *
+   * @return
+   */
+  public getConnectionPoints(): Point[] {
+    let points: Point[] = [];
+
+    let left = this.x;
+    let top = this.y;
+    let right = this.x + this.width;
+    let bottom = this.y + this.height;
+    let pinX = this.pinX;
+    let pinY = this.pinY;
+    let centerX = left + this.width / 2;
+    let centerY = top + this.height / 2;
+
+    switch (this.clipArea) {
+      case ClipArea.NONE:
+        // Top.
+        points.push(new Point(centerX, top));
+        // Bottom.
+        points.push(new Point(centerX, bottom));
+        break;
+
+      case ClipArea.LEFT_TOP:
+        // Top.
+        points.push(new Point(pinX + (right - pinX) / 2, top));
+        points.push(new Point(left + (pinX - left) / 2, pinY));
+        // Bottom.
+        points.push(new Point(centerX, bottom));
+        break;
+
+      case ClipArea.RIGHT_TOP:
+        // Top.
+        points.push(new Point(left + (pinX - left) / 2, top));
+        points.push(new Point(pinX + (right - pinX) / 2, pinY));
+        // Bottom.
+        points.push(new Point(centerX, bottom));
+        break;
+
+      case ClipArea.LEFT_BOTTOM:
+        // Top.
+        points.push(new Point(centerX, top));
+        // Bottom.
+        points.push(new Point(left + (pinX - left) / 2, pinY));
+        points.push(new Point(pinX + (right - pinX) / 2, bottom));
+        break;
+
+      case ClipArea.RIGHT_BOTTOM:
+        // Top.
+        points.push(new Point(centerX, top));
+        // Bottom.
+        points.push(new Point(pinX + (right - pinX) / 2, pinY));
+        points.push(new Point(left + (pinX - left) / 2, bottom));
+        break;
+    }
+
+    return points;
+  }
+
+  /**
    * Get center point of top line.
    * @return
    */
@@ -805,6 +871,8 @@ export class ArchMod extends Element {
               }
 
               this.relayout();
+
+              if (this.callback != null) this.callback.onSizeChanged(this);
 
           } )
           .on("end", () => {
@@ -1204,6 +1272,8 @@ export class ArchMod extends Element {
       this.disableEditMode();
       this.enableEditMode();
       this.relayout();
+
+      if (this.callback != null) this.callback.onClipAreaChanged(this);
     }
   }
 

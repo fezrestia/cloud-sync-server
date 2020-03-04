@@ -14,6 +14,7 @@ import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
+import { ArchMod } from "./ArchMod";
 
 /**
  * Callback interface for Connector.
@@ -34,6 +35,8 @@ export interface ConnectorCallback {
 
   onHistoricalChanged(line: Connector): void;
 
+  queryArchMod(uid: number): ArchMod;
+
 }
 
 /**
@@ -42,6 +45,8 @@ export interface ConnectorCallback {
 export interface ConnectorJson {
   [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
+  [Def.KEY_FROM_UID]: number,
+  [Def.KEY_TO_UID]: number,
   [Def.KEY_DIMENS]: {
       [Def.KEY_FROM_X]: number,
       [Def.KEY_FROM_Y]: number,
@@ -238,6 +243,8 @@ export class Connector extends Element {
     let jsonObj = {
         [Def.KEY_UID]: this.uid,
         [Def.KEY_CLASS]: Connector.TAG,
+        [Def.KEY_FROM_UID]: this.fromUid,
+        [Def.KEY_TO_UID]: this.toUid,
         [Def.KEY_DIMENS]: {
             [Def.KEY_FROM_X]: this.fromPoint.x,
             [Def.KEY_FROM_Y]: this.fromPoint.y,
@@ -259,16 +266,26 @@ export class Connector extends Element {
    * @return Connector.
    */
   public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: ConnectorJson): Connector {
-    let divLine = new Connector(
+    let connector = new Connector(
         json[Def.KEY_UID],
         html,
         svg);
-    divLine.setDimens(
-        new Point(json[Def.KEY_DIMENS][Def.KEY_FROM_X], json[Def.KEY_DIMENS][Def.KEY_FROM_Y]),
-        new Point(json[Def.KEY_DIMENS][Def.KEY_TO_X], json[Def.KEY_DIMENS][Def.KEY_TO_Y]),
-        json[Def.KEY_DIMENS][Def.KEY_WIDTH]);
-    divLine.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
-    return divLine;
+
+    (connector as any).fromUid = json[Def.KEY_FROM_UID];
+    (connector as any).toUid = json[Def.KEY_TO_UID];
+
+    let fromX = json[Def.KEY_DIMENS][Def.KEY_FROM_X];
+    let fromY = json[Def.KEY_DIMENS][Def.KEY_FROM_Y];
+    let toX = json[Def.KEY_DIMENS][Def.KEY_TO_X];
+    let toY = json[Def.KEY_DIMENS][Def.KEY_TO_Y];
+
+    (connector as any).fromPoint =  new Point(fromX, fromY);
+    (connector as any).toPoint =  new Point(toX, toY);
+    (connector as any).width = json[Def.KEY_DIMENS][Def.KEY_WIDTH];
+
+    connector.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    return connector;
   }
 
   // Elements.
@@ -277,6 +294,8 @@ export class Connector extends Element {
   private editor: D3Node.G|null = null;
 
   // Position/Size.
+  private fromUid: number = 0;
+  private toUid: number = 0;
   private fromPoint: Point = new Point(0, 0);
   private toPoint: Point = new Point(0, 0);
   private width: number;
@@ -304,17 +323,83 @@ export class Connector extends Element {
   }
 
   /**
-   * Set FROM/TO X-Y coordinates.
+   * Set FROM/TO ArchMod element.
    *
-   * @param fromX
-   * @param fromY
-   * @param toX
-   * @param toY
+   * @param fromArchMod
+   * @param toArchMod
    */
-  public setFromToXY(fromX: number, fromY: number, toX: number, toY: number) {
-    this.fromPoint = new Point(fromX, fromY);
-    this.toPoint = new Point(toX, toY);
+  public setFromToArchMod(fromArchMod: ArchMod, toArchMod: ArchMod) {
+    this.fromUid = fromArchMod.uid;
+    this.toUid = toArchMod.uid;
+
+    let fromConnPoints = fromArchMod.getConnectionPoints();
+    let toConnPoints = toArchMod.getConnectionPoints();
+
+    // Initial values.
+    let minDiff = Number.MAX_SAFE_INTEGER;
+    let validFromPoint = fromConnPoints[fromConnPoints.length - 1]; // Most bottom.
+    let validToPoint = toConnPoints[0]; // Most top.
+
+    fromConnPoints.forEach( (fromP: Point) => {
+      toConnPoints.forEach( (toP: Point) => {
+        let diff = Math.pow(toP.x - fromP.x, 2) + Math.pow(toP.y - fromP.y, 2);
+
+        if (diff < minDiff) {
+          validFromPoint = fromP;
+          validToPoint = toP;
+
+          minDiff = diff;
+        }
+
+      } );
+    } );
+
+    this.fromPoint = validFromPoint;
+    this.toPoint = validToPoint;
+
     this.relayout();
+  }
+
+  /**
+   * Update FROM/TO connection points.
+   */
+  public updateConnectionPoints() {
+    if (this.callback != null) {
+      let fromArchMod = this.callback.queryArchMod(this.fromUid);
+      let toArchMod = this.callback.queryArchMod(this.toUid);
+
+      this.setFromToArchMod(fromArchMod, toArchMod);
+    }
+  }
+
+  /**
+   * This connector is FROM @uid or not.
+   *
+   * @param uid
+   * @return Connected FROM uid or not.
+   */
+  public isConnectedFrom(uid: number) {
+    return this.fromUid == uid;
+  }
+
+  /**
+   * This connector is TO @uid or not.
+   *
+   * @param uid
+   * @return Connected TO uid or not.
+   */
+  public isConnectedTo(uid: number) {
+    return this.toUid == uid;
+  }
+
+  /**
+   * This connector is connected to @uid or not.
+   *
+   * @param uid
+   * @return Connected or not.
+   */
+  public isConnected(uid: number) {
+    return this.isConnectedFrom(uid) || this.isConnectedTo(uid);
   }
 
   /**
@@ -329,22 +414,6 @@ export class Connector extends Element {
         toX: this.toPoint.x,
         toY: this.toPoint.y,
     };
-  }
-
-  /**
-   * Update total dimension values.
-   *
-   * @param fromPoint FROM anchor point.
-   * @param toPoint TO anchor point.
-   * @param width
-   */
-  public setDimens(
-      fromPoint: Point|null,
-      toPoint: Point|null,
-      width: number|null) {
-    if (fromPoint != null) this.fromPoint = fromPoint;
-    if (toPoint != null) this.toPoint = toPoint;
-    if (width != null) this.width = width;
   }
 
   /**
@@ -405,31 +474,31 @@ export class Connector extends Element {
     } );
   }
 
-  /**
-   * Move this Connector with X-Y diff.
-   *
-   * @param plusX
-   * @param plusY
-   */
+  // @Override
   public move(plusX: number, plusY: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, `move() : plusX=${plusX}, plusY=${plusY}`);
+    alert(`Connector.move() is NEVER used`);
+  }
 
+  /**
+   * Move FROM connect point.
+   *
+   * @plusX Move step in pixels
+   * @plusY Move step in pixels
+   */
+  public moveFromPoint(plusX: number, plusY: number) {
     this.fromPoint = new Point(this.fromPoint.x + plusX, this.fromPoint.y + plusY);
-    this.toPoint = new Point(this.toPoint.x + plusX, this.toPoint.y + plusY);
-
-    this.checkLayoutLimit();
     this.relayout();
   }
 
-  private checkLayoutLimit() {
-    // Top-Left edge limit check. Bottom-Right edge is movable, so skip check.
-
-    let minX: number = Math.min(this.fromPoint.x, this.toPoint.x, 0);
-    let minY: number = Math.min(this.fromPoint.y, this.toPoint.y, 0);
-
-    this.fromPoint = new Point(this.fromPoint.x - minX, this.fromPoint.y - minY);
-    this.toPoint = new Point(this.toPoint.x - minX, this.toPoint.y - minY);
-
+  /**
+   * Move TO connect point.
+   *
+   * @plusX Move step in pixels
+   * @plusY Move step in pixels
+   */
+  public moveToPoint(plusX: number, plusY: number) {
+    this.toPoint = new Point(this.toPoint.x + plusX, this.toPoint.y + plusY);
+    this.relayout();
   }
 
   private registerCallbacks() {
@@ -455,67 +524,6 @@ export class Connector extends Element {
         d3.event.preventDefault();
     });
 
-    this.root.call(
-      d3.drag<SVGGElement, any, any>()
-          .on("start", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "on:drag:start");
-              if (this.currentState.isMovable()) {
-                d3.event.target.origFromPoint = this.fromPoint;
-                d3.event.target.origToPoint = this.toPoint;
-                d3.event.target.startX = d3.event.x;
-                d3.event.target.startY = d3.event.y;
-
-                if (this.callback != null) this.callback.onDragStart(this);
-              }
-          } )
-          .on("drag", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "on:drag:drag");
-              if (this.currentState.isMovable()) {
-                let isSnapDragEnabled = d3.event.sourceEvent.altKey;
-
-                let origFromPoint = d3.event.target.origFromPoint;
-                let origToPoint = d3.event.target.origToPoint;
-
-                let dx = d3.event.x - d3.event.target.startX;
-                let dy = d3.event.y - d3.event.target.startY;
-
-                let oldFromPoint = this.fromPoint; // to calc diff of this step.
-
-                this.fromPoint = new Point(origFromPoint.x + dx, origFromPoint.y + dy);
-                this.toPoint = new Point(origToPoint.x + dx, origToPoint.y + dy);
-
-                // Position snapping.
-                // Snap control is based on FROM point.
-                if (isSnapDragEnabled) {
-                  let snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
-                  let snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
-
-                  this.fromPoint = new Point(this.fromPoint.x - snapX, this.fromPoint.y - snapY);
-                  this.toPoint = new Point(this.toPoint.x - snapX, this.toPoint.y - snapY);
-                }
-
-                this.checkLayoutLimit();
-                this.relayout();
-
-                let plusX = this.fromPoint.x - oldFromPoint.x;
-                let plusY = this.fromPoint.y - oldFromPoint.y;
-                if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
-              }
-          } )
-          .on("end", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "on:drag:end");
-              if (this.currentState.isMovable()) {
-                d3.event.target.origFromPoint = new Point(0, 0);
-                d3.event.target.origToPoint = new Point(0, 0);
-                d3.event.target.startX = 0;
-                d3.event.target.startY = 0;
-
-                if (this.callback != null) this.callback.onDragEnd(this);
-
-                if (this.callback != null) this.callback.onHistoricalChanged(this);
-              }
-          } )
-      );
   }
 
   private enableEditMode() {
@@ -528,6 +536,9 @@ export class Connector extends Element {
     this.addEditGrip(this.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
     this.addEditGrip(this.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
 
+    this.relayout();
+    this.recolor();
+
   }
 
   private addEditGrip(id: string, cx: number, cy: number): any {
@@ -535,120 +546,116 @@ export class Connector extends Element {
 
     let TAG = "EditGrip";
 
-    let circle = this.editor.append("circle")
-        .attr("id", id)
-        .attr("cx", cx)
-        .attr("cy", cy)
-        .attr("fill", this.colorResolver.bgHighlight)
-        .attr("r", this.EDIT_GRIP_RADIUS_PIX);
+    let grip = this.editor.append("rect")
+        .attr("id", id);
 
-    circle.on("click", () => {
+    grip.on("click", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
         d3.event.stopPropagation();
     });
 
-    circle.call(
-      d3.drag<SVGCircleElement, any, any>()
-          .on("start", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:start");
-
-              d3.event.target.origFromPoint = this.fromPoint;
-              d3.event.target.origToPoint = this.toPoint;
-              d3.event.target.startX = d3.event.x;
-              d3.event.target.startY = d3.event.y;
-
-          } )
-          .on("drag", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
-
-              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
-              let isRadialSnapEnabled = d3.event.sourceEvent.shiftKey;
-
-              let origFromPoint = d3.event.target.origFromPoint;
-              let origToPoint = d3.event.target.origToPoint;
-
-              let dx = d3.event.x - d3.event.target.startX;
-              let dy = d3.event.y - d3.event.target.startY;
-
-              // cX/cY = Center Point
-              // pX/pY = Snap Point
-              let calcRadialSnapXY = (cX: number, cY: number, pX: number, pY: number)
-                  : { x: number, y: number } => {
-                let x = pX - cX;
-                let y = pY - cY;
-                let r = Math.sqrt(x * x + y * y);
-                let rawRad = Math.atan2(y, x); // [-PI, +PI]
-                let radStep = Math.round(rawRad / Def.RADIAL_SNAP_STEP_RAD);
-                let snapRad = radStep * Def.RADIAL_SNAP_STEP_RAD;
-
-                let newX = Math.round(r * Math.cos(snapRad));
-                let newY = Math.round(r * Math.sin(snapRad));
-
-                return {
-                  x: cX + newX,
-                  y: cY + newY,
-                };
-              };
-
-              switch (id) {
-                case this.GRIP_ID_FROM: {
-                  this.fromPoint = new Point(origFromPoint.x + dx, origFromPoint.y + dy);
-
-                  // Snapping.
-                  if (isSnapDragEnabled) {
-                    if (isRadialSnapEnabled) {
-                      let snappedXY = calcRadialSnapXY(
-                          this.toPoint.x,
-                          this.toPoint.y,
-                          this.fromPoint.x,
-                          this.fromPoint.y);
-                      this.fromPoint = new Point(snappedXY.x, snappedXY.y);
-                    } else {
-                      let snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
-                      let snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
-                      this.fromPoint = new Point(this.fromPoint.x - snapX, this.fromPoint.y - snapY);
-                    }
-                  }
-                }
-                break;
-
-                case this.GRIP_ID_TO: {
-                  this.toPoint = new Point(origToPoint.x + dx, origToPoint.y + dy);
-
-                  // Snapping.
-                  if (isSnapDragEnabled) {
-                    if (isRadialSnapEnabled) {
-                      let snappedXY = calcRadialSnapXY(
-                          this.fromPoint.x,
-                          this.fromPoint.y,
-                          this.toPoint.x,
-                          this.toPoint.y);
-                      this.toPoint = new Point(snappedXY.x, snappedXY.y);
-                    } else {
-                      let snapX = this.toPoint.x % Def.SNAP_STEP_PIX;
-                      let snapY = this.toPoint.y % Def.SNAP_STEP_PIX;
-                      this.toPoint = new Point(this.toPoint.x - snapX, this.toPoint.y - snapY);
-                    }
-                  }
-                }
-                break;
-
-              }
-
-              this.relayout();
-
-          } )
-          .on("end", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:end");
-
-              d3.event.target.origFromPoint = new Point(0, 0);
-              d3.event.target.origToPoint = new Point(0, 0);
-              d3.event.target.startX = 0;
-              d3.event.target.startY = 0;
-
-              if (this.callback != null) this.callback.onHistoricalChanged(this);
-          } )
-    );
+//    grip.call(
+//      d3.drag<SVGRectElement, any, any>()
+//          .on("start", () => {
+//              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:start");
+//
+//              d3.event.target.origFromPoint = this.fromPoint;
+//              d3.event.target.origToPoint = this.toPoint;
+//              d3.event.target.startX = d3.event.x;
+//              d3.event.target.startY = d3.event.y;
+//
+//          } )
+//          .on("drag", () => {
+//              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
+//
+//              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+//              let isRadialSnapEnabled = d3.event.sourceEvent.shiftKey;
+//
+//              let origFromPoint = d3.event.target.origFromPoint;
+//              let origToPoint = d3.event.target.origToPoint;
+//
+//              let dx = d3.event.x - d3.event.target.startX;
+//              let dy = d3.event.y - d3.event.target.startY;
+//
+//              // cX/cY = Center Point
+//              // pX/pY = Snap Point
+//              let calcRadialSnapXY = (cX: number, cY: number, pX: number, pY: number)
+//                  : { x: number, y: number } => {
+//                let x = pX - cX;
+//                let y = pY - cY;
+//                let r = Math.sqrt(x * x + y * y);
+//                let rawRad = Math.atan2(y, x); // [-PI, +PI]
+//                let radStep = Math.round(rawRad / Def.RADIAL_SNAP_STEP_RAD);
+//                let snapRad = radStep * Def.RADIAL_SNAP_STEP_RAD;
+//
+//                let newX = Math.round(r * Math.cos(snapRad));
+//                let newY = Math.round(r * Math.sin(snapRad));
+//
+//                return {
+//                  x: cX + newX,
+//                  y: cY + newY,
+//                };
+//              };
+//
+//              switch (id) {
+//                case this.GRIP_ID_FROM: {
+//                  this.fromPoint = new Point(origFromPoint.x + dx, origFromPoint.y + dy);
+//
+//                  // Snapping.
+//                  if (isSnapDragEnabled) {
+//                    if (isRadialSnapEnabled) {
+//                      let snappedXY = calcRadialSnapXY(
+//                          this.toPoint.x,
+//                          this.toPoint.y,
+//                          this.fromPoint.x,
+//                          this.fromPoint.y);
+//                      this.fromPoint = new Point(snappedXY.x, snappedXY.y);
+//                    } else {
+//                      let snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
+//                      let snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
+//                      this.fromPoint = new Point(this.fromPoint.x - snapX, this.fromPoint.y - snapY);
+//                    }
+//                  }
+//                }
+//                break;
+//
+//                case this.GRIP_ID_TO: {
+//                  this.toPoint = new Point(origToPoint.x + dx, origToPoint.y + dy);
+//
+//                  // Snapping.
+//                  if (isSnapDragEnabled) {
+//                    if (isRadialSnapEnabled) {
+//                      let snappedXY = calcRadialSnapXY(
+//                          this.fromPoint.x,
+//                          this.fromPoint.y,
+//                          this.toPoint.x,
+//                          this.toPoint.y);
+//                      this.toPoint = new Point(snappedXY.x, snappedXY.y);
+//                    } else {
+//                      let snapX = this.toPoint.x % Def.SNAP_STEP_PIX;
+//                      let snapY = this.toPoint.y % Def.SNAP_STEP_PIX;
+//                      this.toPoint = new Point(this.toPoint.x - snapX, this.toPoint.y - snapY);
+//                    }
+//                  }
+//                }
+//                break;
+//
+//              }
+//
+//              this.relayout();
+//
+//          } )
+//          .on("end", () => {
+//              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:end");
+//
+//              d3.event.target.origFromPoint = new Point(0, 0);
+//              d3.event.target.origToPoint = new Point(0, 0);
+//              d3.event.target.startX = 0;
+//              d3.event.target.startY = 0;
+//
+//              if (this.callback != null) this.callback.onHistoricalChanged(this);
+//          } )
+//    );
   }
 
   private disableEditMode() {
@@ -680,19 +687,36 @@ export class Connector extends Element {
     // Grips.
     if (this.editor != null) {
       let fromGrip = this.editor.select(`#${this.GRIP_ID_FROM}`);
-      fromGrip.attr("cx", this.fromPoint.x);
-      fromGrip.attr("cy", this.fromPoint.y);
+      fromGrip.attr("x", this.fromPoint.x - this.EDIT_GRIP_RADIUS_PIX)
+      fromGrip.attr("y", this.fromPoint.y - this.EDIT_GRIP_RADIUS_PIX)
+      fromGrip.attr("width", this.EDIT_GRIP_RADIUS_PIX * 2)
+      fromGrip.attr("height", this.EDIT_GRIP_RADIUS_PIX * 2)
 
       let toGrip = this.editor.select(`#${this.GRIP_ID_TO}`);
-      toGrip.attr("cx", this.toPoint.x);
-      toGrip.attr("cy", this.toPoint.y);
+      toGrip.attr("x", this.toPoint.x - this.EDIT_GRIP_RADIUS_PIX)
+      toGrip.attr("y", this.toPoint.y - this.EDIT_GRIP_RADIUS_PIX)
+      toGrip.attr("width", this.EDIT_GRIP_RADIUS_PIX * 2)
+      toGrip.attr("height", this.EDIT_GRIP_RADIUS_PIX * 2)
 
     }
 
   }
 
   private recolor() {
-    this.path.attr("stroke", this.colorResolver.bg);
+    if (this.currentState instanceof Connector.IdleState) {
+      this.path.attr("stroke", this.colorResolver.bg);
+    } else {
+      this.path.attr("stroke", this.colorResolver.bgHighlight);
+    }
+
+    if (this.editor != null) {
+      let fromGrip = this.editor.select(`#${this.GRIP_ID_FROM}`);
+      fromGrip.attr("fill", this.colorResolver.bgHighlight);
+
+      let toGrip = this.editor.select(`#${this.GRIP_ID_TO}`);
+      toGrip.attr("fill", this.colorResolver.bgHighlight);
+
+    }
 
   }
 
@@ -712,10 +736,9 @@ export class Connector extends Element {
     changeColorSet(colorSet: ColorSet) {
       this.target.colorSet = colorSet;
 
-      // Re-construction and re-color.
+      // Re-construction.
       this.target.disableEditMode();
       this.target.enableEditMode();
-      this.target.recolor();
     }
 
     moveToFrontEnd() {

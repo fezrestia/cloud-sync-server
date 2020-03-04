@@ -8,7 +8,7 @@ export class Def {
   public static readonly RADIAL_SNAP_STEP_RAD = Math.PI * 2 / 24; // 15 deg
 
   public static readonly KEY_VERSION = "version";
-  public static readonly VAL_VERSION = "3";
+  public static readonly VAL_VERSION = "4";
 
   public static readonly KEY_ARCHITECTURE_MAP = "architecture_map";
   public static readonly KEY_OUT_FRAME = "out_frame";
@@ -32,6 +32,9 @@ export class Def {
   public static readonly KEY_FROM_Y = "from_y";
   public static readonly KEY_TO_X = "to_x";
   public static readonly KEY_TO_Y = "to_y";
+
+  public static readonly KEY_FROM_UID = "from_uid";
+  public static readonly KEY_TO_UID = "to_uid";
 
 }
 
