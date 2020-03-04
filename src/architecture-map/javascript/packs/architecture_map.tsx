@@ -54,7 +54,6 @@ class Context {
   public genNewElementUid(): number {
     let max: number = Math.max.apply(null, this.elementUids);
     let newUid = max + 1;
-    this.elementUids.push(newUid);
     return newUid;
   }
 
@@ -183,7 +182,7 @@ class Context {
     } );
   }
 
-  private validateAndCacheElementUid(element: Element) {
+  private validateElementUid(element: Element) {
     let uid = element.uid;
 
     if (!uid) {
@@ -201,12 +200,11 @@ class Context {
     }
 
     // OK.
-    this.elementUids.push(uid);
   }
 
   private deserializeArchMod(json: ArchModJson): ArchMod {
     let archMod = ArchMod.deserialize(this.html, this.svg, json);
-    this.validateAndCacheElementUid(archMod);
+    this.validateElementUid(archMod);
     this.renderArchMod(archMod);
     return archMod;
   }
@@ -236,7 +234,7 @@ class Context {
 
   private deserializeDividerLine(json: DividerLineJson): DividerLine {
     let line = DividerLine.deserialize(this.html, this.svg, json);
-    this.validateAndCacheElementUid(line);
+    this.validateElementUid(line);
     this.renderDividerLine(line);
     return line;
   }
@@ -266,7 +264,7 @@ class Context {
 
   private deserializeConnector(json: ConnectorJson): Connector {
     let connector = Connector.deserialize(this.html, this.svg, json);
-    this.validateAndCacheElementUid(connector);
+    this.validateElementUid(connector);
     this.renderConnector(connector);
     return connector;
   }

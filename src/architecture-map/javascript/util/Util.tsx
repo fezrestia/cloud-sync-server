@@ -39,4 +39,12 @@ export class Util {
     return `${Y}-${M}-${D}_${h}${m}${s}`;
   }
 
+  public static uniqArray(array: any[]): any[] {
+    const uniqElements = new Set();
+    array.forEach( (element) => {
+      uniqElements.add(element);
+    } );
+    return Array.from(uniqElements);
+  }
+
 }

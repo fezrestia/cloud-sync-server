@@ -888,67 +888,85 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     let history = [];
 
     await resizeOutFrame(DRAG_DIFF, DRAG_DIFF);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     let one = await addNewArchMod();
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await drag(one, DEFAULT_W / 2 + DRAG_DIFF, DEFAULT_H / 2 + DRAG_DIFF);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await changeLabel(one, "one");
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await changeLabelRotToVertical(one);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await changeLabelAlignTo(one, "top");
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await changeClipAreaToLeftTop(one);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await select(one); // edit
     let gripPin = await one.findElement(By.id("grip_pin"));
     await drag(gripPin, -1 * DRAG_DIFF, -1 * DRAG_DIFF);
     await deselect(one);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await changeColorTo(one, "color_set_green");
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     let two = await addNewArchMod();
     await changeLabel(two, "two");
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await lower(two);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await raise(two);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     let line = await addNewDividerLine();
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await drag(line, DEFAULT_W, -1 * DEFAULT_H);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await select(line); //edit
     let fromGrip = await line.findElement(By.id("from_grip"));
     await drag(fromGrip, -1 * DRAG_DIFF, -1 * DRAG_DIFF);
     await deselect(line);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await select(line); //edit
     let toGrip = await line.findElement(By.id("to_grip"));
     await drag(toGrip, DRAG_DIFF, DRAG_DIFF);
     await deselect(line);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await changeColorTo(line, "color_set_blue");
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     await lower(line);
+    assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
     // Check there is NO same history.
@@ -977,6 +995,52 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     assert.deepEqual(redoLast, history[history.length - 1]);
 
   } );
+
+  async function isElementUidsValid(): Promise<boolean> {
+    let inject = (): string => {
+      // From Util.uniqArray(array: any[]).
+      function uniqArray(array: any[]): any[] {
+        const uniqElements = new Set();
+        array.forEach( (element) => {
+          uniqElements.add(element);
+        } );
+        return Array.from(uniqElements);
+      }
+
+      let allElements = (window as any).getContext().allElements;
+      let elementUids = (window as any).getContext().elementUids;
+
+      let elmsSize = allElements.length;
+      let uidsSize = elementUids.length;
+
+      if ( (allElements.length + 1) != elementUids.length) {
+        return `allElements.length(${elmsSize}) + 1 != elementsUids.length(${elmsSize})`;
+      }
+
+      let elementsUniqSize = uniqArray(allElements).length;
+      if (elementsUniqSize != allElements.length) {
+        return `elementsUniqSize(${elementsUniqSize}) != allElements.length(${elmsSize})`;
+      }
+
+      let uidsUniqSize = uniqArray(elementUids).length;
+      if (uidsUniqSize != elementUids.length) {
+        return `uidsUniqSize(${uidsUniqSize}) != elementUids.length(${uidsSize})`;
+      }
+
+      return ""; // OK.
+    };
+
+    let result = await driver.executeScript(inject);
+
+    if (result == "") {
+      // OK.
+      return true;
+    } else {
+      // NG.
+      console.log(`    ## ${result}`);
+      return false;
+    }
+  }
 
   ///////////////////////////////////////////////////////////////////////////////// TEST CASE ////
 
