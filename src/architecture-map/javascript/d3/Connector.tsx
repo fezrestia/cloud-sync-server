@@ -15,6 +15,7 @@ import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
 import { ArchMod } from "./ArchMod";
+import { ConnectorEnd } from "../Def.ts";
 
 /**
  * Callback interface for Connector.
@@ -54,6 +55,8 @@ export interface ConnectorJson {
       [Def.KEY_TO_Y]: number,
       [Def.KEY_WIDTH]: number,
   },
+  [Def.KEY_FROM_CONNECTOR_END]: string,
+  [Def.KEY_TO_CONNECTOR_END]: string,
   [Def.KEY_COLOR_SET]: string,
 }
 
@@ -104,9 +107,13 @@ export class Connector extends Element {
   private readonly GRIP_ID_FROM = "from_grip";
   private readonly GRIP_ID_TO = "to_grip";
 
+  private readonly MARKER_SIZE = 16;
+  private readonly MARKER_ID_ARROW = "arrow_marker";
+  private readonly MARKER_ID_RECT = "rect_marker";
+
   private static IdleState = class extends ConnectorState {
     enter() {
-      this.target.setHighlight(false);
+      this.target.isHighlight = false;
     }
 
     onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
@@ -130,12 +137,12 @@ export class Connector extends Element {
     }
 
     enter() {
-      this.target.setHighlight(true);
+      this.target.isHighlight = true;
       if (this.target.callback != null) this.target.callback.onSelected(this.target, this.isMulti);
     }
 
     exit() {
-      this.target.setHighlight(false);
+      this.target.isHighlight = false;
       if (this.target.callback != null) this.target.callback.onDeselected(this.target);
     }
 
@@ -160,14 +167,14 @@ export class Connector extends Element {
     }
 
     enter() {
-      this.target.setHighlight(true);
+      this.target.isHighlight = true;
       this.target.enableEditMode();
       if (this.target.callback != null) this.target.callback.onEditing(this.target, this.isMulti);
     }
 
     exit() {
       this.target.closeContextMenu();
-      this.target.setHighlight(false);
+      this.target.isHighlight = false;
       this.target.disableEditMode();
       if (this.target.callback != null) this.target.callback.onEdited(this.target);
     }
@@ -234,6 +241,35 @@ export class Connector extends Element {
         this._itxMode = mode;
       }
 
+  private _fromConnectorEnd: ConnectorEnd = ConnectorEnd.NONE;
+      public get fromConnectorEnd(): ConnectorEnd {
+        return this._fromConnectorEnd;
+      }
+      public set fromConnectorEnd(end: ConnectorEnd) {
+        this._fromConnectorEnd = end;
+        this.relayout();
+        this.recolor();
+      }
+
+  private _toConnectorEnd: ConnectorEnd = ConnectorEnd.NONE;
+      public get toConnectorEnd(): ConnectorEnd {
+        return this._toConnectorEnd;
+      }
+      public set toConnectorEnd(end: ConnectorEnd) {
+        this._toConnectorEnd = end;
+        this.relayout();
+        this.recolor();
+      }
+
+  private _isHighlight: boolean = false;
+      private get isHighlight(): boolean {
+        return this._isHighlight;
+      }
+      private set isHighlight(highlight: boolean) {
+        this._isHighlight = highlight;
+        this.recolor();
+      }
+
   /**
    * Serialize Connector object to ConnectorJson Object.
    *
@@ -252,6 +288,8 @@ export class Connector extends Element {
             [Def.KEY_TO_Y]: this.toPoint.y,
             [Def.KEY_WIDTH]: this.width,
         },
+        [Def.KEY_FROM_CONNECTOR_END]: this.fromConnectorEnd,
+        [Def.KEY_TO_CONNECTOR_END]: this.toConnectorEnd,
         [Def.KEY_COLOR_SET]: this.colorSet,
     };
     return jsonObj;
@@ -282,6 +320,9 @@ export class Connector extends Element {
     (connector as any).fromPoint =  new Point(fromX, fromY);
     (connector as any).toPoint =  new Point(toX, toY);
     (connector as any).width = json[Def.KEY_DIMENS][Def.KEY_WIDTH];
+
+    (connector as any)._fromConnectorEnd = ConnectorEnd.valueOf(json[Def.KEY_FROM_CONNECTOR_END]);
+    (connector as any)._toConnectorEnd = ConnectorEnd.valueOf(json[Def.KEY_TO_CONNECTOR_END]);
 
     connector.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
 
@@ -445,14 +486,6 @@ export class Connector extends Element {
     this.registerCallbacks();
   }
 
-  private setHighlight(isHighlight: boolean) {
-    if (isHighlight) {
-      this.path.attr("stroke", this.colorResolver.bgHighlight);
-    } else {
-      this.path.attr("stroke", this.colorResolver.bg);
-    }
-  }
-
   // @Override
   public select() {
     this.runNoCallback( () => {
@@ -533,8 +566,12 @@ export class Connector extends Element {
     this.editor = this.root.append("g")
         .attr("id", "editor_plane");
 
-    this.addEditGrip(this.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
-    this.addEditGrip(this.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
+    if (this.fromConnectorEnd == ConnectorEnd.NONE) {
+      this.addEditGrip(this.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
+    }
+    if (this.toConnectorEnd == ConnectorEnd.NONE) {
+      this.addEditGrip(this.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
+    }
 
     this.relayout();
     this.recolor();
@@ -700,14 +737,141 @@ export class Connector extends Element {
 
     }
 
+    // Marker.
+    this.prepareMarkers();
+    this.updateMarkers();
+  }
+
+  private prepareMarkers() {
+    let defs = this.svg.select("defs") as D3Node.Defs;
+    if (defs.empty()) {
+      defs = this.svg.append("defs");
+    }
+
+    // Arrow marker dynamic IDs.
+    let idArrow = `${this.MARKER_ID_ARROW}_${this.colorSet}`;
+    let idArrowHighlight = `${this.MARKER_ID_ARROW}_${this.colorSet}_highlight`;
+
+    // Arrow markers.
+    let arrowMap = [
+      [idArrow,           this.colorResolver.bg],
+      [idArrowHighlight,  this.colorResolver.bgHighlight],
+    ];
+    arrowMap.forEach( (idAndColor) => {
+      let id = idAndColor[0];
+      let color = idAndColor[1];
+
+      let arrowMarker = defs.select(`#${id}`) as D3Node.Marker;
+      if (arrowMarker.empty()) {
+        arrowMarker = defs.append("marker")
+            .attr("id", id)
+            .attr("viewBox", `0, 0, ${this.MARKER_SIZE}, ${this.MARKER_SIZE}`)
+            .attr("refX", this.MARKER_SIZE - this.DEFAULT_WIDTH)
+            .attr("refY", this.MARKER_SIZE / 2)
+            .attr("markerWidth", this.MARKER_SIZE)
+            .attr("markerHeight", this.MARKER_SIZE)
+            .attr("orient", "auto-start-reverse")
+            .attr("markerUnits", "userSpaceOnUse");
+        let d = this.MARKER_SIZE;
+        let l = this.DEFAULT_WIDTH;
+        let a = 1.118; // root(5)/2
+        arrowMarker.append("path")
+            .attr("d", `M ${d},${d / 2} 0,${d} 0,${d - a * l} ${d - 2 * a * l},${d / 2} 0,${a * l} 0,0 Z`)
+            .attr("fill", color);
+      }
+
+    } );
+
+    // Rect marker dynamic IDs.
+    let idRect= `${this.MARKER_ID_RECT}_${this.colorSet}`;
+    let idRectHighlight = `${this.MARKER_ID_RECT}_${this.colorSet}_highlight`;
+
+    // Rect markers.
+    let rectMap = [
+      [idRect,          this.colorResolver.bg],
+      [idRectHighlight, this.colorResolver.bgHighlight],
+    ];
+    rectMap.forEach( (idAndColor) => {
+      let id = idAndColor[0];
+      let color = idAndColor[1];
+
+      let rectMarker = defs.select(`#${id}`) as D3Node.Marker;
+      if (rectMarker.empty()) {
+        let rectSize = this.MARKER_SIZE * 3 / 4;
+        rectMarker = defs.append("marker")
+            .attr("id", id)
+            .attr("viewBox", `0, 0, ${rectSize}, ${rectSize}`)
+            .attr("refX", rectSize / 2)
+            .attr("refY", rectSize / 2)
+            .attr("markerWidth", rectSize)
+            .attr("markerHeight", rectSize)
+            .attr("orient", "0")
+            .attr("markerUnits", "userSpaceOnUse");
+        let d = rectSize;
+        rectMarker.append("path")
+            .attr("d", `M 0,0 0,${d} ${d},${d} ${d},0 Z`)
+            .attr("fill", color);
+      }
+
+    } );
+
+  }
+
+  private updateMarkers() {
+    if (this.path != null) {
+      let fromMarkerId = "";
+      switch (this.fromConnectorEnd) {
+        case ConnectorEnd.ARROW:
+          if (this.isHighlight) {
+            fromMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}_highlight`
+          } else {
+            fromMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}`
+          }
+          break;
+
+        case ConnectorEnd.RECT:
+          if (this.isHighlight) {
+            fromMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}_highlight`
+          } else {
+            fromMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}`
+          }
+          break;
+      }
+      this.path.attr("marker-start", `url(#${fromMarkerId})`);
+
+      let toMarkerId = "";
+      switch (this.toConnectorEnd) {
+        case ConnectorEnd.ARROW:
+          if (this.isHighlight) {
+            toMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}_highlight`
+          } else {
+            toMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}`
+          }
+          break;
+
+        case ConnectorEnd.RECT:
+          if (this.isHighlight) {
+            toMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}_highlight`
+          } else {
+            toMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}`
+          }
+          break;
+      }
+      this.path.attr("marker-end", `url(#${toMarkerId})`);
+
+    }
+
   }
 
   private recolor() {
-    if (this.currentState instanceof Connector.IdleState) {
-      this.path.attr("stroke", this.colorResolver.bg);
+    let color;
+    if (this.isHighlight) {
+      color = this.colorResolver.bgHighlight;
     } else {
-      this.path.attr("stroke", this.colorResolver.bgHighlight);
+      color = this.colorResolver.bg;
     }
+
+    this.path.attr("stroke", color);
 
     if (this.editor != null) {
       let fromGrip = this.editor.select(`#${this.GRIP_ID_FROM}`);
@@ -718,6 +882,9 @@ export class Connector extends Element {
 
     }
 
+    // Marker.
+    this.prepareMarkers();
+    this.updateMarkers();
   }
 
   private ContextMenuCallbackImpl = class implements ConnectorContextMenuCallback {
@@ -731,6 +898,22 @@ export class Connector extends Element {
       this.target.closeContextMenu();
 
       if (this.target.callback != null) this.target.callback.onHistoricalChanged(this.target);
+    }
+
+    changeFromConnectorEnd(connectorEnd: ConnectorEnd) {
+      this.target.fromConnectorEnd = connectorEnd;
+
+      // Re-construction.
+      this.target.disableEditMode();
+      this.target.enableEditMode();
+    }
+
+    changeToConnectorEnd(connectorEnd: ConnectorEnd) {
+      this.target.toConnectorEnd = connectorEnd;
+
+      // Re-construction.
+      this.target.disableEditMode();
+      this.target.enableEditMode();
     }
 
     changeColorSet(colorSet: ColorSet) {

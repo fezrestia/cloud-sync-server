@@ -15,6 +15,8 @@ export namespace D3Node {
   export type Text = d3.Selection<SVGTextElement, any, HTMLElement, any>;
   export type Path = d3.Selection<SVGPathElement, any, HTMLElement, any>;
   export type Circle = d3.Selection<SVGCircleElement, any, HTMLElement, any>;
+  export type Defs = d3.Selection<SVGDefsElement, any, HTMLElement, any>;
+  export type Marker = d3.Selection<SVGMarkerElement, any, HTMLElement, any>;
 }
 
 export type JQueryNode = JQuery<HTMLElement>;

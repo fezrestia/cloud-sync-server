@@ -4,6 +4,7 @@ import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
+import { ConnectorEnd } from "../Def.ts";
 
 interface Props {
   callback: ConnectorContextMenuCallback,
@@ -16,6 +17,8 @@ interface State {
 
 export interface ConnectorContextMenuCallback {
   close(): void;
+  changeFromConnectorEnd(connectorEnd: ConnectorEnd): void;
+  changeToConnectorEnd(connectorEnd: ConnectorEnd): void;
   changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
@@ -85,6 +88,22 @@ export class ConnectorContextMenu extends React.Component<Props, State> {
             onClick={ handleContextMenuClick }
         >
           <table className="context-menu-contents" ><tbody>
+            <tr>
+              <td className="no-wrap" >FROM Connector End</td>
+              <td>
+                {this.genClickButton("from_connector_end_none",   "None",   () => { callback.changeFromConnectorEnd(ConnectorEnd.NONE) })}
+                {this.genClickButton("from_connector_end_arrow",  "Arrow",  () => { callback.changeFromConnectorEnd(ConnectorEnd.ARROW) })}
+                {this.genClickButton("from_connector_end_rect",   "Rect",   () => { callback.changeFromConnectorEnd(ConnectorEnd.RECT) })}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >TO Connector End</td>
+              <td>
+                {this.genClickButton("to_connector_end_none",   "None",   () => { callback.changeToConnectorEnd(ConnectorEnd.NONE) })}
+                {this.genClickButton("to_connector_end_arrow",  "Arrow",  () => { callback.changeToConnectorEnd(ConnectorEnd.ARROW) })}
+                {this.genClickButton("to_connector_end_rect",   "Rect",   () => { callback.changeToConnectorEnd(ConnectorEnd.RECT) })}
+              </td>
+            </tr>
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >

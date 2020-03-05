@@ -661,10 +661,28 @@ class Context {
   }
 
   public queryElementUid(uid: number): Element {
-    let hit = CONTEXT.allElements.find( (element: Element) => element.uid == uid );
+    let hit = this.allElements.find( (element: Element) => element.uid == uid );
     if (hit == undefined) throw new Error(`UID = ${uid} is NOT Hit.`);
     return hit;
   }
+
+  public queryConnector(fromUid: number, toUid: number): Element|null {
+    let hit = this.allElements.find( (element: Element)=> {
+      if (element.TAG == Connector.TAG) {
+        let conn = element as Connector;
+        return conn.isConnectedFrom(fromUid) && conn.isConnectedTo(toUid);
+      } else {
+        // NO Hit.
+        return false;
+      }
+    } );
+    if (hit == undefined) {
+      return null;
+    } else {
+      return hit;
+    }
+  }
+
 }
 const CONTEXT = new Context();
 (window as any).getContext = () => { return CONTEXT };
@@ -701,9 +719,14 @@ class ArchModCallbackImpl implements ArchModCallback {
         if (fromArchMod.uid == toArchMod.uid) {
           // NOP. Same one.
         } else {
-          // Add new connector.
-          CONTEXT.addNewConnector(fromArchMod, toArchMod);
-          CONTEXT.recordHistory();
+          // Duplicate check.
+          let nit = CONTEXT.queryConnector(fromArchMod.uid, toArchMod.uid);
+
+          if (nit == null) {
+            // Add new connector.
+            CONTEXT.addNewConnector(fromArchMod, toArchMod);
+            CONTEXT.recordHistory();
+          }
         }
 
         // Finish add mode.
