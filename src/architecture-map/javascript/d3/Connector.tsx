@@ -551,7 +551,8 @@ export class Connector extends Element {
     this.path.on("contextmenu", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "on:contextmenu");
 
-        this.currentState.onRightClicked(d3.event.x, d3.event.y);
+        // NOTICE: Click offset X-Y is based on viewport of polygon. (same as svg)
+        this.currentState.onRightClicked(d3.event.offsetX, d3.event.offsetY);
 
         d3.event.stopPropagation();
         d3.event.preventDefault();
@@ -939,22 +940,11 @@ export class Connector extends Element {
 
     this.html.css("display", "block");
 
-    // Position.
-    let offsetX = 0;
-    let offsetY = 0;
-    let htmlOffset = this.html.offset();
-    if (htmlOffset != undefined) {
-        offsetX = htmlOffset.left;
-        offsetY = htmlOffset.top;
-    }
-    let leftPix: number = clickX - offsetX;
-    let topPix: number = clickY - offsetY;
-
     ReactDOM.render(
         <ConnectorContextMenu
             callback={new this.ContextMenuCallbackImpl(this)}
-            leftPix={leftPix}
-            topPix={topPix}
+            leftPix={clickX}
+            topPix={clickY}
         />,
         document.getElementById(this.html[0].id));
   }
