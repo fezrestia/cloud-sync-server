@@ -107,7 +107,7 @@ export class Connector extends Element {
   private readonly GRIP_ID_FROM = "from_grip";
   private readonly GRIP_ID_TO = "to_grip";
 
-  private readonly MARKER_SIZE = 16;
+  private readonly MARKER_SIZE = 4;
   private readonly MARKER_ID_ARROW = "arrow_marker";
   private readonly MARKER_ID_RECT = "rect_marker";
 
@@ -212,7 +212,6 @@ export class Connector extends Element {
 
     this.colorSet = this.colorSet; // Load defaut
     this._currentState = new Connector.IdleState(this);
-    this.width = this.DEFAULT_WIDTH;
 
     this._label = String(Connector.countId);
     Connector.countId++;
@@ -339,7 +338,7 @@ export class Connector extends Element {
   private toUid: number = 0;
   private fromPoint: Point = new Point(0, 0);
   private toPoint: Point = new Point(0, 0);
-  private width: number;
+  private width: number = this.DEFAULT_WIDTH;
 
   // Color resolver functions.
   private _colorSet: ColorSet = ColorSet.GRAY;
@@ -455,6 +454,34 @@ export class Connector extends Element {
         toX: this.toPoint.x,
         toY: this.toPoint.y,
     };
+  }
+
+  /**
+   * Change stroke width.
+   *
+   * @param strokeWidth
+   */
+  public changeStrokeWidth(strokeWidth: number) {
+    this.width = strokeWidth;
+    this.relayout();
+
+  }
+
+  /**
+   * Change connecto end style.
+   *
+   * @param fromConnectorEnd null means NOP.
+   * @param toConnectorEnd null means NOP.
+   */
+  public changeConnectorEnd(fromConnectorEnd: ConnectorEnd|null, toConnectorEnd: ConnectorEnd|null) {
+    if (fromConnectorEnd != null) {
+      this.fromConnectorEnd = fromConnectorEnd;
+    }
+
+    if (toConnectorEnd != null) {
+      this.toConnectorEnd = toConnectorEnd;
+    }
+
   }
 
   /**
@@ -767,12 +794,12 @@ export class Connector extends Element {
         arrowMarker = defs.append("marker")
             .attr("id", id)
             .attr("viewBox", `0, 0, ${this.MARKER_SIZE}, ${this.MARKER_SIZE}`)
-            .attr("refX", this.MARKER_SIZE - this.DEFAULT_WIDTH)
+            .attr("refX", this.MARKER_SIZE)
             .attr("refY", this.MARKER_SIZE / 2)
             .attr("markerWidth", this.MARKER_SIZE)
             .attr("markerHeight", this.MARKER_SIZE)
             .attr("orient", "auto-start-reverse")
-            .attr("markerUnits", "userSpaceOnUse");
+            .attr("markerUnits", "strokeWidth");
         let d = this.MARKER_SIZE;
         let l = this.DEFAULT_WIDTH;
         let a = 1.118; // root(5)/2
@@ -807,7 +834,7 @@ export class Connector extends Element {
             .attr("markerWidth", rectSize)
             .attr("markerHeight", rectSize)
             .attr("orient", "0")
-            .attr("markerUnits", "userSpaceOnUse");
+            .attr("markerUnits", "strokeWidth");
         let d = rectSize;
         rectMarker.append("path")
             .attr("d", `M 0,0 0,${d} ${d},${d} ${d},0 Z`)
@@ -859,6 +886,12 @@ export class Connector extends Element {
           break;
       }
       this.path.attr("marker-end", `url(#${toMarkerId})`);
+
+      let endGap = this.width;
+      let lineLen = this.path.node()!.getTotalLength() - endGap * 2;
+
+      this.path.attr("stroke-dasharray", `0 ${endGap} ${lineLen} ${endGap}`);
+      this.path.attr("stroke-dashoffset", 0);
 
     }
 
