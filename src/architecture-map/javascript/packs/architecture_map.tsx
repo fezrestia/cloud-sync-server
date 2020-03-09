@@ -1071,6 +1071,8 @@ function registerGlobalCallbacks() {
           isHandledByGodMode = false;
           break;
       }
+    } else {
+      isHandledByGodMode = false;
     }
 
     // for BOTH mode.
