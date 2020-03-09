@@ -1067,6 +1067,10 @@ function registerGlobalCallbacks() {
           }
           break;
 
+        case "F5":
+          alert("Reload Short-Cut Key is Disabled in EDIT mode.");
+          break;
+
         default:
           isHandledByGodMode = false;
           break;
