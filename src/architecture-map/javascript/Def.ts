@@ -68,6 +68,7 @@ export enum ColorSet {
   GREEN       = "green",
   BLUE        = "blue",
   YELLOW      = "yellow",
+  RED         = "red",
 }
 export namespace ColorSet {
   export function valueOf(value: string): ColorSet {
@@ -84,6 +85,7 @@ export namespace ColorSet {
       case ColorSet.GREEN:      return new ColorResolver("palegreen",      "limegreen",  "limegreen");
       case ColorSet.BLUE:       return new ColorResolver("lightskyblue",   "royalblue",  "dodgerblue");
       case ColorSet.YELLOW:     return new ColorResolver("khaki",          "gold",       "gold");
+      case ColorSet.RED:        return new ColorResolver("red",            "red",        "red");
 
       default:                  return ColorSet.resolve(ColorSet.NONE);
     }

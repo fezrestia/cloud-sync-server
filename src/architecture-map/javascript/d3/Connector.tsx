@@ -101,15 +101,22 @@ export class Connector extends Element {
 
   private static countId: number = 0;
 
-  private readonly EDIT_GRIP_RADIUS_PIX = 8;
-  private readonly MIN_SIZE_PIX = 16;
-  private readonly DEFAULT_WIDTH = 4;
-  private readonly GRIP_ID_FROM = "from_grip";
-  private readonly GRIP_ID_TO = "to_grip";
+  private static readonly EDIT_GRIP_RADIUS_PIX = 8;
+  private static readonly MIN_SIZE_PIX = 16;
+  private static readonly DEFAULT_WIDTH = 4;
+  private static readonly GRIP_ID_FROM = "from_grip";
+  private static readonly GRIP_ID_TO = "to_grip";
 
-  private readonly MARKER_SIZE = 4;
-  private readonly MARKER_ID_ARROW = "arrow_marker";
-  private readonly MARKER_ID_RECT = "rect_marker";
+  private static readonly MARKER_SIZE = 4;
+  private static readonly MARKER_ID_ARROW = "arrow_marker";
+  private static readonly MARKER_ID_RECT = "rect_marker";
+
+  private static readonly DEFAULT_COLOR_SET = ColorSet.GRAY;
+
+  private static readonly DEFAULT_FROM_CONNECTOR_END = ConnectorEnd.NONE;
+  private static readonly DEFAULT_TO_CONNECTOR_END = ConnectorEnd.NONE;
+
+  private static readonly ENABLE_HIGH_SPEED_RENDERING = false;
 
   private static IdleState = class extends ConnectorState {
     enter() {
@@ -210,7 +217,8 @@ export class Connector extends Element {
   constructor(uid: number, html: JQueryNode, svg: D3Node.SVG) {
     super(uid, html, svg);
 
-    this.colorSet = this.colorSet; // Load defaut
+    this.colorSet = Connector.DEFAULT_COLOR_SET;
+
     this._currentState = new Connector.IdleState(this);
 
     this._label = String(Connector.countId);
@@ -240,7 +248,7 @@ export class Connector extends Element {
         this._itxMode = mode;
       }
 
-  private _fromConnectorEnd: ConnectorEnd = ConnectorEnd.NONE;
+  private _fromConnectorEnd: ConnectorEnd = Connector.DEFAULT_FROM_CONNECTOR_END;
       public get fromConnectorEnd(): ConnectorEnd {
         return this._fromConnectorEnd;
       }
@@ -250,7 +258,7 @@ export class Connector extends Element {
         this.recolor();
       }
 
-  private _toConnectorEnd: ConnectorEnd = ConnectorEnd.NONE;
+  private _toConnectorEnd: ConnectorEnd = Connector.DEFAULT_TO_CONNECTOR_END;
       public get toConnectorEnd(): ConnectorEnd {
         return this._toConnectorEnd;
       }
@@ -338,10 +346,10 @@ export class Connector extends Element {
   private toUid: number = 0;
   private fromPoint: Point = new Point(0, 0);
   private toPoint: Point = new Point(0, 0);
-  private width: number = this.DEFAULT_WIDTH;
+  private width: number = Connector.DEFAULT_WIDTH;
 
   // Color resolver functions.
-  private _colorSet: ColorSet = ColorSet.GRAY;
+  private _colorSet!: ColorSet;
       public get colorSet(): ColorSet {
         return this._colorSet;
       }
@@ -595,10 +603,10 @@ export class Connector extends Element {
         .attr("id", "editor_plane");
 
     if (this.fromConnectorEnd == ConnectorEnd.NONE) {
-      this.addEditGrip(this.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
+      this.addEditGrip(Connector.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
     }
     if (this.toConnectorEnd == ConnectorEnd.NONE) {
-      this.addEditGrip(this.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
+      this.addEditGrip(Connector.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
     }
 
     this.relayout();
@@ -663,7 +671,7 @@ export class Connector extends Element {
 //              };
 //
 //              switch (id) {
-//                case this.GRIP_ID_FROM: {
+//                case Connector.GRIP_ID_FROM: {
 //                  this.fromPoint = new Point(origFromPoint.x + dx, origFromPoint.y + dy);
 //
 //                  // Snapping.
@@ -684,7 +692,7 @@ export class Connector extends Element {
 //                }
 //                break;
 //
-//                case this.GRIP_ID_TO: {
+//                case Connector.GRIP_ID_TO: {
 //                  this.toPoint = new Point(origToPoint.x + dx, origToPoint.y + dy);
 //
 //                  // Snapping.
@@ -751,17 +759,17 @@ export class Connector extends Element {
 
     // Grips.
     if (this.editor != null) {
-      let fromGrip = this.editor.select(`#${this.GRIP_ID_FROM}`);
-      fromGrip.attr("x", this.fromPoint.x - this.EDIT_GRIP_RADIUS_PIX)
-      fromGrip.attr("y", this.fromPoint.y - this.EDIT_GRIP_RADIUS_PIX)
-      fromGrip.attr("width", this.EDIT_GRIP_RADIUS_PIX * 2)
-      fromGrip.attr("height", this.EDIT_GRIP_RADIUS_PIX * 2)
+      let fromGrip = this.editor.select(`#${Connector.GRIP_ID_FROM}`);
+      fromGrip.attr("x", this.fromPoint.x - Connector.EDIT_GRIP_RADIUS_PIX)
+      fromGrip.attr("y", this.fromPoint.y - Connector.EDIT_GRIP_RADIUS_PIX)
+      fromGrip.attr("width", Connector.EDIT_GRIP_RADIUS_PIX * 2)
+      fromGrip.attr("height", Connector.EDIT_GRIP_RADIUS_PIX * 2)
 
-      let toGrip = this.editor.select(`#${this.GRIP_ID_TO}`);
-      toGrip.attr("x", this.toPoint.x - this.EDIT_GRIP_RADIUS_PIX)
-      toGrip.attr("y", this.toPoint.y - this.EDIT_GRIP_RADIUS_PIX)
-      toGrip.attr("width", this.EDIT_GRIP_RADIUS_PIX * 2)
-      toGrip.attr("height", this.EDIT_GRIP_RADIUS_PIX * 2)
+      let toGrip = this.editor.select(`#${Connector.GRIP_ID_TO}`);
+      toGrip.attr("x", this.toPoint.x - Connector.EDIT_GRIP_RADIUS_PIX)
+      toGrip.attr("y", this.toPoint.y - Connector.EDIT_GRIP_RADIUS_PIX)
+      toGrip.attr("width", Connector.EDIT_GRIP_RADIUS_PIX * 2)
+      toGrip.attr("height", Connector.EDIT_GRIP_RADIUS_PIX * 2)
 
     }
 
@@ -777,8 +785,8 @@ export class Connector extends Element {
     }
 
     // Arrow marker dynamic IDs.
-    let idArrow = `${this.MARKER_ID_ARROW}_${this.colorSet}`;
-    let idArrowHighlight = `${this.MARKER_ID_ARROW}_${this.colorSet}_highlight`;
+    let idArrow = `${Connector.MARKER_ID_ARROW}_${this.colorSet}`;
+    let idArrowHighlight = `${Connector.MARKER_ID_ARROW}_${this.colorSet}_highlight`;
 
     // Arrow markers.
     let arrowMap = [
@@ -793,15 +801,15 @@ export class Connector extends Element {
       if (arrowMarker.empty()) {
         arrowMarker = defs.append("marker")
             .attr("id", id)
-            .attr("viewBox", `0, 0, ${this.MARKER_SIZE}, ${this.MARKER_SIZE}`)
-            .attr("refX", this.MARKER_SIZE)
-            .attr("refY", this.MARKER_SIZE / 2)
-            .attr("markerWidth", this.MARKER_SIZE)
-            .attr("markerHeight", this.MARKER_SIZE)
+            .attr("viewBox", `0, 0, ${Connector.MARKER_SIZE}, ${Connector.MARKER_SIZE}`)
+            .attr("refX", Connector.MARKER_SIZE)
+            .attr("refY", Connector.MARKER_SIZE / 2)
+            .attr("markerWidth", Connector.MARKER_SIZE)
+            .attr("markerHeight", Connector.MARKER_SIZE)
             .attr("orient", "auto-start-reverse")
             .attr("markerUnits", "strokeWidth");
-        let d = this.MARKER_SIZE;
-        let l = this.DEFAULT_WIDTH;
+        let d = Connector.MARKER_SIZE;
+        let l = Connector.DEFAULT_WIDTH;
         let a = 1.118; // root(5)/2
         arrowMarker.append("path")
             .attr("d", `M ${d},${d / 2} 0,${d} 0,${d - a * l} ${d - 2 * a * l},${d / 2} 0,${a * l} 0,0 Z`)
@@ -811,8 +819,8 @@ export class Connector extends Element {
     } );
 
     // Rect marker dynamic IDs.
-    let idRect= `${this.MARKER_ID_RECT}_${this.colorSet}`;
-    let idRectHighlight = `${this.MARKER_ID_RECT}_${this.colorSet}_highlight`;
+    let idRect= `${Connector.MARKER_ID_RECT}_${this.colorSet}`;
+    let idRectHighlight = `${Connector.MARKER_ID_RECT}_${this.colorSet}_highlight`;
 
     // Rect markers.
     let rectMap = [
@@ -825,7 +833,7 @@ export class Connector extends Element {
 
       let rectMarker = defs.select(`#${id}`) as D3Node.Marker;
       if (rectMarker.empty()) {
-        let rectSize = this.MARKER_SIZE * 3 / 4;
+        let rectSize = Connector.MARKER_SIZE * 3 / 4;
         rectMarker = defs.append("marker")
             .attr("id", id)
             .attr("viewBox", `0, 0, ${rectSize}, ${rectSize}`)
@@ -851,17 +859,17 @@ export class Connector extends Element {
       switch (this.fromConnectorEnd) {
         case ConnectorEnd.ARROW:
           if (this.isHighlight) {
-            fromMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}_highlight`
+            fromMarkerId = `${Connector.MARKER_ID_ARROW}_${this.colorSet}_highlight`
           } else {
-            fromMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}`
+            fromMarkerId = `${Connector.MARKER_ID_ARROW}_${this.colorSet}`
           }
           break;
 
         case ConnectorEnd.RECT:
           if (this.isHighlight) {
-            fromMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}_highlight`
+            fromMarkerId = `${Connector.MARKER_ID_RECT}_${this.colorSet}_highlight`
           } else {
-            fromMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}`
+            fromMarkerId = `${Connector.MARKER_ID_RECT}_${this.colorSet}`
           }
           break;
       }
@@ -871,27 +879,30 @@ export class Connector extends Element {
       switch (this.toConnectorEnd) {
         case ConnectorEnd.ARROW:
           if (this.isHighlight) {
-            toMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}_highlight`
+            toMarkerId = `${Connector.MARKER_ID_ARROW}_${this.colorSet}_highlight`
           } else {
-            toMarkerId = `${this.MARKER_ID_ARROW}_${this.colorSet}`
+            toMarkerId = `${Connector.MARKER_ID_ARROW}_${this.colorSet}`
           }
           break;
 
         case ConnectorEnd.RECT:
           if (this.isHighlight) {
-            toMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}_highlight`
+            toMarkerId = `${Connector.MARKER_ID_RECT}_${this.colorSet}_highlight`
           } else {
-            toMarkerId = `${this.MARKER_ID_RECT}_${this.colorSet}`
+            toMarkerId = `${Connector.MARKER_ID_RECT}_${this.colorSet}`
           }
           break;
       }
       this.path.attr("marker-end", `url(#${toMarkerId})`);
 
-      let endGap = this.width;
-      let lineLen = this.path.node()!.getTotalLength() - endGap * 2;
+      if (!Connector.ENABLE_HIGH_SPEED_RENDERING) {
+        let endGap = this.width;
+        let lineLen = this.path.node()!.getTotalLength() - endGap * 2;
 
-      this.path.attr("stroke-dasharray", `0 ${endGap} ${lineLen} ${endGap}`);
-      this.path.attr("stroke-dashoffset", 0);
+        this.path.attr("stroke-dasharray", `0 ${endGap} ${lineLen} ${endGap}`);
+        this.path.attr("stroke-dashoffset", 0);
+
+      }
 
     }
 
@@ -908,10 +919,10 @@ export class Connector extends Element {
     this.path.attr("stroke", color);
 
     if (this.editor != null) {
-      let fromGrip = this.editor.select(`#${this.GRIP_ID_FROM}`);
+      let fromGrip = this.editor.select(`#${Connector.GRIP_ID_FROM}`);
       fromGrip.attr("fill", this.colorResolver.bgHighlight);
 
-      let toGrip = this.editor.select(`#${this.GRIP_ID_TO}`);
+      let toGrip = this.editor.select(`#${Connector.GRIP_ID_TO}`);
       toGrip.attr("fill", this.colorResolver.bgHighlight);
 
     }

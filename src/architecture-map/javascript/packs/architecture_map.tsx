@@ -212,11 +212,12 @@ class Context {
     return archMod;
   }
 
-  public addNewArchMod(label: string, x: number, y: number, width: number, height: number) {
+  public addNewArchMod(label: string, x: number, y: number, width: number, height: number): ArchMod {
     let uid = this.genNewElementUid();
     let archMod = new ArchMod(uid, this.html, this.svg, label);
     archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
     this.renderArchMod(archMod);
+    return archMod;
   }
 
   private renderArchMod(archMod: ArchMod) {
@@ -242,11 +243,12 @@ class Context {
     return line;
   }
 
-  public addNewDividerLine(fromX: number, fromY: number) {
+  public addNewDividerLine(fromX: number, fromY: number): DividerLine {
     let uid = this.genNewElementUid();
     let line = new DividerLine(uid, this.html, this.svg);
     line.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
     this.renderDividerLine(line);
+    return line;
   }
 
   private renderDividerLine(line: DividerLine) {
@@ -272,11 +274,12 @@ class Context {
     return connector;
   }
 
-  public addNewConnector(fromArchMod: ArchMod, toArchMod: ArchMod) {
+  public addNewConnector(fromArchMod: ArchMod, toArchMod: ArchMod): Connector {
     let uid = this.genNewElementUid();
     let connector = new Connector(uid, this.html, this.svg);
     connector.setFromToArchMod(fromArchMod, toArchMod);
     this.renderConnector(connector);
+    return connector;
   }
 
   private renderConnector(connector: Connector) {
