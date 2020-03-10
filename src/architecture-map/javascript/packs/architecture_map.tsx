@@ -24,7 +24,7 @@ import { Def } from "../Def";
 import { Util } from "../util/Util";
 import { Downloader } from "../util/Downloader";
 import { ConnectorEnd } from "../Def";
-import { convertJsonToLatest } from "../Def";
+import { convertJsonToLatest } from "../JsonConverter";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";

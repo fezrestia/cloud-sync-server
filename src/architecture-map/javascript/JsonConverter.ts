@@ -1,11 +1,14 @@
 import { TraceLog } from "./util/TraceLog";
 import { Def } from "./Def";
 import { Connector } from "./d3/Connector";
+import { ConnectorJson } from "./d3/Connector";
 import { ConnectorEnd } from "./Def";
 import { Line } from "./d3/Line";
+import { ElementJson } from "./d3/Element";
 
 // Convert old version JSON to latest.
 export function convertJsonToLatest(serialized: any): any {
+  const TAG = "JsonConverter";
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `convertJsonToLatest()`);
 
   let ver: number = Number(serialized[Def.KEY_VERSION]);
@@ -19,7 +22,7 @@ export function convertJsonToLatest(serialized: any): any {
   // Add UID.
   if (ver < 3) {
     let uid: number = 1;
-    elements.forEach( (element) => {
+    elements.forEach( (element: ElementJson) => {
       element[Def.KEY_UID] = uid;
       uid++;
     } );
@@ -38,7 +41,7 @@ export function convertJsonToLatest(serialized: any): any {
 
   // Convert DividerLine to Line.
   if (ver < 6) {
-    elements.forEach( (element) => {
+    elements.forEach( (element: ElementJson) => {
       if (element[Def.KEY_CLASS] == "DividerLine") {
         element[Def.KEY_CLASS] = Line.TAG;
       }

@@ -40,7 +40,7 @@ module.exports = (env, argv) => {
         // TypeScript.
         {
           test: /\.(ts|tsx)$/, // ext = .ts/.tsx
-          use: "ts-loader", // compile .ts
+          use: "ts-loader?configFile=tsconfig.webpack.json", // compile .ts
         },
 
         // CSS/SCSS/SASS.
