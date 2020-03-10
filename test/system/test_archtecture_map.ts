@@ -570,21 +570,21 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Add New Divider Line", async () => {
-    const ID = "dividerline";
+  it("Add New Line", async () => {
+    const ID = "line";
 
-    let line0 = await addNewDividerLine();
+    let line0 = await addNewLine();
     assert.isNotNull(line0);
     let label0 = await getLabel(line0);
     assert.equal(label0, "0");
     await deleteElement(line0);
     assert.isEmpty(await driver.findElements(By.id(`${ID}_0`)));
 
-    let line1 = await addNewDividerLine();
+    let line1 = await addNewLine();
     assert.isNotNull(line1);
     let label1 = await getLabel(line1);
     assert.equal(label1, "1");
-    let line2 = await addNewDividerLine();
+    let line2 = await addNewLine();
     assert.isNotNull(line2);
     let label2 = await getLabel(line2);
     assert.equal(label2, "2");
@@ -600,8 +600,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Select Divider Line", async () => {
-    let line = await addNewDividerLine();
+  it("Select Line", async () => {
+    let line = await addNewLine();
 
     await line.click();
     assert.isTrue(await isSelected(line));
@@ -611,8 +611,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Brush Select Divider Line", async () => {
-    let line = await addNewDividerLine();
+  it("Brush Select Line", async () => {
+    let line = await addNewLine();
 
     // Brush all with no-control key.
     await dragAndDrop(
@@ -671,8 +671,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Divider Line Context Menu Open/Close", async () => {
-    let line = await addNewDividerLine();
+  it("Line Context Menu Open/Close", async () => {
+    let line = await addNewLine();
 
     await changeToItxMode();
 
@@ -690,14 +690,14 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Drag Divider Line", async () => {
+  it("Drag Line", async () => {
     let d;
     let fromX;
     let fromY;
     let toX;
     let toY;
 
-    let line = await addNewDividerLine();
+    let line = await addNewLine();
     let path = await line.findElement(By.id("path"));
 
     d = await path.getAttribute("d");
@@ -735,8 +735,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Edit Divider Line", async () => {
-    let line = await addNewDividerLine();
+  it("Edit Line", async () => {
+    let line = await addNewLine();
     let path = await line.findElement(By.id("path"));
     let d;
 
@@ -780,18 +780,18 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Change Divider Line Color Set", async () => {
-    let line = await addNewDividerLine();
+  it("Change Line Color Set", async () => {
+    let line = await addNewLine();
 
-    await testDividerLineColorSet(line, "color_set_orange", ColorSet.ORANGE);
-    await testDividerLineColorSet(line, "color_set_green",  ColorSet.GREEN);
-    await testDividerLineColorSet(line, "color_set_blue",   ColorSet.BLUE);
-    await testDividerLineColorSet(line, "color_set_yellow", ColorSet.YELLOW);
-    await testDividerLineColorSet(line, "color_set_gray",   ColorSet.GRAY);
+    await testLineColorSet(line, "color_set_orange", ColorSet.ORANGE);
+    await testLineColorSet(line, "color_set_green",  ColorSet.GREEN);
+    await testLineColorSet(line, "color_set_blue",   ColorSet.BLUE);
+    await testLineColorSet(line, "color_set_yellow", ColorSet.YELLOW);
+    await testLineColorSet(line, "color_set_gray",   ColorSet.GRAY);
 
   } );
 
-  async function testDividerLineColorSet(line: WebElement, buttonId: string, expColorSet: ColorSet) {
+  async function testLineColorSet(line: WebElement, buttonId: string, expColorSet: ColorSet) {
     await changeColorTo(line, buttonId);
 
     let path = await line.findElement(By.id("path"));
@@ -802,9 +802,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   }
 
-  it("Change Divider Line Z-Order", async () => {
-    let one = await addNewDividerLine();
-    let two = await addNewDividerLine();
+  it("Change Line Z-Order", async () => {
+    let one = await addNewLine();
+    let two = await addNewLine();
 
     // Make overlap and non-overlap area.
     await drag(two, DEFAULT_W / 2 + DRAG_DIFF, DEFAULT_H / 2 + DRAG_DIFF);
@@ -835,7 +835,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   it("Check Download JSON", async () => {
     let archMod = await addNewArchMod();
-    let line = await addNewDividerLine();
+    let line = await addNewLine();
 
     let actJson = await getLatestJson();
 
@@ -867,7 +867,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         },
         {
           [Def.KEY_UID]: 2,
-          [Def.KEY_CLASS]: "DividerLine",
+          [Def.KEY_CLASS]: "Line",
           [Def.KEY_DIMENS]: {
             [Def.KEY_FROM_X]: DEFAULT_X,
             [Def.KEY_FROM_Y]: DEFAULT_Y,
@@ -939,7 +939,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
-    let line = await addNewDividerLine();
+    let line = await addNewLine();
     assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
@@ -1076,7 +1076,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   async function isSelectable(element: WebElement): Promise<boolean> {
     let id = await element.getAttribute("id");
     if (id.startsWith("archmod_")) return true;
-    if (id.startsWith("dividerline_")) return true;
+    if (id.startsWith("line_")) return true;
     return false;
   }
 
@@ -1113,13 +1113,13 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     return await addNewArchMod();
   }
 
-  async function addNewDividerLine(): Promise<WebElement> {
-    let addButton = await driver.findElement(By.id("add_dividerline"));
+  async function addNewLine(): Promise<WebElement> {
+    let addButton = await driver.findElement(By.id("add_line"));
     await addButton.click();
     await click(html, DEFAULT_X, DEFAULT_Y);
 
     let label = await getLatestAddedElementLabel();
-    return await svg.findElement(By.id(`dividerline_${label}`));
+    return await svg.findElement(By.id(`line_${label}`));
   }
 
   async function getLatestAddedElementLabel(): Promise<string> {
@@ -1134,7 +1134,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   async function getLabel(element: WebElement): Promise<string> {
     let label = await element.getAttribute("id");
     label = label.replace(/^archmod\_/, '');
-    label = label.replace(/^dividerline\_/, '');
+    label = label.replace(/^line\_/, '');
     return label;
   }
 

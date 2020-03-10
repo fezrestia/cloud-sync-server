@@ -6,7 +6,7 @@ import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 
 interface Props {
-  callback: DividerLineContextMenuCallback,
+  callback: LineContextMenuCallback,
   leftPix: number,
   topPix: number,
 }
@@ -14,7 +14,7 @@ interface Props {
 interface State {
 }
 
-export interface DividerLineContextMenuCallback {
+export interface LineContextMenuCallback {
   close(): void;
   changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
@@ -22,8 +22,8 @@ export interface DividerLineContextMenuCallback {
 
 }
 
-export class DividerLineContextMenu extends React.Component<Props, State> {
-  private readonly TAG = "DividerLineContextMenu";
+export class LineContextMenu extends React.Component<Props, State> {
+  private readonly TAG = "LineContextMenu";
 
   constructor(props: Props) {
     super(props);

@@ -7,22 +7,24 @@ import { ElementJson } from "../d3/Element";
 import { ArchMod } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
 import { ArchModJson } from "../d3/ArchMod";
-import { DividerLine } from "../d3/DividerLine";
-import { DividerLineCallback } from "../d3/DividerLine";
-import { DividerLineJson } from "../d3/DividerLine";
+import { Line } from "../d3/Line";
+import { LineCallback } from "../d3/Line";
+import { LineJson } from "../d3/Line";
 import { Connector } from "../d3/Connector";
 import { ConnectorCallback } from "../d3/Connector";
 import { ConnectorJson } from "../d3/Connector";
 import { OutFrame } from "../d3/OutFrame";
 import { OutFrameCallback } from "../d3/OutFrame";
 import { OutFrameJson } from "../d3/OutFrame";
-import { TraceLog } from "../util/TraceLog.ts";
-import { ColorSet } from "../Def.ts";
-import { D3Node } from "../TypeDef.ts";
-import { JQueryNode } from "../TypeDef.ts";
-import { Def } from "../Def.ts";
+import { TraceLog } from "../util/TraceLog";
+import { ColorSet } from "../Def";
+import { D3Node } from "../TypeDef";
+import { JQueryNode } from "../TypeDef";
+import { Def } from "../Def";
 import { Util } from "../util/Util";
-import { Downloader } from "../util/Downloader.ts";
+import { Downloader } from "../util/Downloader";
+import { ConnectorEnd } from "../Def";
+import { convertJsonToLatest } from "../Def";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
@@ -80,7 +82,7 @@ class Context {
 
   // State flags.
   public isAddNewArchModMode: boolean = false;
-  public isAddNewDividerLineMode: boolean = false;
+  public isAddNewLineMode: boolean = false;
   public isAddNewConnectorMode: boolean = false;
   public globalMode: string = GLOBAL_MODE_GOD;
 
@@ -143,8 +145,8 @@ class Context {
   public deserializeFromJson(serialized: ArchitectureMapJson) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `deserializeFromjson()`);
 
-    let ver: string = serialized[Def.KEY_VERSION];
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `## ver = ${ver}`);
+    // Convert to Latest version.
+    serialized = convertJsonToLatest(serialized);
 
     let outSize = serialized[Def.KEY_OUT_FRAME];
     this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
@@ -162,9 +164,9 @@ class Context {
           deserialized = this.deserializeArchMod(json);
           break;
 
-        case DividerLine.TAG:
-          json = element as DividerLineJson;
-          deserialized = this.deserializeDividerLine(json);
+        case Line.TAG:
+          json = element as LineJson;
+          deserialized = this.deserializeLine(json);
           break;
 
         case Connector.TAG:
@@ -189,9 +191,9 @@ class Context {
     let uid = element.uid;
 
     if (!uid) {
-      // NG. UID is not set. May be ArchitectureMapJson version is old.
-      uid = this.genNewElementUid();
-      (element as any).uid = uid;
+      // NG. UID is not set.
+      console.log(`#### ERROR: Element UID is NOT Available.`);
+      alert(`Element UID is NOT Available.`);
       return;
     }
 
@@ -236,23 +238,23 @@ class Context {
     this.addElementToTop(archMod);
   }
 
-  private deserializeDividerLine(json: DividerLineJson): DividerLine {
-    let line = DividerLine.deserialize(this.html, this.svg, json);
+  private deserializeLine(json: LineJson): Line {
+    let line = Line.deserialize(this.html, this.svg, json);
     this.validateElementUid(line);
-    this.renderDividerLine(line);
+    this.renderLine(line);
     return line;
   }
 
-  public addNewDividerLine(fromX: number, fromY: number): DividerLine {
+  public addNewLine(fromX: number, fromY: number): Line {
     let uid = this.genNewElementUid();
-    let line = new DividerLine(uid, this.html, this.svg);
+    let line = new Line(uid, this.html, this.svg);
     line.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
-    this.renderDividerLine(line);
+    this.renderLine(line);
     return line;
   }
 
-  private renderDividerLine(line: DividerLine) {
-    line.setCallback(new DividerLineCallbackImpl());
+  private renderLine(line: Line) {
+    line.setCallback(new LineCallbackImpl());
 
     switch (this.globalMode) {
       case GLOBAL_MODE_GOD:
@@ -352,8 +354,8 @@ class Context {
         }
         break;
 
-        case DividerLine.TAG: {
-          let line = element as DividerLine;
+        case Line.TAG: {
+          let line = element as Line;
 
           let {fromX, fromY, toX, toY} = line.getFromToXY();
 
@@ -513,15 +515,15 @@ class Context {
           element = this.deserializeArchMod(json);
           break;
 
-        case DividerLine.TAG:
-          json = serialized as DividerLineJson;
+        case Line.TAG:
+          json = serialized as LineJson;
 
           json[Def.KEY_DIMENS][Def.KEY_FROM_X] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_FROM_Y] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_TO_X] += COPY_PASTE_SLIDE_DIFF;
           json[Def.KEY_DIMENS][Def.KEY_TO_Y] += COPY_PASTE_SLIDE_DIFF;
 
-          element = this.deserializeDividerLine(json);
+          element = this.deserializeLine(json);
           break;
 
 
@@ -632,7 +634,7 @@ class Context {
         case ArchMod.TAG:
           element.itxMode = ElementItxMode.EDITABLE;
           break;
-        case DividerLine.TAG:
+        case Line.TAG:
           element.itxMode = ElementItxMode.EDITABLE;
           break;
         case Connector.TAG:
@@ -652,7 +654,7 @@ class Context {
         case ArchMod.TAG:
           element.itxMode = ElementItxMode.SELECTABLE;
           break;
-        case DividerLine.TAG:
+        case Line.TAG:
           element.itxMode = ElementItxMode.RIGID;
           break;
         case Connector.TAG:
@@ -810,55 +812,55 @@ class ArchModCallbackImpl implements ArchModCallback {
   }
 }
 
-// Common callback for ALL DividerLine instances.
-class DividerLineCallbackImpl implements DividerLineCallback {
-  onSelected(selected: DividerLine, isMulti: boolean) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onSelected() : isMulti=${isMulti}`);
+// Common callback for ALL Line instances.
+class LineCallbackImpl implements LineCallback {
+  onSelected(selected: Line, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onSelected() : isMulti=${isMulti}`);
     CONTEXT.onSelected(selected, isMulti);
   }
 
-  onDeselected(deselected: DividerLine) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDeselected()`);
+  onDeselected(deselected: Line) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onDeselected()`);
     CONTEXT.onDeselected(deselected);
   }
 
-  onEditing(editing: DividerLine, isMulti: boolean) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onEditing() : isMulti=${isMulti}`);
+  onEditing(editing: Line, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onEditing() : isMulti=${isMulti}`);
     CONTEXT.onSelected(editing, isMulti);
   }
 
-  onEdited(edited: DividerLine) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onEdited()`);
+  onEdited(edited: Line) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onEdited()`);
     CONTEXT.onDeselected(edited);
   }
 
-  onDragStart(moved: DividerLine) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDragStart()`);
+  onDragStart(moved: Line) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onDragStart()`);
     // NOP.
   }
 
-  onDrag(moved: DividerLine, plusX: number, plusY: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDrag() : plusX=${plusX}, plusY=${plusY}`);
+  onDrag(moved: Line, plusX: number, plusY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onDrag() : plusX=${plusX}, plusY=${plusY}`);
     CONTEXT.moveSelectedElements(plusX, plusY, moved);
   }
 
-  onDragEnd(moved: DividerLine) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onDragEnd()`);
+  onDragEnd(moved: Line) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onDragEnd()`);
     // NOP.
   }
 
-  onRaised(raised: DividerLine) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onRaised()`);
+  onRaised(raised: Line) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onRaised()`);
     CONTEXT.raise(raised);
   }
 
-  onLowered(lowered: DividerLine) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onLowered()`);
+  onLowered(lowered: Line) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onLowered()`);
     CONTEXT.lower(lowered);
   }
 
-  onHistoricalChanged(line: DividerLine) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `DividerLine.onHistoricalChanged()`);
+  onHistoricalChanged(line: Line) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onHistoricalChanged()`);
     CONTEXT.recordHistory();
   }
 }
@@ -1189,14 +1191,14 @@ function registerGlobalCallbacks() {
   }
 };
 
-(window as any).onAddNewDividerLineClicked = () => {
-  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewDividerLineClicked()");
+(window as any).onAddNewLineClicked = () => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewLineClicked()");
 
-  if (CONTEXT.isAddNewDividerLineMode) {
+  if (CONTEXT.isAddNewLineMode) {
     // Finish add mode.
 
     resetHtmlRoot();
-    CONTEXT.isAddNewDividerLineMode = false;
+    CONTEXT.isAddNewLineMode = false;
 
   } else {
     // Prepare add mode.
@@ -1210,16 +1212,16 @@ function registerGlobalCallbacks() {
       let posX: number = e.offsetX || 0;
       let posY: number = e.offsetY || 0;
 
-      CONTEXT.addNewDividerLine(posX, posY);
+      CONTEXT.addNewLine(posX, posY);
 
       CONTEXT.recordHistory();
 
       // Finish add mode.
       resetHtmlRoot();
-      CONTEXT.isAddNewDividerLineMode = false;
+      CONTEXT.isAddNewLineMode = false;
     } );
 
-    CONTEXT.isAddNewDividerLineMode = true;
+    CONTEXT.isAddNewLineMode = true;
   }
 };
 

@@ -93,7 +93,7 @@ class ConnectorState {
 }
 
 /**
- * Divider Line class.
+ * Line class.
  */
 export class Connector extends Element {
   public static readonly TAG = "Connector";

@@ -6,8 +6,8 @@ import * as ReactDOM from "react-dom";
 import { ColorResolver } from "./resolver/ColorResolver.ts";
 import { Point } from "./Util.ts";
 import { TraceLog } from "../util/TraceLog.ts";
-import { DividerLineContextMenu } from "../components/DividerLineContextMenu.tsx";
-import { DividerLineContextMenuCallback } from "../components/DividerLineContextMenu.tsx";
+import { LineContextMenu } from "../components/LineContextMenu.tsx";
+import { LineContextMenuCallback } from "../components/LineContextMenu.tsx";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
@@ -16,30 +16,30 @@ import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
 
 /**
- * Callback interface for DividerLine.
+ * Callback interface for Line.
  */
-export interface DividerLineCallback {
-  onSelected(selected: DividerLine, isMulti: boolean): void;
-  onDeselected(deselected: DividerLine): void;
+export interface LineCallback {
+  onSelected(selected: Line, isMulti: boolean): void;
+  onDeselected(deselected: Line): void;
 
-  onEditing(editing: DividerLine, isMulti: boolean): void;
-  onEdited(edited: DividerLine): void;
+  onEditing(editing: Line, isMulti: boolean): void;
+  onEdited(edited: Line): void;
 
-  onDragStart(moved: DividerLine): void;
-  onDrag(moved: DividerLine, plusX: number, plusY: number): void;
-  onDragEnd(moved: DividerLine): void;
+  onDragStart(moved: Line): void;
+  onDrag(moved: Line, plusX: number, plusY: number): void;
+  onDragEnd(moved: Line): void;
 
-  onRaised(raised: DividerLine): void;
-  onLowered(lowered: DividerLine): void;
+  onRaised(raised: Line): void;
+  onLowered(lowered: Line): void;
 
-  onHistoricalChanged(line: DividerLine): void;
+  onHistoricalChanged(line: Line): void;
 
 }
 
 /**
- * DividerLine serialized JSON interface.
+ * Line serialized JSON interface.
  */
-export interface DividerLineJson {
+export interface LineJson {
   [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
   [Def.KEY_DIMENS]: {
@@ -53,11 +53,11 @@ export interface DividerLineJson {
 }
 
 /**
- * Base state class for DividerLine state machine.
+ * Base state class for Line state machine.
  */
-class DividerLineState {
-  protected target: DividerLine;
-  constructor(target: DividerLine) {
+class LineState {
+  protected target: Line;
+  constructor(target: Line) {
     this.target = target;
   }
 
@@ -85,11 +85,11 @@ class DividerLineState {
 }
 
 /**
- * Divider Line class.
+ *  Line class.
  */
-export class DividerLine extends Element {
-  public static readonly TAG = "DividerLine";
-  public readonly TAG = DividerLine.TAG;
+export class Line extends Element {
+  public static readonly TAG = "Line";
+  public readonly TAG = Line.TAG;
 
   private static countId: number = 0;
 
@@ -99,7 +99,7 @@ export class DividerLine extends Element {
   private readonly GRIP_ID_FROM = "from_grip";
   private readonly GRIP_ID_TO = "to_grip";
 
-  private static IdleState = class extends DividerLineState {
+  private static IdleState = class extends LineState {
     enter() {
       this.target.setHighlight(false);
     }
@@ -107,19 +107,19 @@ export class DividerLine extends Element {
     onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
       switch (this.target.itxMode) {
         case ElementItxMode.SELECTABLE:
-          this.target.currentState = new DividerLine.SelectedState(this.target, withCtrl);
+          this.target.currentState = new Line.SelectedState(this.target, withCtrl);
           break;
 
         case ElementItxMode.EDITABLE:
-          this.target.currentState = new DividerLine.EditingState(this.target, withCtrl);
+          this.target.currentState = new Line.EditingState(this.target, withCtrl);
           break;
       }
     }
   }
 
-  private static SelectedState = class extends DividerLineState {
+  private static SelectedState = class extends LineState {
     private isMulti: boolean;
-    constructor(target: DividerLine, isMulti: boolean) {
+    constructor(target: Line, isMulti: boolean) {
       super(target);
       this.isMulti = isMulti;
     }
@@ -139,7 +139,7 @@ export class DividerLine extends Element {
     }
 
     onCanceled() {
-      this.target.currentState = new DividerLine.IdleState(this.target);
+      this.target.currentState = new Line.IdleState(this.target);
     }
 
     reset() {
@@ -147,9 +147,9 @@ export class DividerLine extends Element {
     }
   }
 
-  private static EditingState = class extends DividerLineState {
+  private static EditingState = class extends LineState {
     private isMulti: boolean;
-    constructor(target: DividerLine, isMulti: boolean) {
+    constructor(target: Line, isMulti: boolean) {
       super(target);
       this.isMulti = isMulti;
     }
@@ -176,7 +176,7 @@ export class DividerLine extends Element {
     }
 
     onCanceled() {
-      this.target.currentState = new DividerLine.IdleState(this.target);
+      this.target.currentState = new Line.IdleState(this.target);
     }
 
     reset() {
@@ -199,11 +199,11 @@ export class DividerLine extends Element {
     super(uid, html, svg);
 
     this.colorSet = this.colorSet; // Load defaut
-    this._currentState = new DividerLine.IdleState(this);
+    this._currentState = new Line.IdleState(this);
     this.width = this.DEFAULT_WIDTH;
 
-    this._label = String(DividerLine.countId);
-    DividerLine.countId++;
+    this._label = String(Line.countId);
+    Line.countId++;
   }
 
   private _label: string;
@@ -211,11 +211,11 @@ export class DividerLine extends Element {
     return this._label;
   }
 
-  private _currentState: DividerLineState;
-      private get currentState(): DividerLineState {
+  private _currentState: LineState;
+      private get currentState(): LineState {
         return this._currentState;
       }
-      private set currentState(newState: DividerLineState) {
+      private set currentState(newState: LineState) {
         this._currentState.exit();
         this._currentState = newState;
         this._currentState.enter();
@@ -230,14 +230,14 @@ export class DividerLine extends Element {
       }
 
   /**
-   * Serialize DividerLine object to DividerLineJson Object.
+   * Serialize Line object to LineJson Object.
    *
-   * @return string DividerLineJson Object.
+   * @return string LineJson Object.
    */
-  public serialize(): DividerLineJson {
+  public serialize(): LineJson {
     let jsonObj = {
         [Def.KEY_UID]: this.uid,
-        [Def.KEY_CLASS]: DividerLine.TAG,
+        [Def.KEY_CLASS]: Line.TAG,
         [Def.KEY_DIMENS]: {
             [Def.KEY_FROM_X]: this.fromPoint.x,
             [Def.KEY_FROM_Y]: this.fromPoint.y,
@@ -251,15 +251,15 @@ export class DividerLine extends Element {
   }
 
   /**
-   * Deserlialize DividerLine object from JSON object.
+   * Deserlialize Line object from JSON object.
    *
    * @param html HTML root node.
    * @param svg SVG root node.
    * @param json JSON object.
-   * @return DividerLine.
+   * @return Line.
    */
-  public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: DividerLineJson): DividerLine {
-    let divLine = new DividerLine(
+  public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: LineJson): Line {
+    let divLine = new Line(
         json[Def.KEY_UID],
         html,
         svg);
@@ -294,7 +294,7 @@ export class DividerLine extends Element {
   private colorResolver!: ColorResolver;
 
   // Callback.
-  private callback: DividerLineCallback|null = null;
+  private callback: LineCallback|null = null;
 
   private runNoCallback(proc: () => void) {
     let cb = this.callback;
@@ -352,7 +352,7 @@ export class DividerLine extends Element {
    *
    * @param callback Callback object.
    */
-  public setCallback(callback: DividerLineCallback) {
+  public setCallback(callback: LineCallback) {
     this.callback = callback;
   }
 
@@ -361,7 +361,7 @@ export class DividerLine extends Element {
    */
   public render() {
     this.root = this.svg.append("g")
-        .attr("id", `dividerline_${this._label}`)
+        .attr("id", `line_${this._label}`)
         .datum(this);
 
     // Line path.
@@ -406,13 +406,13 @@ export class DividerLine extends Element {
   }
 
   /**
-   * Move this DividerLine with X-Y diff.
+   * Move this Line with X-Y diff.
    *
    * @param plusX
    * @param plusY
    */
   public move(plusX: number, plusY: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, `move() : plusX=${plusX}, plusY=${plusY}`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, `move() : plusX=${plusX}, plusY=${plusY}`);
 
     this.fromPoint = new Point(this.fromPoint.x + plusX, this.fromPoint.y + plusY);
     this.toPoint = new Point(this.toPoint.x + plusX, this.toPoint.y + plusY);
@@ -434,7 +434,7 @@ export class DividerLine extends Element {
 
   private registerCallbacks() {
     this.path.on("click", () => {
-        if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "on:click");
+        if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:click");
 
         if (d3.event.ctrlKey) {
           this.currentState.onLeftClicked(d3.event.x, d3.event.y, true);
@@ -447,7 +447,7 @@ export class DividerLine extends Element {
     });
 
     this.path.on("contextmenu", () => {
-        if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "on:contextmenu");
+        if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:contextmenu");
 
         // NOTICE: Click offset X-Y is based on viewport of polygon. (same as svg)
         this.currentState.onRightClicked(d3.event.offsetX, d3.event.offsetY);
@@ -459,7 +459,7 @@ export class DividerLine extends Element {
     this.root.call(
       d3.drag<SVGGElement, any, any>()
           .on("start", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "on:drag:start");
+              if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:start");
               if (this.currentState.isMovable()) {
                 d3.event.target.origFromPoint = this.fromPoint;
                 d3.event.target.origToPoint = this.toPoint;
@@ -470,7 +470,7 @@ export class DividerLine extends Element {
               }
           } )
           .on("drag", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "on:drag:drag");
+              if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:drag");
               if (this.currentState.isMovable()) {
                 let isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
@@ -504,7 +504,7 @@ export class DividerLine extends Element {
               }
           } )
           .on("end", () => {
-              if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "on:drag:end");
+              if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:end");
               if (this.currentState.isMovable()) {
                 d3.event.target.origFromPoint = new Point(0, 0);
                 d3.event.target.origToPoint = new Point(0, 0);
@@ -520,7 +520,7 @@ export class DividerLine extends Element {
   }
 
   private enableEditMode() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "enableEditMode()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "enableEditMode()");
     if (this.editor != null) return;
 
     this.editor = this.root.append("g")
@@ -653,7 +653,7 @@ export class DividerLine extends Element {
   }
 
   private disableEditMode() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "disableEditMode()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "disableEditMode()");
     if (this.editor == null) return;
 
     this.editor.remove();
@@ -697,10 +697,10 @@ export class DividerLine extends Element {
 
   }
 
-  private ContextMenuCallbackImpl = class implements DividerLineContextMenuCallback {
-    private target: DividerLine;
+  private ContextMenuCallbackImpl = class implements LineContextMenuCallback {
+    private target: Line;
 
-    constructor(target: DividerLine) {
+    constructor(target: Line) {
       this.target = target;
     }
 
@@ -730,12 +730,12 @@ export class DividerLine extends Element {
   }
 
   private openContextMenu(clickX: number, clickY: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "openContextMenu()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "openContextMenu()");
 
     this.html.css("display", "block");
 
     ReactDOM.render(
-        <DividerLineContextMenu
+        <LineContextMenu
             callback={new this.ContextMenuCallbackImpl(this)}
             leftPix={clickX}
             topPix={clickY}
@@ -744,7 +744,7 @@ export class DividerLine extends Element {
   }
 
   private closeContextMenu() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, "closeContextMenu()");
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "closeContextMenu()");
 
     let container = document.getElementById(this.html[0].id);
     if (container != null) {
@@ -755,13 +755,13 @@ export class DividerLine extends Element {
   }
 
   private moveToFrontEnd() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, `moveToFrontEnd()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, `moveToFrontEnd()`);
     this.root.raise();
     if (this.callback != null) this.callback.onRaised(this);
   }
 
   private moveToBackEnd() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, `moveToBackEnd()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, `moveToBackEnd()`);
     this.root.lower();
     if (this.callback != null) this.callback.onLowered(this);
   }
@@ -770,7 +770,7 @@ export class DividerLine extends Element {
    * Delete this instance.
    */
   public delete() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(DividerLine.TAG, `moveToBackEnd()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, `moveToBackEnd()`);
     this.resetState();
     this.root.remove();
   }
