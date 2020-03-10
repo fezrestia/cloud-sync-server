@@ -954,6 +954,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
     let serialized: ArchitectureMapJson = JSON.parse(defaultLoadJson);
     CONTEXT.deserializeFromJson(serialized);
     CONTEXT.resetAllState();
+    CONTEXT.recordHistory();
   }
 }
 
