@@ -875,6 +875,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
             [Def.KEY_TO_Y]: DEFAULT_Y + DEFAULT_H,
             [Def.KEY_WIDTH]: 4,
           },
+          [Def.KEY_FROM_MARKER_TYPE]: "none",
+          [Def.KEY_TO_MARKER_TYPE]: "none",
           [Def.KEY_COLOR_SET]: "gray",
         },
       ],

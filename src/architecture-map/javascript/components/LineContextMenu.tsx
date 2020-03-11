@@ -4,6 +4,7 @@ import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
+import { MarkerType } from "../d3/Marker";
 
 interface Props {
   callback: LineContextMenuCallback,
@@ -16,6 +17,8 @@ interface State {
 
 export interface LineContextMenuCallback {
   close(): void;
+  changeFromMarkerType(markerType: MarkerType): void;
+  changeToMarkerType(markerType: MarkerType): void;
   changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
@@ -85,6 +88,22 @@ export class LineContextMenu extends React.Component<Props, State> {
             onClick={ handleContextMenuClick }
         >
           <table className="context-menu-contents" ><tbody>
+            <tr>
+              <td className="no-wrap" >FROM Marker</td>
+              <td>
+                {this.genClickButton("from_marker_type_none",   "None",   () => { callback.changeFromMarkerType(MarkerType.NONE) })}
+                {this.genClickButton("from_marker_type_arrow",  "Arrow",  () => { callback.changeFromMarkerType(MarkerType.ARROW) })}
+                {this.genClickButton("from_marker_type_rect",   "Rect",   () => { callback.changeFromMarkerType(MarkerType.RECT) })}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >TO Marker</td>
+              <td>
+                {this.genClickButton("to_marker_type_none",   "None",   () => { callback.changeToMarkerType(MarkerType.NONE) })}
+                {this.genClickButton("to_marker_type_arrow",  "Arrow",  () => { callback.changeToMarkerType(MarkerType.ARROW) })}
+                {this.genClickButton("to_marker_type_rect",   "Rect",   () => { callback.changeToMarkerType(MarkerType.RECT) })}
+              </td>
+            </tr>
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >

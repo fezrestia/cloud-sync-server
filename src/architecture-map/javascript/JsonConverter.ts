@@ -2,8 +2,9 @@ import { TraceLog } from "./util/TraceLog";
 import { Def } from "./Def";
 import { Connector } from "./d3/Connector";
 import { ConnectorJson } from "./d3/Connector";
-import { ConnectorEnd } from "./Def";
+import { MarkerType } from "./d3/Marker";
 import { Line } from "./d3/Line";
+import { LineJson } from "./d3/Line";
 import { ElementJson } from "./d3/Element";
 
 // Convert old version JSON to latest.
@@ -31,10 +32,10 @@ export function convertJsonToLatest(serialized: any): any {
   // Add ConnectorEnd.
   if (ver < 5) {
     elements.forEach( (element: ElementJson) => {
-      if (element[Def.KEY_CLASS] == Connector.TAG) {
-        let connJson = element as ConnectorJson;
-        connJson[Def.KEY_FROM_CONNECTOR_END] = ConnectorEnd.NONE;
-        connJson[Def.KEY_TO_CONNECTOR_END] = ConnectorEnd.NONE;
+      if (element[Def.KEY_CLASS] == "Connector") {
+        let connJson = element as any;
+        connJson["from_connector_end"] = "none";
+        connJson["to_connector_end"] = "none";
       }
     } );
   }
@@ -43,8 +44,29 @@ export function convertJsonToLatest(serialized: any): any {
   if (ver < 6) {
     elements.forEach( (element: ElementJson) => {
       if (element[Def.KEY_CLASS] == "DividerLine") {
-        element[Def.KEY_CLASS] = Line.TAG;
+        element[Def.KEY_CLASS] = "Line";
       }
+    } );
+  }
+
+  // Convert ConnectorEnd to MarkerType.
+  if (ver < 7) {
+    elements.forEach( (element: ElementJson) => {
+      if (element[Def.KEY_CLASS] == "Connector") {
+        let connJson = element as any;
+        connJson[Def.KEY_FROM_MARKER_TYPE] = connJson["from_connector_end"];
+        connJson[Def.KEY_TO_MARKER_TYPE] = connJson["to_connector_end"];
+        delete connJson["from_connector_end"];
+        delete connJson["to_connector_end"];
+
+      }
+      if (element[Def.KEY_CLASS] == "Line") {
+        let lineJson = element as any;
+        lineJson["from_marker_type"] = "none";
+        lineJson["to_marker_type"] = "none";
+
+      }
+
     } );
   }
 

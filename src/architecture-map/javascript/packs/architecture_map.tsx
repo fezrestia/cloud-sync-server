@@ -23,7 +23,7 @@ import { JQueryNode } from "../TypeDef";
 import { Def } from "../Def";
 import { Util } from "../util/Util";
 import { Downloader } from "../util/Downloader";
-import { ConnectorEnd } from "../Def";
+import { MarkerType } from "../d3/Marker";
 import { convertJsonToLatest } from "../JsonConverter";
 
 const TAG = "SVG_ROOT";

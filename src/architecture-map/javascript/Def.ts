@@ -8,7 +8,7 @@ export class Def {
   public static readonly RADIAL_SNAP_STEP_RAD = Math.PI * 2 / 24; // 15 deg
 
   public static readonly KEY_VERSION = "version";
-  public static readonly VAL_VERSION = "6";
+  public static readonly VAL_VERSION = "7";
 
   public static readonly KEY_ARCHITECTURE_MAP = "architecture_map";
   public static readonly KEY_OUT_FRAME = "out_frame";
@@ -35,8 +35,8 @@ export class Def {
 
   public static readonly KEY_FROM_UID = "from_uid";
   public static readonly KEY_TO_UID = "to_uid";
-  public static readonly KEY_FROM_CONNECTOR_END = "from_connector_end";
-  public static readonly KEY_TO_CONNECTOR_END = "to_connector_end";
+  public static readonly KEY_FROM_MARKER_TYPE = "from_marker_type";
+  public static readonly KEY_TO_MARKER_TYPE = "to_marker_type";
 
 }
 
@@ -89,20 +89,6 @@ export namespace ColorSet {
 
       default:                  return ColorSet.resolve(ColorSet.NONE);
     }
-  }
-}
-
-/**
- * Connector terminator type.
- */
-export enum ConnectorEnd {
-  NONE  = "none",
-  ARROW = "arrow",
-  RECT  = "rect",
-}
-export namespace ConnectorEnd {
-  export function valueOf(value: string): ConnectorEnd {
-    return value as ConnectorEnd;
   }
 }
 

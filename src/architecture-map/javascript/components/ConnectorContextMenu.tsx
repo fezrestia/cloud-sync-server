@@ -4,7 +4,7 @@ import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { ConnectorEnd } from "../Def.ts";
+import { MarkerType } from "../d3/Marker";
 
 interface Props {
   callback: ConnectorContextMenuCallback,
@@ -17,8 +17,8 @@ interface State {
 
 export interface ConnectorContextMenuCallback {
   close(): void;
-  changeFromConnectorEnd(connectorEnd: ConnectorEnd): void;
-  changeToConnectorEnd(connectorEnd: ConnectorEnd): void;
+  changeFromMarkerType(markerType: MarkerType): void;
+  changeToMarkerType(markerType: MarkerType): void;
   changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
@@ -89,19 +89,19 @@ export class ConnectorContextMenu extends React.Component<Props, State> {
         >
           <table className="context-menu-contents" ><tbody>
             <tr>
-              <td className="no-wrap" >FROM Connector End</td>
+              <td className="no-wrap" >FROM Marker</td>
               <td>
-                {this.genClickButton("from_connector_end_none",   "None",   () => { callback.changeFromConnectorEnd(ConnectorEnd.NONE) })}
-                {this.genClickButton("from_connector_end_arrow",  "Arrow",  () => { callback.changeFromConnectorEnd(ConnectorEnd.ARROW) })}
-                {this.genClickButton("from_connector_end_rect",   "Rect",   () => { callback.changeFromConnectorEnd(ConnectorEnd.RECT) })}
+                {this.genClickButton("from_marker_type_none",   "None",   () => { callback.changeFromMarkerType(MarkerType.NONE) })}
+                {this.genClickButton("from_marker_type_arrow",  "Arrow",  () => { callback.changeFromMarkerType(MarkerType.ARROW) })}
+                {this.genClickButton("from_marker_type_rect",   "Rect",   () => { callback.changeFromMarkerType(MarkerType.RECT) })}
               </td>
             </tr>
             <tr>
-              <td className="no-wrap" >TO Connector End</td>
+              <td className="no-wrap" >TO Marker</td>
               <td>
-                {this.genClickButton("to_connector_end_none",   "None",   () => { callback.changeToConnectorEnd(ConnectorEnd.NONE) })}
-                {this.genClickButton("to_connector_end_arrow",  "Arrow",  () => { callback.changeToConnectorEnd(ConnectorEnd.ARROW) })}
-                {this.genClickButton("to_connector_end_rect",   "Rect",   () => { callback.changeToConnectorEnd(ConnectorEnd.RECT) })}
+                {this.genClickButton("to_marker_type_none",   "None",   () => { callback.changeToMarkerType(MarkerType.NONE) })}
+                {this.genClickButton("to_marker_type_arrow",  "Arrow",  () => { callback.changeToMarkerType(MarkerType.ARROW) })}
+                {this.genClickButton("to_marker_type_rect",   "Rect",   () => { callback.changeToMarkerType(MarkerType.RECT) })}
               </td>
             </tr>
             <tr>

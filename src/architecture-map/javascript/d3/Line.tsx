@@ -14,6 +14,8 @@ import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
+import { Marker } from "./Marker";
+import { MarkerType } from "./Marker";
 
 /**
  * Callback interface for Line.
@@ -49,6 +51,8 @@ export interface LineJson {
       [Def.KEY_TO_Y]: number,
       [Def.KEY_WIDTH]: number,
   },
+  [Def.KEY_FROM_MARKER_TYPE]: string,
+  [Def.KEY_TO_MARKER_TYPE]: string,
   [Def.KEY_COLOR_SET]: string,
 }
 
@@ -93,15 +97,19 @@ export class Line extends Element {
 
   private static countId: number = 0;
 
-  private readonly EDIT_GRIP_RADIUS_PIX = 8;
-  private readonly MIN_SIZE_PIX = 16;
-  private readonly DEFAULT_WIDTH = 4;
-  private readonly GRIP_ID_FROM = "from_grip";
-  private readonly GRIP_ID_TO = "to_grip";
+  private static readonly EDIT_GRIP_RADIUS_PIX = 8;
+  private static readonly DEFAULT_WIDTH = 4;
+  private static readonly GRIP_ID_FROM = "from_grip";
+  private static readonly GRIP_ID_TO = "to_grip";
+
+  private static readonly DEFAULT_COLOR_SET = ColorSet.GRAY;
+
+  private static readonly DEFAULT_FROM_MARKER_TYPE = MarkerType.NONE;
+  private static readonly DEFAULT_TO_MARKER_TYPE = MarkerType.NONE;
 
   private static IdleState = class extends LineState {
     enter() {
-      this.target.setHighlight(false);
+      this.target.isHighlight = false;
     }
 
     onLeftClicked(clickX: number, clickY: number, withCtrl: boolean) {
@@ -125,12 +133,12 @@ export class Line extends Element {
     }
 
     enter() {
-      this.target.setHighlight(true);
+      this.target.isHighlight = true;
       if (this.target.callback != null) this.target.callback.onSelected(this.target, this.isMulti);
     }
 
     exit() {
-      this.target.setHighlight(false);
+      this.target.isHighlight = false;
       if (this.target.callback != null) this.target.callback.onDeselected(this.target);
     }
 
@@ -155,14 +163,14 @@ export class Line extends Element {
     }
 
     enter() {
-      this.target.setHighlight(true);
+      this.target.isHighlight = true;
       this.target.enableEditMode();
       if (this.target.callback != null) this.target.callback.onEditing(this.target, this.isMulti);
     }
 
     exit() {
       this.target.closeContextMenu();
-      this.target.setHighlight(false);
+      this.target.isHighlight = false;
       this.target.disableEditMode();
       if (this.target.callback != null) this.target.callback.onEdited(this.target);
     }
@@ -198,9 +206,9 @@ export class Line extends Element {
   constructor(uid: number, html: JQueryNode, svg: D3Node.SVG) {
     super(uid, html, svg);
 
-    this.colorSet = this.colorSet; // Load defaut
+    this.colorSet = Line.DEFAULT_COLOR_SET;
+
     this._currentState = new Line.IdleState(this);
-    this.width = this.DEFAULT_WIDTH;
 
     this._label = String(Line.countId);
     Line.countId++;
@@ -229,6 +237,35 @@ export class Line extends Element {
         this._itxMode = mode;
       }
 
+  private _fromMarkerType: MarkerType = Line.DEFAULT_FROM_MARKER_TYPE;
+      public get fromMarkerType(): MarkerType {
+        return this._fromMarkerType;
+      }
+      public set fromMarkerType(end: MarkerType) {
+        this._fromMarkerType = end;
+        this.relayout();
+        this.recolor();
+      }
+
+  private _toMarkerType: MarkerType = Line.DEFAULT_TO_MARKER_TYPE;
+      public get toMarkerType(): MarkerType {
+        return this._toMarkerType;
+      }
+      public set toMarkerType(end: MarkerType) {
+        this._toMarkerType = end;
+        this.relayout();
+        this.recolor();
+      }
+
+  private _isHighlight: boolean = false;
+      private get isHighlight(): boolean {
+        return this._isHighlight;
+      }
+      private set isHighlight(highlight: boolean) {
+        this._isHighlight = highlight;
+        this.recolor();
+      }
+
   /**
    * Serialize Line object to LineJson Object.
    *
@@ -245,6 +282,8 @@ export class Line extends Element {
             [Def.KEY_TO_Y]: this.toPoint.y,
             [Def.KEY_WIDTH]: this.width,
         },
+        [Def.KEY_FROM_MARKER_TYPE]: this.fromMarkerType,
+        [Def.KEY_TO_MARKER_TYPE]: this.toMarkerType,
         [Def.KEY_COLOR_SET]: this.colorSet,
     };
     return jsonObj;
@@ -279,7 +318,7 @@ export class Line extends Element {
   // Position/Size.
   private fromPoint: Point = new Point(0, 0);
   private toPoint: Point = new Point(0, 0);
-  private width: number;
+  private width: number = Line.DEFAULT_WIDTH;
 
   // Color resolver functions.
   private _colorSet: ColorSet = ColorSet.GRAY;
@@ -374,14 +413,6 @@ export class Line extends Element {
 
     // Callbacks.
     this.registerCallbacks();
-  }
-
-  private setHighlight(isHighlight: boolean) {
-    if (isHighlight) {
-      this.path.attr("stroke", this.colorResolver.bgHighlight);
-    } else {
-      this.path.attr("stroke", this.colorResolver.bg);
-    }
   }
 
   // @Override
@@ -526,8 +557,8 @@ export class Line extends Element {
     this.editor = this.root.append("g")
         .attr("id", "editor_plane");
 
-    this.addEditGrip(this.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
-    this.addEditGrip(this.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
+    this.addEditGrip(Line.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
+    this.addEditGrip(Line.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
 
   }
 
@@ -541,7 +572,7 @@ export class Line extends Element {
         .attr("cx", cx)
         .attr("cy", cy)
         .attr("fill", this.colorResolver.bgHighlight)
-        .attr("r", this.EDIT_GRIP_RADIUS_PIX);
+        .attr("r", Line.EDIT_GRIP_RADIUS_PIX);
 
     circle.on("click", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
@@ -592,7 +623,7 @@ export class Line extends Element {
               };
 
               switch (id) {
-                case this.GRIP_ID_FROM: {
+                case Line.GRIP_ID_FROM: {
                   this.fromPoint = new Point(origFromPoint.x + dx, origFromPoint.y + dy);
 
                   // Snapping.
@@ -613,7 +644,7 @@ export class Line extends Element {
                 }
                 break;
 
-                case this.GRIP_ID_TO: {
+                case Line.GRIP_ID_TO: {
                   this.toPoint = new Point(origToPoint.x + dx, origToPoint.y + dy);
 
                   // Snapping.
@@ -676,15 +707,26 @@ export class Line extends Element {
           .datum(lineData)
           .attr("d", line)
           .attr("stroke-width", this.width);
+
+      // Marker.
+      Marker.prepareMarkers(this.svg, this.colorSet);
+      Marker.updateMarkers(
+          this.path,
+          this.fromMarkerType,
+          this.toMarkerType,
+          this.colorSet,
+          this.isHighlight,
+          false); // Disable fast rendering.
+
     }
 
     // Grips.
     if (this.editor != null) {
-      let fromGrip = this.editor.select(`#${this.GRIP_ID_FROM}`);
+      let fromGrip = this.editor.select(`#${Line.GRIP_ID_FROM}`);
       fromGrip.attr("cx", this.fromPoint.x);
       fromGrip.attr("cy", this.fromPoint.y);
 
-      let toGrip = this.editor.select(`#${this.GRIP_ID_TO}`);
+      let toGrip = this.editor.select(`#${Line.GRIP_ID_TO}`);
       toGrip.attr("cx", this.toPoint.x);
       toGrip.attr("cy", this.toPoint.y);
 
@@ -693,7 +735,24 @@ export class Line extends Element {
   }
 
   private recolor() {
-    this.path.attr("stroke", this.colorResolver.bg);
+    if (this.path != null) {
+      if (this.isHighlight) {
+        this.path.attr("stroke", this.colorResolver.bgHighlight);
+      } else {
+        this.path.attr("stroke", this.colorResolver.bg);
+      }
+
+      // Marker.
+      Marker.prepareMarkers(this.svg, this.colorSet);
+      Marker.updateMarkers(
+          this.path,
+          this.fromMarkerType,
+          this.toMarkerType,
+          this.colorSet,
+          this.isHighlight,
+          false); // Disable fast rendering.
+
+    }
 
   }
 
@@ -708,6 +767,22 @@ export class Line extends Element {
       this.target.closeContextMenu();
 
       if (this.target.callback != null) this.target.callback.onHistoricalChanged(this.target);
+    }
+
+    changeFromMarkerType(markerType: MarkerType) {
+      this.target.fromMarkerType = markerType;
+
+      // Re-construction.
+      this.target.disableEditMode();
+      this.target.enableEditMode();
+    }
+
+    changeToMarkerType(markerType: MarkerType) {
+      this.target.toMarkerType = markerType;
+
+      // Re-construction.
+      this.target.disableEditMode();
+      this.target.enableEditMode();
     }
 
     changeColorSet(colorSet: ColorSet) {
