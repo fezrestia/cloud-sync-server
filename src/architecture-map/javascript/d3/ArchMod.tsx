@@ -506,24 +506,6 @@ export class ArchMod extends Element {
     return points;
   }
 
-  /**
-   * Get center point of top line.
-   * @return
-   */
-  public getTopMidPoint(): Point {
-    let {x: curX, y: curY, width: curW, height: curH} = this.getXYWH();
-    return new Point(curX + curW / 2, curY);
-  }
-
-  /**
-   * Get center point of bottom line.
-   * @return
-   */
-  public getBottomMidPoint(): Point {
-    let {x: curX, y: curY, width: curW, height: curH} = this.getXYWH();
-    return new Point(curX + curW / 2, curY + curH);
-  }
-
   private setHighlight(isHighlight: boolean) {
     if (isHighlight) {
       this.polygon.attr("fill", this.colorResolver.bgHighlight);

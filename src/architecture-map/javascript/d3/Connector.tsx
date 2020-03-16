@@ -503,7 +503,7 @@ export class Connector extends Element {
    */
   public render() {
     this.root = this.svg.append("g")
-        .attr("id", `Connector_${this._label}`)
+        .attr("id", `connector_${this._label}`)
         .datum(this);
 
     // Line path.

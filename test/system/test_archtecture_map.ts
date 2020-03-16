@@ -833,9 +833,83 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
+  it("Add New Connector", async () => {
+    let fromMod = await addNewArchMod();
+    await changeLabel(fromMod, "from");
+
+    let toMod = await addNewArchMod();
+    await changeLabel(toMod, "to");
+
+    let dragDiff = DEFAULT_W * 2;
+    await drag(toMod, dragDiff, dragDiff);
+
+    let fromSize = await getArchModSize(fromMod);
+    let fromX = fromSize.x + fromSize.width / 2;
+    let fromY = fromSize.y + fromSize.height;
+
+    let toSize = await getArchModSize(toMod);
+    let toX = toSize.x + toSize.width / 2;
+    let toY = toSize.y;
+
+    let estimateD = `M${fromX},${fromY}L${toX},${toY}`;
+
+    let expFromX = DEFAULT_X + DEFAULT_W / 2;
+    let expFromY = DEFAULT_Y + DEFAULT_H;
+    let expToX = DEFAULT_X + DEFAULT_W / 2 + dragDiff;
+    let expToY = DEFAULT_Y + dragDiff;
+
+    let expectD = `M${expFromX},${expFromY}L${expToX},${expToY}`
+
+    let connector = await addNewConnector(fromMod, toMod);
+    let path = await connector.findElement(By.id("path"));
+    let actualD = await path.getAttribute("d");
+
+    assert.equal(expectD, actualD);
+    assert.equal(expectD, estimateD);
+
+  } );
+
+  it("Drag ArchMod with Connector", async () => {
+    let fromMod = await addNewArchMod();
+    await changeLabel(fromMod, "from");
+
+    let toMod = await addNewArchMod();
+    await changeLabel(toMod, "to");
+
+    let dragDiff = 100;
+    await drag(toMod, dragDiff, dragDiff);
+
+    let connector = await addNewConnector(fromMod, toMod);
+
+    await drag(toMod, dragDiff, dragDiff);
+
+    let path = await connector.findElement(By.id("path"));
+    let actualD = await path.getAttribute("d");
+
+    let expFromX = DEFAULT_X + DEFAULT_W / 2;
+    let expFromY = DEFAULT_Y + DEFAULT_H;
+    let expToX = DEFAULT_X + DEFAULT_W / 2 + dragDiff * 2;
+    let expToY = DEFAULT_Y + dragDiff * 2;
+    let expectD = `M${expFromX},${expFromY}L${expToX},${expToY}`
+
+    assert.equal(expectD, actualD);
+
+  } );
+
   it("Check Download JSON", async () => {
-    let archMod = await addNewArchMod();
+    let fromMod = await addNewArchMod();
+    await changeLabel(fromMod, "from");
+
+    let toMod = await addNewArchMod();
+    await changeLabel(toMod, "to");
+
+    let dragDiff = 200;
+    await drag(toMod, dragDiff, dragDiff);
+
     let line = await addNewLine();
+    await drag(line, 0, dragDiff);
+
+    let connector = await addNewConnector(fromMod, toMod);
 
     let actJson = await getLatestJson();
 
@@ -851,7 +925,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         {
           [Def.KEY_UID]: 1,
           [Def.KEY_CLASS]: "ArchMod",
-          [Def.KEY_LABEL]: LABEL,
+          [Def.KEY_LABEL]: "from",
           [Def.KEY_DIMENS]: {
             [Def.KEY_X]: DEFAULT_X,
             [Def.KEY_Y]: DEFAULT_Y,
@@ -867,13 +941,46 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         },
         {
           [Def.KEY_UID]: 2,
+          [Def.KEY_CLASS]: "ArchMod",
+          [Def.KEY_LABEL]: "to",
+          [Def.KEY_DIMENS]: {
+            [Def.KEY_X]: DEFAULT_X + dragDiff,
+            [Def.KEY_Y]: DEFAULT_Y + dragDiff,
+            [Def.KEY_WIDTH]: DEFAULT_W,
+            [Def.KEY_HEIGHT]: DEFAULT_H,
+            [Def.KEY_PIN_X]: DEFAULT_X + DEFAULT_W / 2 + dragDiff,
+            [Def.KEY_PIN_Y]: DEFAULT_Y + DEFAULT_H / 2 + dragDiff,
+            [Def.KEY_LABEL_ROT_DEG]: 0,
+            [Def.KEY_LABEL_ALIGN]: "middle",
+           },
+           [Def.KEY_CLIP_AREA]: "none",
+           [Def.KEY_COLOR_SET]: "gray",
+        },
+        {
+          [Def.KEY_UID]: 3,
           [Def.KEY_CLASS]: "Line",
           [Def.KEY_DIMENS]: {
             [Def.KEY_FROM_X]: DEFAULT_X,
-            [Def.KEY_FROM_Y]: DEFAULT_Y,
+            [Def.KEY_FROM_Y]: DEFAULT_Y + dragDiff,
             [Def.KEY_TO_X]: DEFAULT_X + DEFAULT_W,
-            [Def.KEY_TO_Y]: DEFAULT_Y + DEFAULT_H,
+            [Def.KEY_TO_Y]: DEFAULT_Y + DEFAULT_H + dragDiff,
             [Def.KEY_WIDTH]: 4,
+          },
+          [Def.KEY_FROM_MARKER_TYPE]: "none",
+          [Def.KEY_TO_MARKER_TYPE]: "none",
+          [Def.KEY_COLOR_SET]: "gray",
+        },
+        {
+          [Def.KEY_UID]: 4,
+          [Def.KEY_CLASS]: "Connector",
+          [Def.KEY_FROM_UID]: 1,
+          [Def.KEY_TO_UID]: 2,
+          [Def.KEY_DIMENS]: {
+              [Def.KEY_FROM_X]: DEFAULT_X + DEFAULT_W / 2,
+              [Def.KEY_FROM_Y]: DEFAULT_Y + DEFAULT_H,
+              [Def.KEY_TO_X]: DEFAULT_X + DEFAULT_W / 2 + dragDiff,
+              [Def.KEY_TO_Y]: DEFAULT_Y + dragDiff,
+              [Def.KEY_WIDTH]: 4,
           },
           [Def.KEY_FROM_MARKER_TYPE]: "none",
           [Def.KEY_TO_MARKER_TYPE]: "none",
@@ -968,6 +1075,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     history.push(await getLatestJson());
 
     await lower(line);
+    assert.isTrue(await isElementUidsValid());
+    history.push(await getLatestJson());
+
+    let connector = await addNewConnector(one, two);
     assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
@@ -1122,6 +1233,17 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
     let label = await getLatestAddedElementLabel();
     return await svg.findElement(By.id(`line_${label}`));
+  }
+
+  async function addNewConnector(fromElm: WebElement, toElm: WebElement): Promise<WebElement> {
+    let addButton = await driver.findElement(By.id("add_connector"));
+    await addButton.click();
+
+    await fromElm.click();
+    await toElm.click();
+
+    let label = await getLatestAddedElementLabel();
+    return await svg.findElement(By.id(`connector_${label}`));
   }
 
   async function getLatestAddedElementLabel(): Promise<string> {
