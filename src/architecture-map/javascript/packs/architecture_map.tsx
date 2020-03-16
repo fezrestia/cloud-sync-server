@@ -1152,90 +1152,105 @@ function registerGlobalCallbacks() {
   } );
 }
 
-(window as any).onAddNewArchModClicked = () => {
-  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewArchModClicked()");
+// Add new component interaction entry point.
+(window as any).onAddComponentClicked = (clicked: HTMLInputElement) => {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddComponentClicked()");
 
-  if (CONTEXT.isAddNewArchModMode) {
-    // Finish add mode.
+  switch(clicked.id) {
+    case "add_archmod":
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "Finish add new ArchMod");
 
-    resetHtmlRoot();
-    CONTEXT.isAddNewArchModMode = false;
+      if (CONTEXT.isAddNewArchModMode) {
+        finishAddNewArchModMode();
+        clicked.checked = false;
+      } else {
+        prepareAddNewArchModMode();
+      }
+      break;
 
-  } else {
-    // Prepare add mode.
+    case "add_line":
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "Finish add new Line");
 
-    CONTEXT.resetAllState();
+      if (CONTEXT.isAddNewLineMode) {
+        finishAddNewLineMode();
+        clicked.checked =false;
+      } else {
+        prepareAddNewLineMode();
+      }
+      break;
 
-    CONTEXT.html.css("display", "block");
-    CONTEXT.html.css("background-color", "#AAAAAAAA");
+    case "add_connector":
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "Finish add new Connector");
 
-    CONTEXT.html.on("click", (e: JQuery.Event) => {
-      let posX: number = e.offsetX || 0;
-      let posY: number = e.offsetY || 0;
-
-      CONTEXT.addNewArchMod(
-          ArchMod.TAG,
-          posX,
-          posY,
-          DEFAULT_SIZE,
-          DEFAULT_SIZE);
-
-      CONTEXT.recordHistory();
-
-      // Finish add mode.
-      resetHtmlRoot();
-      CONTEXT.isAddNewArchModMode = false;
-    } );
-
-    CONTEXT.isAddNewArchModMode = true;
+      if (CONTEXT.isAddNewConnectorMode) {
+        finishAddNewConnectorMode();
+        clicked.checked = false;
+      } else {
+        prepareAddNewConnectorMode();
+      }
+      break;
   }
+
 };
 
-(window as any).onAddNewLineClicked = () => {
-  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewLineClicked()");
+function prepareAddNewArchModMode() {
+  CONTEXT.resetAllState();
 
-  if (CONTEXT.isAddNewLineMode) {
-    // Finish add mode.
+  CONTEXT.html.css("display", "block");
+  CONTEXT.html.css("background-color", "#AAAAAAAA");
 
-    resetHtmlRoot();
-    CONTEXT.isAddNewLineMode = false;
+  CONTEXT.html.on("click", (e: JQuery.Event) => {
+    let posX: number = e.offsetX || 0;
+    let posY: number = e.offsetY || 0;
 
-  } else {
-    // Prepare add mode.
+    CONTEXT.addNewArchMod(
+        ArchMod.TAG,
+        posX,
+        posY,
+        DEFAULT_SIZE,
+        DEFAULT_SIZE);
 
-    CONTEXT.resetAllState();
+    CONTEXT.recordHistory();
 
-    CONTEXT.html.css("display", "block");
-    CONTEXT.html.css("background-color", "#AAAAAAAA");
+    finishAddNewArchModMode();
+  } );
 
-    CONTEXT.html.on("click", (e: JQuery.Event) => {
-      let posX: number = e.offsetX || 0;
-      let posY: number = e.offsetY || 0;
+  CONTEXT.isAddNewArchModMode = true;
+}
 
-      CONTEXT.addNewLine(posX, posY);
+function finishAddNewArchModMode() {
+  resetHtmlRoot();
+  CONTEXT.isAddNewArchModMode = false;
 
-      CONTEXT.recordHistory();
+  (document.getElementById("add_archmod") as HTMLInputElement).checked = false;
+}
 
-      // Finish add mode.
-      resetHtmlRoot();
-      CONTEXT.isAddNewLineMode = false;
-    } );
+function prepareAddNewLineMode() {
+  CONTEXT.resetAllState();
 
-    CONTEXT.isAddNewLineMode = true;
-  }
-};
+  CONTEXT.html.css("display", "block");
+  CONTEXT.html.css("background-color", "#AAAAAAAA");
 
-(window as any).onAddNewConnectorClicked = () => {
-  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onAddNewConnectorClicked()");
+  CONTEXT.html.on("click", (e: JQuery.Event) => {
+    let posX: number = e.offsetX || 0;
+    let posY: number = e.offsetY || 0;
 
-  if (CONTEXT.isAddNewConnectorMode) {
-    // Cancel add mode.
-    finishAddNewConnectorMode();
-  } else {
-    // Prepare add mode.
-    prepareAddNewConnectorMode();
-  }
-};
+    CONTEXT.addNewLine(posX, posY);
+
+    CONTEXT.recordHistory();
+
+    finishAddNewLineMode();
+  } );
+
+  CONTEXT.isAddNewLineMode = true;
+}
+
+function finishAddNewLineMode() {
+  resetHtmlRoot();
+  CONTEXT.isAddNewLineMode = false;
+
+  (document.getElementById("add_line") as HTMLInputElement).checked = false;
+}
 
 function prepareAddNewConnectorMode() {
   CONTEXT.resetAllState();
@@ -1259,6 +1274,7 @@ function finishAddNewConnectorMode() {
 
   CONTEXT.changeToGodMode();
 
+  (document.getElementById("add_connector") as HTMLInputElement).checked = false;
 }
 
 function resetHtmlRoot() {

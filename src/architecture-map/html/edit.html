@@ -40,11 +40,22 @@
       <table ><tbody>
         <tr>
           <td nowrap class="no-border" >
-            <strong>CRUD</strong>
+            <strong>Add Componennts</strong>
             <br>
-            <button id="add_archmod" class="fixed-button" onClick="onAddNewArchModClicked();" >ArchMod</button>
-            <button id="add_line" class="fixed-button" onClick="onAddNewLineClicked();" >Line</button>
-            <button id="add_connector" class="fixed-button" onClick="onAddNewConnectorClicked();" >Connector</button>
+            <group class="inline-radio" >
+              <div>
+                <input id="add_archmod" type="radio" name="component" onClick="onAddComponentClicked(this);" >
+                <label>Module</label>
+              </div>
+              <div>
+                <input id="add_line" type="radio" name="component" onClick="onAddComponentClicked(this);" >
+                <label>Line</label>
+              </div>
+              <div>
+                <input id="add_connector" type="radio" name="component" onClick="onAddComponentClicked(this);" >
+                <label>Connector</label>
+              </div>
+            </group>
           </td>
         </tr>
       </tbody></table>
