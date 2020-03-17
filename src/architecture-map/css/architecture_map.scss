@@ -23,10 +23,15 @@ th, td {
   border: 1px solid #000000;
 }
 
-td.no-border {
+td.no-border, table.no-border td {
   border-style: none;
   padding-right: 30px;
   vertical-align: top;
+}
+
+table.large-margin td {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 // FOR DEBUG
@@ -113,12 +118,11 @@ div#html_root {
 .inline-radio {
   display: flex;
   height: 22px;
-  background: #F8F8F8;
 }
 .inline-radio div {
   position: relative;
-  width: 124px;
-  flex: 1;
+  width: 192px;
+  background: #F8F8F8;
 }
 .inline-radio input {
   width: 100%;
