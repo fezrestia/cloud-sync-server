@@ -12,19 +12,23 @@ module.exports = (env, argv) => {
 
   let dstDir = "dst";
   let dstPath = path.resolve(__dirname, dstDir);
-  let filenameJS = "[name]-[hash].js";
-  let filenameCSS = "[name]-[hash].css";
 
   return {
     // chunk name vs file path.
     entry: {
-      entry: path.resolve(__dirname, "src/entry.ts"),
+      entry: path.resolve(__dirname, "src/entry.js"),
       architecture_map: path.resolve(__dirname, "src/architecture_map.js"),
     },
 
     output: {
       path: dstPath,
-      filename: filenameJS,
+      filename: (chunkData) => {
+        if (chunkData.chunk.name == "entry") {
+          return "[name].js";
+        } else {
+          return "[name]/[hash].js";
+        }
+      },
     },
 
     // Override optimization options.
@@ -84,7 +88,13 @@ module.exports = (env, argv) => {
         verbose: true,
       } ),
       new MiniCssExtractPlugin( {
-        filename: filenameCSS,
+        moduleFilename: ( { name } ) => {
+          if (name == "entry") {
+            return "[name].css";
+          } else {
+            return "[name]/[hash].css";
+          }
+        },
       } ),
       new HtmlWebpackPlugin( {
         template: "src/entry.html",
@@ -93,12 +103,12 @@ module.exports = (env, argv) => {
       } ),
       new HtmlWebpackPlugin( {
         template: "src/architecture-map/html/view.html",
-        filename: "architecture_map_view.html",
+        filename: "architecture_map/view.html",
         chunks: ["architecture_map"],
       } ),
       new HtmlWebpackPlugin( {
         template: "src/architecture-map/html/edit.html",
-        filename: "architecture_map_edit.html",
+        filename: "architecture_map/edit.html",
         chunks: ["architecture_map"],
       } ),
       new CopyWebpackPlugin( [
