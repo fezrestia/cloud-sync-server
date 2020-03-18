@@ -1,5 +1,11 @@
 .main-title {
-    font-family: "Verdana";
-    font-size: 24px;
-    color: green;
+  font-family: "Verdana";
+  font-size: 24px;
+  color: green;
+}
+
+td.no-border, table.no-border td {
+  border-style: none;
+  padding-right: 10px;
+  vertical-align: top;
 }

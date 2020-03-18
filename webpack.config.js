@@ -18,6 +18,7 @@ module.exports = (env, argv) => {
     entry: {
       entry: path.resolve(__dirname, "src/entry.js"),
       architecture_map: path.resolve(__dirname, "src/architecture_map.js"),
+      sim_stats: path.resolve(__dirname, "src/sim-stats/js/sim_stats.ts"),
     },
 
     output: {
@@ -110,6 +111,11 @@ module.exports = (env, argv) => {
         template: "src/architecture-map/html/edit.html",
         filename: "architecture_map/edit.html",
         chunks: ["architecture_map"],
+      } ),
+      new HtmlWebpackPlugin( {
+        template: "src/sim-stats/html/total.html",
+        filename: "sim_stats/total.html",
+        chunks: ["sim_stats"],
       } ),
       new CopyWebpackPlugin( [
         {
