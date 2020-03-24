@@ -30,8 +30,13 @@ td.no-border, table.no-border td {
 }
 
 table.large-margin td {
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+table.no-margin td {
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 // FOR DEBUG
