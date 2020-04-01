@@ -2,3 +2,12 @@
   color: green;
 }
 
+table {
+  border-collapse: collapse;
+}
+
+table.no-border td {
+  border-style: none;
+  padding-right: 32px;
+}
+

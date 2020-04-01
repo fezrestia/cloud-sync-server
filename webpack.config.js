@@ -18,7 +18,7 @@ module.exports = (env, argv) => {
     entry: {
       entry: path.resolve(__dirname, "src/entry.js"),
       architecture_map: path.resolve(__dirname, "src/architecture_map.js"),
-      sim_stats: path.resolve(__dirname, "src/sim-stats/js/sim_stats.ts"),
+      sim_stats: path.resolve(__dirname, "src/sim-stats/js/sim_stats.tsx"),
     },
 
     output: {
