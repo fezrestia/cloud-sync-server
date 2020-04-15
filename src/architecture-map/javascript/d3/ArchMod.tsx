@@ -446,12 +446,38 @@ export class ArchMod extends Element {
   }
 
   /**
+   * Get FROM connector points to CALLEE Archmod.
+   *
+   * @return
+   */
+  public getFromConnectorPoints(): Point[] {
+    let result = this.calcConnPoints();
+    return result.bottomPoints;
+  }
+
+  /**
+   * Get TO connector points to CALLER Archmod.
+   *
+   * @return
+   */
+  public getToConnectorPoints(): Point[] {
+    let result = this.calcConnPoints();
+    return result.topPoints;
+  }
+
+  /**
    * Get default connection point list.
    *
    * @return
    */
   public getConnectionPoints(): Point[] {
-    let points: Point[] = [];
+    let result = this.calcConnPoints();
+    return result.topPoints.concat(result.bottomPoints);
+  }
+
+  private calcConnPoints(): { topPoints: Point[], bottomPoints: Point[] } {
+    let topPoints: Point[] = [];
+    let bottomPoints: Point[] = [];
 
     let left = this.x;
     let top = this.y;
@@ -465,45 +491,48 @@ export class ArchMod extends Element {
     switch (this.clipArea) {
       case ClipArea.NONE:
         // Top.
-        points.push(new Point(centerX, top));
+        topPoints.push(new Point(centerX, top));
         // Bottom.
-        points.push(new Point(centerX, bottom));
+        bottomPoints.push(new Point(centerX, bottom));
         break;
 
       case ClipArea.LEFT_TOP:
         // Top.
-        points.push(new Point(pinX + (right - pinX) / 2, top));
-        points.push(new Point(left + (pinX - left) / 2, pinY));
+        topPoints.push(new Point(pinX + (right - pinX) / 2, top));
+        topPoints.push(new Point(left + (pinX - left) / 2, pinY));
         // Bottom.
-        points.push(new Point(centerX, bottom));
+        bottomPoints.push(new Point(centerX, bottom));
         break;
 
       case ClipArea.RIGHT_TOP:
         // Top.
-        points.push(new Point(left + (pinX - left) / 2, top));
-        points.push(new Point(pinX + (right - pinX) / 2, pinY));
+        topPoints.push(new Point(left + (pinX - left) / 2, top));
+        topPoints.push(new Point(pinX + (right - pinX) / 2, pinY));
         // Bottom.
-        points.push(new Point(centerX, bottom));
+        bottomPoints.push(new Point(centerX, bottom));
         break;
 
       case ClipArea.LEFT_BOTTOM:
         // Top.
-        points.push(new Point(centerX, top));
+        topPoints.push(new Point(centerX, top));
         // Bottom.
-        points.push(new Point(left + (pinX - left) / 2, pinY));
-        points.push(new Point(pinX + (right - pinX) / 2, bottom));
+        bottomPoints.push(new Point(left + (pinX - left) / 2, pinY));
+        bottomPoints.push(new Point(pinX + (right - pinX) / 2, bottom));
         break;
 
       case ClipArea.RIGHT_BOTTOM:
         // Top.
-        points.push(new Point(centerX, top));
+        topPoints.push(new Point(centerX, top));
         // Bottom.
-        points.push(new Point(pinX + (right - pinX) / 2, pinY));
-        points.push(new Point(left + (pinX - left) / 2, bottom));
+        bottomPoints.push(new Point(pinX + (right - pinX) / 2, pinY));
+        bottomPoints.push(new Point(left + (pinX - left) / 2, bottom));
         break;
     }
 
-    return points;
+    return {
+      topPoints: topPoints,
+      bottomPoints: bottomPoints,
+    };
   }
 
   private setHighlight(isHighlight: boolean) {

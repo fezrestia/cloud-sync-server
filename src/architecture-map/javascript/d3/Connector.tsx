@@ -377,8 +377,8 @@ export class Connector extends Element {
     this.fromUid = fromArchMod.uid;
     this.toUid = toArchMod.uid;
 
-    let fromConnPoints = fromArchMod.getConnectionPoints();
-    let toConnPoints = toArchMod.getConnectionPoints();
+    let fromConnPoints = fromArchMod.getFromConnectorPoints();
+    let toConnPoints = toArchMod.getToConnectorPoints();
 
     // Initial values.
     let minDiff = Number.MAX_SAFE_INTEGER;
