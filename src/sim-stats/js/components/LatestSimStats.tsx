@@ -24,9 +24,9 @@ export class LatestSimStats extends React.Component<Props, State> {
   render() {
     const p = this.props;
 
-    const dcmMonthUsed = p.dcmMonthUsed == -1 ? LOADING : `${p.dcmMonthUsed} MB`;
-    const nuroMonthUsed = p.nuroMonthUsed == -1 ? LOADING : `${p.nuroMonthUsed} MB`;
-    const zeroSimMonthUsed = p.zeroSimMonthUsed == -1 ? LOADING : `${p.zeroSimMonthUsed} MB`;
+    const dcmMonthUsed = p.dcmMonthUsed === -1 ? LOADING : `${p.dcmMonthUsed} MB`;
+    const nuroMonthUsed = p.nuroMonthUsed === -1 ? LOADING : `${p.nuroMonthUsed} MB`;
+    const zeroSimMonthUsed = p.zeroSimMonthUsed === -1 ? LOADING : `${p.zeroSimMonthUsed} MB`;
 
     return (
       <div>

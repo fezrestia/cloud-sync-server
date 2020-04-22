@@ -61,38 +61,38 @@ export class ArchModContextMenu extends React.Component<Props, State> {
 
   render() {
 
-    let menuStyle = {
+    const menuStyle = {
         left: this.props.leftPix,
         top: this.props.topPix,
     };
 
-    let handleBackgroundClick = (e: ReactMouseEvent) => {
+    const handleBackgroundClick = (e: ReactMouseEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onBackgroundClicked()");
       e.stopPropagation();
 
       // Correction.
-      let newLabel = this.state.currentLabel.trim();
-      if (this.props.label != newLabel) {
+      const newLabel = this.state.currentLabel.trim();
+      if (this.props.label !== newLabel) {
         this.props.callback.onLabelChanged(this.props.label, newLabel);
       }
 
       this.props.callback.close();
     };
 
-    let handleContextMenuClick = (e: ReactMouseEvent) => {
+    const handleContextMenuClick = (e: ReactMouseEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onContextMenuClicked()");
       e.stopPropagation();
       // NOP.
     };
 
-    let handleLabelChanged = (e: ReactTextAreaChangeEvent) => {
+    const handleLabelChanged = (e: ReactTextAreaChangeEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onLabelChanged()");
       e.stopPropagation();
 
-      let newLabel = e.target.value;
+      const newLabel = e.target.value;
 
       let isOk = false;
-      if (this.props.label == newLabel) {
+      if (this.props.label === newLabel) {
         // No changed.
         isOk = true;
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `Label is NOT changed.`);
@@ -101,19 +101,19 @@ export class ArchModContextMenu extends React.Component<Props, State> {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `Label Change OK/NG = ${isOk}, newLabel=${newLabel}`);
       }
 
-      let error = isOk ? null : "ID is already exists.";
+      const error = isOk ? null : "ID is already exists.";
       this.setState( {
           currentLabel: newLabel,
           labelError: error,
       } );
     };
 
-    let handleKeyDownUp = (e: ReactKeyboardTextAreaEvent) => {
+    const handleKeyDownUp = (e: ReactKeyboardTextAreaEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onKeyDown/Up()");
       e.stopPropagation();
     }
 
-    let callback = this.props.callback;
+    const callback = this.props.callback;
 
     return (
       <div className="layer-parent match-parent" >

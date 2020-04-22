@@ -64,7 +64,7 @@ export class Marker {
   public static prepareMarkers(
       svg: D3Node.SVG,
       colorSet: ColorSet) {
-    let colorResolver = ColorSet.resolve(colorSet);
+    const colorResolver = ColorSet.resolve(colorSet);
 
     let defs = svg.select("defs") as D3Node.Defs;
     if (defs.empty()) {
@@ -72,13 +72,13 @@ export class Marker {
     }
 
     // Arrow markers.
-    let arrowMap = [
+    const arrowMap = [
       [Marker.genArrowId(colorSet, false),  colorResolver.bg],          // Normal
       [Marker.genArrowId(colorSet, true),   colorResolver.bgHighlight], // Highlight
     ];
     arrowMap.forEach( (idAndColor) => {
-      let id = idAndColor[0];
-      let color = idAndColor[1];
+      const id = idAndColor[0];
+      const color = idAndColor[1];
 
       let arrowMarker = defs.select(`#${id}`) as D3Node.Marker;
       if (arrowMarker.empty()) {
@@ -91,9 +91,9 @@ export class Marker {
             .attr("markerHeight", Marker.MARKER_SIZE)
             .attr("orient", "auto-start-reverse")
             .attr("markerUnits", "strokeWidth");
-        let d = Marker.MARKER_SIZE;
-        let l = Marker.DEFAULT_WIDTH;
-        let a = 1.118; // root(5)/2
+        const d = Marker.MARKER_SIZE;
+        const l = Marker.DEFAULT_WIDTH;
+        const a = 1.118; // root(5)/2
         arrowMarker.append("path")
             .attr("d", `M ${d},${d / 2} 0,${d} 0,${d - a * l} ${d - 2 * a * l},${d / 2} 0,${a * l} 0,0 Z`)
             .attr("fill", color);
@@ -102,17 +102,17 @@ export class Marker {
     } );
 
     // Rect markers.
-    let rectMap = [
+    const rectMap = [
       [Marker.genRectId(colorSet, false), colorResolver.bg],          // Normal
       [Marker.genRectId(colorSet, true),  colorResolver.bgHighlight], // Highlight
     ];
     rectMap.forEach( (idAndColor) => {
-      let id = idAndColor[0];
-      let color = idAndColor[1];
+      const id = idAndColor[0];
+      const color = idAndColor[1];
 
       let rectMarker = defs.select(`#${id}`) as D3Node.Marker;
       if (rectMarker.empty()) {
-        let rectSize = Marker.MARKER_SIZE * 3 / 4;
+        const rectSize = Marker.MARKER_SIZE * 3 / 4;
         rectMarker = defs.append("marker")
             .attr("id", id)
             .attr("viewBox", `0, 0, ${rectSize}, ${rectSize}`)
@@ -122,7 +122,7 @@ export class Marker {
             .attr("markerHeight", rectSize)
             .attr("orient", "0")
             .attr("markerUnits", "strokeWidth");
-        let d = rectSize;
+        const d = rectSize;
         rectMarker.append("path")
             .attr("d", `M 0,0 0,${d} ${d},${d} ${d},0 Z`)
             .attr("fill", color);
@@ -149,19 +149,19 @@ export class Marker {
       colorSet: ColorSet,
       isHighlight: boolean,
       isHighSpeedRenderingMode: boolean) {
-    let fromMarkerId = Marker.genMarkerId(fromMarkerType, colorSet, isHighlight);
+    const fromMarkerId = Marker.genMarkerId(fromMarkerType, colorSet, isHighlight);
     if (fromMarkerId != null) {
       path.attr("marker-start", `url(#${fromMarkerId})`);
     }
 
-    let toMarkerId = Marker.genMarkerId(toMarkerType, colorSet, isHighlight);
+    const toMarkerId = Marker.genMarkerId(toMarkerType, colorSet, isHighlight);
     if (toMarkerId != null) {
       path.attr("marker-end", `url(#${toMarkerId})`);
     }
 
     if (!isHighSpeedRenderingMode) {
-      let endGap = Number(path.attr("stroke-width"));
-      let lineLen = path.node()!.getTotalLength() - endGap * 2;
+      const endGap = Number(path.attr("stroke-width"));
+      const lineLen = path.node()!.getTotalLength() - endGap * 2;
 
       path.attr("stroke-dasharray", `0 ${endGap} ${lineLen} ${endGap}`);
       path.attr("stroke-dashoffset", 0);

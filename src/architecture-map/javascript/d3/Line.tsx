@@ -272,7 +272,7 @@ export class Line extends Element {
    * @return string LineJson Object.
    */
   public serialize(): LineJson {
-    let jsonObj = {
+    const jsonObj = {
         [Def.KEY_UID]: this.uid,
         [Def.KEY_CLASS]: Line.TAG,
         [Def.KEY_DIMENS]: {
@@ -298,7 +298,7 @@ export class Line extends Element {
    * @return Line.
    */
   public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: LineJson): Line {
-    let divLine = new Line(
+    const divLine = new Line(
         json[Def.KEY_UID],
         html,
         svg);
@@ -336,7 +336,7 @@ export class Line extends Element {
   private callback: LineCallback|null = null;
 
   private runNoCallback(proc: () => void) {
-    let cb = this.callback;
+    const cb = this.callback;
     this.callback = null;
     proc();
     this.callback = cb;
@@ -455,8 +455,8 @@ export class Line extends Element {
   private checkLayoutLimit() {
     // Top-Left edge limit check. Bottom-Right edge is movable, so skip check.
 
-    let minX: number = Math.min(this.fromPoint.x, this.toPoint.x, 0);
-    let minY: number = Math.min(this.fromPoint.y, this.toPoint.y, 0);
+    const minX: number = Math.min(this.fromPoint.x, this.toPoint.x, 0);
+    const minY: number = Math.min(this.fromPoint.y, this.toPoint.y, 0);
 
     this.fromPoint = new Point(this.fromPoint.x - minX, this.fromPoint.y - minY);
     this.toPoint = new Point(this.toPoint.x - minX, this.toPoint.y - minY);
@@ -503,15 +503,15 @@ export class Line extends Element {
           .on("drag", () => {
               if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:drag");
               if (this.currentState.isMovable()) {
-                let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+                const isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
-                let origFromPoint = d3.event.target.origFromPoint;
-                let origToPoint = d3.event.target.origToPoint;
+                const origFromPoint = d3.event.target.origFromPoint;
+                const origToPoint = d3.event.target.origToPoint;
 
-                let dx = d3.event.x - d3.event.target.startX;
-                let dy = d3.event.y - d3.event.target.startY;
+                const dx = d3.event.x - d3.event.target.startX;
+                const dy = d3.event.y - d3.event.target.startY;
 
-                let oldFromPoint = this.fromPoint; // to calc diff of this step.
+                const oldFromPoint = this.fromPoint; // to calc diff of this step.
 
                 this.fromPoint = new Point(origFromPoint.x + dx, origFromPoint.y + dy);
                 this.toPoint = new Point(origToPoint.x + dx, origToPoint.y + dy);
@@ -519,8 +519,8 @@ export class Line extends Element {
                 // Position snapping.
                 // Snap control is based on FROM point.
                 if (isSnapDragEnabled) {
-                  let snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
-                  let snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
+                  const snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
+                  const snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
 
                   this.fromPoint = new Point(this.fromPoint.x - snapX, this.fromPoint.y - snapY);
                   this.toPoint = new Point(this.toPoint.x - snapX, this.toPoint.y - snapY);
@@ -529,8 +529,8 @@ export class Line extends Element {
                 this.checkLayoutLimit();
                 this.relayout();
 
-                let plusX = this.fromPoint.x - oldFromPoint.x;
-                let plusY = this.fromPoint.y - oldFromPoint.y;
+                const plusX = this.fromPoint.x - oldFromPoint.x;
+                const plusY = this.fromPoint.y - oldFromPoint.y;
                 if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
               }
           } )
@@ -565,9 +565,9 @@ export class Line extends Element {
   private addEditGrip(id: string, cx: number, cy: number): any {
     if (this.editor == null) return;
 
-    let TAG = "EditGrip";
+    const TAG = "EditGrip";
 
-    let circle = this.editor.append("circle")
+    const circle = this.editor.append("circle")
         .attr("id", id)
         .attr("cx", cx)
         .attr("cy", cy)
@@ -593,28 +593,28 @@ export class Line extends Element {
           .on("drag", () => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
-              let isRadialSnapEnabled = d3.event.sourceEvent.shiftKey;
+              const isSnapDragEnabled = d3.event.sourceEvent.altKey;
+              const isRadialSnapEnabled = d3.event.sourceEvent.shiftKey;
 
-              let origFromPoint = d3.event.target.origFromPoint;
-              let origToPoint = d3.event.target.origToPoint;
+              const origFromPoint = d3.event.target.origFromPoint;
+              const origToPoint = d3.event.target.origToPoint;
 
-              let dx = d3.event.x - d3.event.target.startX;
-              let dy = d3.event.y - d3.event.target.startY;
+              const dx = d3.event.x - d3.event.target.startX;
+              const dy = d3.event.y - d3.event.target.startY;
 
               // cX/cY = Center Point
               // pX/pY = Snap Point
-              let calcRadialSnapXY = (cX: number, cY: number, pX: number, pY: number)
+              const calcRadialSnapXY = (cX: number, cY: number, pX: number, pY: number)
                   : { x: number, y: number } => {
-                let x = pX - cX;
-                let y = pY - cY;
-                let r = Math.sqrt(x * x + y * y);
-                let rawRad = Math.atan2(y, x); // [-PI, +PI]
-                let radStep = Math.round(rawRad / Def.RADIAL_SNAP_STEP_RAD);
-                let snapRad = radStep * Def.RADIAL_SNAP_STEP_RAD;
+                const x = pX - cX;
+                const y = pY - cY;
+                const r = Math.sqrt(x * x + y * y);
+                const rawRad = Math.atan2(y, x); // [-PI, +PI]
+                const radStep = Math.round(rawRad / Def.RADIAL_SNAP_STEP_RAD);
+                const snapRad = radStep * Def.RADIAL_SNAP_STEP_RAD;
 
-                let newX = Math.round(r * Math.cos(snapRad));
-                let newY = Math.round(r * Math.sin(snapRad));
+                const newX = Math.round(r * Math.cos(snapRad));
+                const newY = Math.round(r * Math.sin(snapRad));
 
                 return {
                   x: cX + newX,
@@ -629,15 +629,15 @@ export class Line extends Element {
                   // Snapping.
                   if (isSnapDragEnabled) {
                     if (isRadialSnapEnabled) {
-                      let snappedXY = calcRadialSnapXY(
+                      const snappedXY = calcRadialSnapXY(
                           this.toPoint.x,
                           this.toPoint.y,
                           this.fromPoint.x,
                           this.fromPoint.y);
                       this.fromPoint = new Point(snappedXY.x, snappedXY.y);
                     } else {
-                      let snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
-                      let snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
+                      const snapX = this.fromPoint.x % Def.SNAP_STEP_PIX;
+                      const snapY = this.fromPoint.y % Def.SNAP_STEP_PIX;
                       this.fromPoint = new Point(this.fromPoint.x - snapX, this.fromPoint.y - snapY);
                     }
                   }
@@ -650,15 +650,15 @@ export class Line extends Element {
                   // Snapping.
                   if (isSnapDragEnabled) {
                     if (isRadialSnapEnabled) {
-                      let snappedXY = calcRadialSnapXY(
+                      const snappedXY = calcRadialSnapXY(
                           this.fromPoint.x,
                           this.fromPoint.y,
                           this.toPoint.x,
                           this.toPoint.y);
                       this.toPoint = new Point(snappedXY.x, snappedXY.y);
                     } else {
-                      let snapX = this.toPoint.x % Def.SNAP_STEP_PIX;
-                      let snapY = this.toPoint.y % Def.SNAP_STEP_PIX;
+                      const snapX = this.toPoint.x % Def.SNAP_STEP_PIX;
+                      const snapY = this.toPoint.y % Def.SNAP_STEP_PIX;
                       this.toPoint = new Point(this.toPoint.x - snapX, this.toPoint.y - snapY);
                     }
                   }
@@ -694,11 +694,11 @@ export class Line extends Element {
   private relayout() {
     // Line.
     if (this.path != null) {
-      let lineData: [number, number][] = [
+      const lineData: [number, number][] = [
         [this.fromPoint.x, this.fromPoint.y],
         [this.toPoint.x, this.toPoint.y],
       ];
-      let line = d3.line()
+      const line = d3.line()
           .x( (d) => { return d[0] } )
           .y( (d) => { return d[1] } )
           .curve(d3.curveLinear);
@@ -722,11 +722,11 @@ export class Line extends Element {
 
     // Grips.
     if (this.editor != null) {
-      let fromGrip = this.editor.select(`#${Line.GRIP_ID_FROM}`);
+      const fromGrip = this.editor.select(`#${Line.GRIP_ID_FROM}`);
       fromGrip.attr("cx", this.fromPoint.x);
       fromGrip.attr("cy", this.fromPoint.y);
 
-      let toGrip = this.editor.select(`#${Line.GRIP_ID_TO}`);
+      const toGrip = this.editor.select(`#${Line.GRIP_ID_TO}`);
       toGrip.attr("cx", this.toPoint.x);
       toGrip.attr("cy", this.toPoint.y);
 
@@ -821,7 +821,7 @@ export class Line extends Element {
   private closeContextMenu() {
     if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "closeContextMenu()");
 
-    let container = document.getElementById(this.html[0].id);
+    const container = document.getElementById(this.html[0].id);
     if (container != null) {
       ReactDOM.unmountComponentAtNode(container);
     }

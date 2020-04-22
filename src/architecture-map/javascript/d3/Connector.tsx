@@ -280,7 +280,7 @@ export class Connector extends Element {
    * @return string ConnectorJson Object.
    */
   public serialize(): ConnectorJson {
-    let jsonObj = {
+    const jsonObj = {
         [Def.KEY_UID]: this.uid,
         [Def.KEY_CLASS]: Connector.TAG,
         [Def.KEY_FROM_UID]: this.fromUid,
@@ -308,7 +308,7 @@ export class Connector extends Element {
    * @return Connector.
    */
   public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: ConnectorJson): Connector {
-    let connector = new Connector(
+    const connector = new Connector(
         json[Def.KEY_UID],
         html,
         svg);
@@ -316,10 +316,10 @@ export class Connector extends Element {
     (connector as any).fromUid = json[Def.KEY_FROM_UID];
     (connector as any).toUid = json[Def.KEY_TO_UID];
 
-    let fromX = json[Def.KEY_DIMENS][Def.KEY_FROM_X];
-    let fromY = json[Def.KEY_DIMENS][Def.KEY_FROM_Y];
-    let toX = json[Def.KEY_DIMENS][Def.KEY_TO_X];
-    let toY = json[Def.KEY_DIMENS][Def.KEY_TO_Y];
+    const fromX = json[Def.KEY_DIMENS][Def.KEY_FROM_X];
+    const fromY = json[Def.KEY_DIMENS][Def.KEY_FROM_Y];
+    const toX = json[Def.KEY_DIMENS][Def.KEY_TO_X];
+    const toY = json[Def.KEY_DIMENS][Def.KEY_TO_Y];
 
     (connector as any).fromPoint =  new Point(fromX, fromY);
     (connector as any).toPoint =  new Point(toX, toY);
@@ -361,7 +361,7 @@ export class Connector extends Element {
   private callback: ConnectorCallback|null = null;
 
   private runNoCallback(proc: () => void) {
-    let cb = this.callback;
+    const cb = this.callback;
     this.callback = null;
     proc();
     this.callback = cb;
@@ -377,8 +377,8 @@ export class Connector extends Element {
     this.fromUid = fromArchMod.uid;
     this.toUid = toArchMod.uid;
 
-    let fromConnPoints = fromArchMod.getFromConnectorPoints();
-    let toConnPoints = toArchMod.getToConnectorPoints();
+    const fromConnPoints = fromArchMod.getFromConnectorPoints();
+    const toConnPoints = toArchMod.getToConnectorPoints();
 
     // Initial values.
     let minDiff = Number.MAX_SAFE_INTEGER;
@@ -387,7 +387,7 @@ export class Connector extends Element {
 
     fromConnPoints.forEach( (fromP: Point) => {
       toConnPoints.forEach( (toP: Point) => {
-        let diff = Math.pow(toP.x - fromP.x, 2) + Math.pow(toP.y - fromP.y, 2);
+        const diff = Math.pow(toP.x - fromP.x, 2) + Math.pow(toP.y - fromP.y, 2);
 
         if (diff < minDiff) {
           validFromPoint = fromP;
@@ -410,8 +410,8 @@ export class Connector extends Element {
    */
   public updateConnectionPoints() {
     if (this.callback != null) {
-      let fromArchMod = this.callback.queryArchMod(this.fromUid);
-      let toArchMod = this.callback.queryArchMod(this.toUid);
+      const fromArchMod = this.callback.queryArchMod(this.fromUid);
+      const toArchMod = this.callback.queryArchMod(this.toUid);
 
       this.setFromToArchMod(fromArchMod, toArchMod);
     }
@@ -424,7 +424,7 @@ export class Connector extends Element {
    * @return Connected FROM uid or not.
    */
   public isConnectedFrom(uid: number) {
-    return this.fromUid == uid;
+    return this.fromUid === uid;
   }
 
   /**
@@ -434,7 +434,7 @@ export class Connector extends Element {
    * @return Connected TO uid or not.
    */
   public isConnectedTo(uid: number) {
-    return this.toUid == uid;
+    return this.toUid === uid;
   }
 
   /**
@@ -599,10 +599,10 @@ export class Connector extends Element {
     this.editor = this.root.append("g")
         .attr("id", "editor_plane");
 
-    if (this.fromMarkerType == MarkerType.NONE) {
+    if (this.fromMarkerType === MarkerType.NONE) {
       this.addEditGrip(Connector.GRIP_ID_FROM, this.fromPoint.x, this.fromPoint.y);
     }
-    if (this.toMarkerType == MarkerType.NONE) {
+    if (this.toMarkerType === MarkerType.NONE) {
       this.addEditGrip(Connector.GRIP_ID_TO, this.toPoint.x, this.toPoint.y);
     }
 
@@ -614,9 +614,9 @@ export class Connector extends Element {
   private addEditGrip(id: string, cx: number, cy: number): any {
     if (this.editor == null) return;
 
-    let TAG = "EditGrip";
+    const TAG = "EditGrip";
 
-    let grip = this.editor.append("rect")
+    const grip = this.editor.append("rect")
         .attr("id", id);
 
     grip.on("click", () => {
@@ -739,11 +739,11 @@ export class Connector extends Element {
   private relayout() {
     // Line.
     if (this.path != null) {
-      let lineData: [number, number][] = [
+      const lineData: [number, number][] = [
         [this.fromPoint.x, this.fromPoint.y],
         [this.toPoint.x, this.toPoint.y],
       ];
-      let line = d3.line()
+      const line = d3.line()
           .x( (d) => { return d[0] } )
           .y( (d) => { return d[1] } )
           .curve(d3.curveLinear);
@@ -766,13 +766,13 @@ export class Connector extends Element {
 
     // Grips.
     if (this.editor != null) {
-      let fromGrip = this.editor.select(`#${Connector.GRIP_ID_FROM}`);
+      const fromGrip = this.editor.select(`#${Connector.GRIP_ID_FROM}`);
       fromGrip.attr("x", this.fromPoint.x - Connector.EDIT_GRIP_RADIUS_PIX)
       fromGrip.attr("y", this.fromPoint.y - Connector.EDIT_GRIP_RADIUS_PIX)
       fromGrip.attr("width", Connector.EDIT_GRIP_RADIUS_PIX * 2)
       fromGrip.attr("height", Connector.EDIT_GRIP_RADIUS_PIX * 2)
 
-      let toGrip = this.editor.select(`#${Connector.GRIP_ID_TO}`);
+      const toGrip = this.editor.select(`#${Connector.GRIP_ID_TO}`);
       toGrip.attr("x", this.toPoint.x - Connector.EDIT_GRIP_RADIUS_PIX)
       toGrip.attr("y", this.toPoint.y - Connector.EDIT_GRIP_RADIUS_PIX)
       toGrip.attr("width", Connector.EDIT_GRIP_RADIUS_PIX * 2)
@@ -793,10 +793,10 @@ export class Connector extends Element {
     this.path.attr("stroke", color);
 
     if (this.editor != null) {
-      let fromGrip = this.editor.select(`#${Connector.GRIP_ID_FROM}`);
+      const fromGrip = this.editor.select(`#${Connector.GRIP_ID_FROM}`);
       fromGrip.attr("fill", this.colorResolver.bgHighlight);
 
-      let toGrip = this.editor.select(`#${Connector.GRIP_ID_TO}`);
+      const toGrip = this.editor.select(`#${Connector.GRIP_ID_TO}`);
       toGrip.attr("fill", this.colorResolver.bgHighlight);
 
     }
@@ -879,7 +879,7 @@ export class Connector extends Element {
   private closeContextMenu() {
     if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "closeContextMenu()");
 
-    let container = document.getElementById(this.html[0].id);
+    const container = document.getElementById(this.html[0].id);
     if (container != null) {
       ReactDOM.unmountComponentAtNode(container);
     }

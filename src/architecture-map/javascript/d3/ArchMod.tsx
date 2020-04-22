@@ -250,7 +250,7 @@ export class ArchMod extends Element {
    * @return string ArchModJson Object.
    */
   public serialize(): ArchModJson {
-    let jsonObj = {
+    const jsonObj = {
         [Def.KEY_UID]: this.uid,
         [Def.KEY_CLASS]: ArchMod.TAG,
         [Def.KEY_LABEL]: this.label,
@@ -280,7 +280,7 @@ export class ArchMod extends Element {
    * @return ArchMod.
    */
   public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: ArchModJson): ArchMod {
-    let archMod = new ArchMod(
+    const archMod = new ArchMod(
         json[Def.KEY_UID],
         html,
         svg,
@@ -342,7 +342,7 @@ export class ArchMod extends Element {
   private callback: ArchModCallback|null = null;
 
   private runNoCallback(proc: () => void) {
-    let cb = this.callback;
+    const cb = this.callback;
     this.callback = null;
     proc();
     this.callback = cb;
@@ -359,8 +359,8 @@ export class ArchMod extends Element {
     let pinX: number|null = null;
     let pinY: number|null = null;
 
-    if (this.pinX == 0) pinX = x + width / 2;
-    if (this.pinY == 0) pinY = y + height / 2;
+    if (this.pinX === 0) pinX = x + width / 2;
+    if (this.pinY === 0) pinY = y + height / 2;
 
     this.setDimens(x, y, width, height, pinX, pinY, null, null);
   }
@@ -451,7 +451,7 @@ export class ArchMod extends Element {
    * @return
    */
   public getFromConnectorPoints(): Point[] {
-    let result = this.calcConnPoints();
+    const result = this.calcConnPoints();
     return result.bottomPoints;
   }
 
@@ -461,7 +461,7 @@ export class ArchMod extends Element {
    * @return
    */
   public getToConnectorPoints(): Point[] {
-    let result = this.calcConnPoints();
+    const result = this.calcConnPoints();
     return result.topPoints;
   }
 
@@ -471,22 +471,22 @@ export class ArchMod extends Element {
    * @return
    */
   public getConnectionPoints(): Point[] {
-    let result = this.calcConnPoints();
+    const result = this.calcConnPoints();
     return result.topPoints.concat(result.bottomPoints);
   }
 
   private calcConnPoints(): { topPoints: Point[], bottomPoints: Point[] } {
-    let topPoints: Point[] = [];
-    let bottomPoints: Point[] = [];
+    const topPoints: Point[] = [];
+    const bottomPoints: Point[] = [];
 
-    let left = this.x;
-    let top = this.y;
-    let right = this.x + this.width;
-    let bottom = this.y + this.height;
-    let pinX = this.pinX;
-    let pinY = this.pinY;
-    let centerX = left + this.width / 2;
-    let centerY = top + this.height / 2;
+    const left = this.x;
+    const top = this.y;
+    const right = this.x + this.width;
+    const bottom = this.y + this.height;
+    const pinX = this.pinX;
+    const pinY = this.pinY;
+    const centerX = left + this.width / 2;
+    const centerY = top + this.height / 2;
 
     switch (this.clipArea) {
       case ClipArea.NONE:
@@ -530,8 +530,8 @@ export class ArchMod extends Element {
     }
 
     return {
-      topPoints: topPoints,
-      bottomPoints: bottomPoints,
+      topPoints,
+      bottomPoints,
     };
   }
 
@@ -635,13 +635,13 @@ export class ArchMod extends Element {
           .on("drag", () => {
               if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:drag");
               if (this.currentState.isMovable()) {
-                let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+                const isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
-                let dx = d3.event.x - d3.event.target.startX;
-                let dy = d3.event.y - d3.event.target.startY;
+                const dx = d3.event.x - d3.event.target.startX;
+                const dy = d3.event.y - d3.event.target.startY;
 
-                let oldX = this.x;
-                let oldY = this.y;
+                const oldX = this.x;
+                const oldY = this.y;
 
                 this.x = d3.event.target.origX + dx;
                 this.y = d3.event.target.origY + dy;
@@ -650,10 +650,10 @@ export class ArchMod extends Element {
 
                 // Position snapping.
                 if (isSnapDragEnabled) {
-                  let snapX = this.x % Def.SNAP_STEP_PIX;
+                  const snapX = this.x % Def.SNAP_STEP_PIX;
                   this.x -= snapX;
                   this.pinX -= snapX;
-                  let snapY = this.y % Def.SNAP_STEP_PIX;
+                  const snapY = this.y % Def.SNAP_STEP_PIX;
                   this.y -= snapY;
                   this.pinY -= snapY;
                 }
@@ -661,8 +661,8 @@ export class ArchMod extends Element {
                 this.checkLayoutLimit();
                 this.relayout();
 
-                let plusX = this.x - oldX;
-                let plusY = this.y - oldY;
+                const plusX = this.x - oldX;
+                const plusY = this.y - oldY;
                 if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
               }
           } )
@@ -696,7 +696,7 @@ export class ArchMod extends Element {
     this.addEditGrip(this.GRIP_ID_LEFT_BOTTOM,    this.x,                 this.y + this.height);
     this.addEditGrip(this.GRIP_ID_RIGHT_BOTTOM,   this.x + this.width,    this.y + this.height);
 
-    if (this.clipArea != ClipArea.NONE) {
+    if (this.clipArea !== ClipArea.NONE) {
       this.addEditGrip(this.GRIP_ID_PIN, this.pinX, this.pinY);
     }
 
@@ -705,9 +705,9 @@ export class ArchMod extends Element {
   private addEditGrip(id: string, cx: number, cy: number): any {
     if (this.editor == null) return;
 
-    let TAG = "EditGrip";
+    const TAG = "EditGrip";
 
-    let circle = this.editor.append("circle")
+    const circle = this.editor.append("circle")
         .attr("id", id)
         .attr("cx", cx)
         .attr("cy", cy)
@@ -738,14 +738,14 @@ export class ArchMod extends Element {
           .on("drag", () => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+              const isSnapDragEnabled = d3.event.sourceEvent.altKey;
 
-              let origX = d3.event.target.origX;
-              let origY = d3.event.target.origY;
-              let origWidth = d3.event.target.origWidth;
-              let origHeight = d3.event.target.origHeight;
-              let origPinX = d3.event.target.origPinX;
-              let origPinY = d3.event.target.origPinY;
+              const origX = d3.event.target.origX;
+              const origY = d3.event.target.origY;
+              const origWidth = d3.event.target.origWidth;
+              const origHeight = d3.event.target.origHeight;
+              const origPinX = d3.event.target.origPinX;
+              const origPinY = d3.event.target.origPinY;
 
               let dx = d3.event.x - d3.event.target.startX;
               let dy = d3.event.y - d3.event.target.startY;
@@ -762,17 +762,17 @@ export class ArchMod extends Element {
                   this.height = origHeight - dy;
 
                   // Pin position.
-                  let minPinX = this.x + this.MIN_SIZE_PIX / 2;
-                  let minPinY = this.y + this.MIN_SIZE_PIX / 2;
+                  const minPinX = this.x + this.MIN_SIZE_PIX / 2;
+                  const minPinY = this.y + this.MIN_SIZE_PIX / 2;
                   if (this.pinX < minPinX) this.pinX = minPinX;
                   if (this.pinY < minPinY) this.pinY = minPinY;
 
                   // Snapping.
                   if (isSnapDragEnabled) {
-                    let snapX = this.x % Def.SNAP_STEP_PIX;
+                    const snapX = this.x % Def.SNAP_STEP_PIX;
                     this.x -= snapX;
                     this.width += snapX;
-                    let snapY = this.y % Def.SNAP_STEP_PIX;
+                    const snapY = this.y % Def.SNAP_STEP_PIX;
                     this.y -= snapY;
                     this.height += snapY;
                   }
@@ -789,16 +789,16 @@ export class ArchMod extends Element {
                   this.height = origHeight - dy;
 
                   // Pin position.
-                  let maxPinX = this.x + this.width - this.MIN_SIZE_PIX / 2;
-                  let minPinY = this.y + this.MIN_SIZE_PIX / 2;
+                  const maxPinX = this.x + this.width - this.MIN_SIZE_PIX / 2;
+                  const minPinY = this.y + this.MIN_SIZE_PIX / 2;
                   if (this.pinX > maxPinX) this.pinX = maxPinX;
                   if (this.pinY < minPinY) this.pinY = minPinY;
 
                   // Snapping.
                   if (isSnapDragEnabled) {
-                    let snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
+                    const snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
                     this.width -= snapX;
-                    let snapY = this.y % Def.SNAP_STEP_PIX;
+                    const snapY = this.y % Def.SNAP_STEP_PIX;
                     this.y -= snapY;
                     this.height += snapY;
                   }
@@ -815,17 +815,17 @@ export class ArchMod extends Element {
                   this.height = origHeight + dy;
 
                   // Pin position.
-                  let minPinX = this.x + this.MIN_SIZE_PIX / 2;
-                  let maxPinY = this.y + this.height - this.MIN_SIZE_PIX / 2;
+                  const minPinX = this.x + this.MIN_SIZE_PIX / 2;
+                  const maxPinY = this.y + this.height - this.MIN_SIZE_PIX / 2;
                   if (this.pinX < minPinX) this.pinX = minPinX;
                   if (this.pinY > maxPinY) this.pinY = maxPinY;
 
                   // Snapping.
                   if (isSnapDragEnabled) {
-                    let snapX = this.x % Def.SNAP_STEP_PIX;
+                    const snapX = this.x % Def.SNAP_STEP_PIX;
                     this.x -= snapX;
                     this.width += snapX;
-                    let snapY = (this.y + this.height) % Def.SNAP_STEP_PIX;
+                    const snapY = (this.y + this.height) % Def.SNAP_STEP_PIX;
                     this.height -= snapY;
                   }
                 }
@@ -840,16 +840,16 @@ export class ArchMod extends Element {
                   this.height = origHeight + dy;
 
                   // Pin position.
-                  let maxPinX = this.x + this.width - this.MIN_SIZE_PIX / 2;
-                  let maxPinY = this.y + this.height - this.MIN_SIZE_PIX / 2;
+                  const maxPinX = this.x + this.width - this.MIN_SIZE_PIX / 2;
+                  const maxPinY = this.y + this.height - this.MIN_SIZE_PIX / 2;
                   if (this.pinX > maxPinX) this.pinX = maxPinX;
                   if (this.pinY > maxPinY) this.pinY = maxPinY;
 
                   // Snapping.
                   if (isSnapDragEnabled) {
-                    let snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
+                    const snapX = (this.x + this.width) % Def.SNAP_STEP_PIX;
                     this.width -= snapX;
-                    let snapY = (this.y + this.height) % Def.SNAP_STEP_PIX;
+                    const snapY = (this.y + this.height) % Def.SNAP_STEP_PIX;
                     this.height -= snapY;
                   }
                 }
@@ -865,10 +865,10 @@ export class ArchMod extends Element {
                      newPinY = Math.floor(newPinY / Def.SNAP_STEP_PIX) * Def.SNAP_STEP_PIX;
                    }
 
-                   let minX = this.x + this.MIN_SIZE_PIX / 2;
-                   let maxX = this.x + this.width - this.MIN_SIZE_PIX / 2;
-                   let minY = this.y + this.MIN_SIZE_PIX / 2;
-                   let maxY = this.y + this.height - this.MIN_SIZE_PIX / 2;
+                   const minX = this.x + this.MIN_SIZE_PIX / 2;
+                   const maxX = this.x + this.width - this.MIN_SIZE_PIX / 2;
+                   const minY = this.y + this.MIN_SIZE_PIX / 2;
+                   const maxY = this.y + this.height - this.MIN_SIZE_PIX / 2;
 
                    if (newPinX < minX) newPinX = minX;
                    if (newPinX > maxX) newPinX = maxX;
@@ -914,14 +914,14 @@ export class ArchMod extends Element {
 
   private relayout() {
     // Common dimens.
-    let left = this.x;
-    let top = this.y;
-    let right = this.x + this.width;
-    let bottom = this.y + this.height;
-    let pinX = this.pinX;
-    let pinY = this.pinY;
-    let centerX = left + this.width / 2;
-    let centerY = top + this.height / 2;
+    const left = this.x;
+    const top = this.y;
+    const right = this.x + this.width;
+    const bottom = this.y + this.height;
+    const pinX = this.pinX;
+    const pinY = this.pinY;
+    const centerX = left + this.width / 2;
+    const centerY = top + this.height / 2;
 
     // Rect or polygon shape.
     let points: number[][] = [];
@@ -984,7 +984,7 @@ export class ArchMod extends Element {
         ];
         break;
     }
-    let polygonPoints: string = points
+    const polygonPoints: string = points
         .map( (point: number[]): string => { return point.join(",") } )
         .join(" ");
     this.polygon.attr("points", polygonPoints);
@@ -1099,24 +1099,24 @@ export class ArchMod extends Element {
 
     // Grips.
     if (this.editor != null) {
-      let ltGrip = this.editor.select(`#${this.GRIP_ID_LEFT_TOP}`);
+      const ltGrip = this.editor.select(`#${this.GRIP_ID_LEFT_TOP}`);
       ltGrip.attr("cx", this.x);
       ltGrip.attr("cy", this.y);
 
-      let rtGrip = this.editor.select(`#${this.GRIP_ID_RIGHT_TOP}`);
+      const rtGrip = this.editor.select(`#${this.GRIP_ID_RIGHT_TOP}`);
       rtGrip.attr("cx", this.x + this.width);
       rtGrip.attr("cy", this.y);
 
-      let lbGrip = this.editor.select(`#${this.GRIP_ID_LEFT_BOTTOM}`);
+      const lbGrip = this.editor.select(`#${this.GRIP_ID_LEFT_BOTTOM}`);
       lbGrip.attr("cx", this.x);
       lbGrip.attr("cy", this.y + this.height);
 
-      let rbGrip = this.editor.select(`#${this.GRIP_ID_RIGHT_BOTTOM}`);
+      const rbGrip = this.editor.select(`#${this.GRIP_ID_RIGHT_BOTTOM}`);
       rbGrip.attr("cx", this.x + this.width);
       rbGrip.attr("cy", this.y + this.height);
 
-      if (this.clipArea != ClipArea.NONE) {
-        let pinGrip = this.editor.select(`#${this.GRIP_ID_PIN}`);
+      if (this.clipArea !== ClipArea.NONE) {
+        const pinGrip = this.editor.select(`#${this.GRIP_ID_PIN}`);
         pinGrip.attr("cx", this.pinX);
         pinGrip.attr("cy", this.pinY);
       }
@@ -1148,10 +1148,10 @@ export class ArchMod extends Element {
   private updateLabelLayout() {
     this.text.text(null);
 
-    let labelX = this.text.attr("x");
-    let labelY = this.text.attr("y");
+    const labelX = this.text.attr("x");
+    const labelY = this.text.attr("y");
 
-    let lines: string[] = this.label.split("\n");
+    const lines: string[] = this.label.split("\n");
 
     let startDY: number;
     switch (this.labelAlign) {
@@ -1253,7 +1253,7 @@ export class ArchMod extends Element {
   private closeContextMenu() {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "closeContextMenu()");
 
-    let container = document.getElementById(this.html[0].id);
+    const container = document.getElementById(this.html[0].id);
     if (container != null) {
       ReactDOM.unmountComponentAtNode(container);
     }
@@ -1276,7 +1276,7 @@ export class ArchMod extends Element {
   private changeClipArea(clipArea: ClipArea) {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `changeClipArea() : ${clipArea}`);
 
-    if (this.clipArea != clipArea) {
+    if (this.clipArea !== clipArea) {
       this.clipArea = clipArea;
 
       // Re-construction and re-layout.

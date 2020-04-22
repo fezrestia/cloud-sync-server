@@ -51,25 +51,25 @@ export class ConnectorContextMenu extends React.Component<Props, State> {
 
   render() {
 
-    let menuStyle = {
+    const menuStyle = {
         left: this.props.leftPix,
         top: this.props.topPix,
     };
 
-    let handleBackgroundClick = (e: ReactMouseEvent) => {
+    const handleBackgroundClick = (e: ReactMouseEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onBackgroundClicked()");
       e.stopPropagation();
 
       this.props.callback.close();
     };
 
-    let handleContextMenuClick = (e: ReactMouseEvent) => {
+    const handleContextMenuClick = (e: ReactMouseEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onContextMenuClicked()");
       e.stopPropagation();
       // NOP.
     };
 
-    let callback = this.props.callback;
+    const callback = this.props.callback;
 
     return (
       <div className="layer-parent match-parent" >

@@ -54,8 +54,8 @@ class Context {
   public elementUids: number[] = [0]; // 0 is OutFrame UID.
 
   public genNewElementUid(): number {
-    let max: number = Math.max.apply(null, this.elementUids);
-    let newUid = max + 1;
+    const max: number = Math.max.apply(null, this.elementUids);
+    const newUid = max + 1;
     return newUid;
   }
 
@@ -104,7 +104,7 @@ class Context {
   }
 
   public onDeselected(deselected: Element) {
-    let index = this.selectedElements.indexOf(deselected);
+    const index = this.selectedElements.indexOf(deselected);
     if (0 <= index) {
       this.selectedElements.splice(index, 1);
     }
@@ -115,21 +115,21 @@ class Context {
    * @return ArchitectureMapJson object.
    */
   public serializeToJson(): ArchitectureMapJson {
-    let serializedElements: ElementJson[] = [];
+    const serializedElements: ElementJson[] = [];
     this.allElements.forEach( (element: Element) => {
-      let serialized = element.serialize();
+      const serialized = element.serialize();
       serializedElements.push(serialized);
     } );
 
-    let outSize = this.outFrame.getXYWH();
-    let outFrameJson = {
+    const outSize = this.outFrame.getXYWH();
+    const outFrameJson = {
       [Def.KEY_X]: outSize.x,
       [Def.KEY_Y]: outSize.y,
       [Def.KEY_WIDTH]: outSize.width,
       [Def.KEY_HEIGHT]: outSize.height,
     };
 
-    let totalJson: ArchitectureMapJson = {
+    const totalJson: ArchitectureMapJson = {
       [Def.KEY_VERSION]: Def.VAL_VERSION,
       [Def.KEY_OUT_FRAME]: outFrameJson,
       [Def.KEY_ARCHITECTURE_MAP]: serializedElements,
@@ -148,12 +148,12 @@ class Context {
     // Convert to Latest version.
     serialized = convertJsonToLatest(serialized);
 
-    let outSize = serialized[Def.KEY_OUT_FRAME];
+    const outSize = serialized[Def.KEY_OUT_FRAME];
     this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
     this.changeOutFrameSize(outSize.width, outSize.height);
     this.outFrame.relayout();
 
-    let elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
+    const elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
     elements.forEach( (element: ElementJson) => {
       let deserialized: Element;
       let json;
@@ -188,7 +188,7 @@ class Context {
   }
 
   private validateElementUid(element: Element) {
-    let uid = element.uid;
+    const uid = element.uid;
 
     if (!uid) {
       // NG. UID is not set.
@@ -208,15 +208,15 @@ class Context {
   }
 
   private deserializeArchMod(json: ArchModJson): ArchMod {
-    let archMod = ArchMod.deserialize(this.html, this.svg, json);
+    const archMod = ArchMod.deserialize(this.html, this.svg, json);
     this.validateElementUid(archMod);
     this.renderArchMod(archMod);
     return archMod;
   }
 
   public addNewArchMod(label: string, x: number, y: number, width: number, height: number): ArchMod {
-    let uid = this.genNewElementUid();
-    let archMod = new ArchMod(uid, this.html, this.svg, label);
+    const uid = this.genNewElementUid();
+    const archMod = new ArchMod(uid, this.html, this.svg, label);
     archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
     this.renderArchMod(archMod);
     return archMod;
@@ -239,15 +239,15 @@ class Context {
   }
 
   private deserializeLine(json: LineJson): Line {
-    let line = Line.deserialize(this.html, this.svg, json);
+    const line = Line.deserialize(this.html, this.svg, json);
     this.validateElementUid(line);
     this.renderLine(line);
     return line;
   }
 
   public addNewLine(fromX: number, fromY: number): Line {
-    let uid = this.genNewElementUid();
-    let line = new Line(uid, this.html, this.svg);
+    const uid = this.genNewElementUid();
+    const line = new Line(uid, this.html, this.svg);
     line.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
     this.renderLine(line);
     return line;
@@ -270,15 +270,15 @@ class Context {
   }
 
   private deserializeConnector(json: ConnectorJson): Connector {
-    let connector = Connector.deserialize(this.html, this.svg, json);
+    const connector = Connector.deserialize(this.html, this.svg, json);
     this.validateElementUid(connector);
     this.renderConnector(connector);
     return connector;
   }
 
   public addNewConnector(fromArchMod: ArchMod, toArchMod: ArchMod): Connector {
-    let uid = this.genNewElementUid();
-    let connector = new Connector(uid, this.html, this.svg);
+    const uid = this.genNewElementUid();
+    const connector = new Connector(uid, this.html, this.svg);
     connector.setFromToArchMod(fromArchMod, toArchMod);
     this.renderConnector(connector);
     return connector;
@@ -311,14 +311,14 @@ class Context {
   }
 
   public removeElement(element: Element) {
-    let index = this.allElements.indexOf(element);
+    const index = this.allElements.indexOf(element);
     if (index < 0) {
       TraceLog.e(TAG, `## Element=${element.serialize()} is NOT existing.`);
       return;
     }
     this.allElements.splice(index, 1);
 
-    let uidIndex = this.elementUids.indexOf(element.uid);
+    const uidIndex = this.elementUids.indexOf(element.uid);
     if (index < 0) {
       TraceLog.e(TAG, `## Element UID of ${element.serialize()} is NOT existing.`);
       return;
@@ -328,17 +328,17 @@ class Context {
 
   // @param selection area 4-edge.
   public updateBrushSelected(selected: number[][]) {
-    let minX = selected[0][0];
-    let minY = selected[0][1];
-    let maxX = selected[1][0];
-    let maxY = selected[1][1];
+    const minX = selected[0][0];
+    const minY = selected[0][1];
+    const maxX = selected[1][0];
+    const maxY = selected[1][1];
 
     this.allElements.forEach( (element: Element) => {
       switch (element.TAG) {
         case ArchMod.TAG: {
-          let archMod = element as ArchMod;
+          const archMod = element as ArchMod;
 
-          let {x, y, width, height} = archMod.getXYWH();
+          const {x, y, width, height} = archMod.getXYWH();
 
           if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
             if (!this.selectedElements.includes(archMod)) {
@@ -355,9 +355,9 @@ class Context {
         break;
 
         case Line.TAG: {
-          let line = element as Line;
+          const line = element as Line;
 
-          let {fromX, fromY, toX, toY} = line.getFromToXY();
+          const {fromX, fromY, toX, toY} = line.getFromToXY();
 
           if (minX < fromX && fromX < maxX && minY < fromY && fromY < maxY
               && minX < toX && toX < maxX && minY < toY && toY < maxY) {
@@ -387,14 +387,14 @@ class Context {
 
   public moveSelectedElements(plusX: number, plusY: number, except: Element) {
     this.selectedElements.forEach( (element: Element) => {
-      if (element.TAG == Connector.TAG) return;
+      if (element.TAG === Connector.TAG) return;
 
-      if (element != except) {
+      if (element !== except) {
         element.move(plusX, plusY);
       }
 
-      if (element.TAG == ArchMod.TAG) {
-        let archMod = element as ArchMod;
+      if (element.TAG === ArchMod.TAG) {
+        const archMod = element as ArchMod;
         this.updateConnectorsRelatedTo(archMod);
       }
 
@@ -403,8 +403,8 @@ class Context {
 
   public updateConnectorsRelatedTo(archMod: ArchMod) {
     this.allElements.forEach( (element: Element) => {
-      if (element.TAG == Connector.TAG) {
-        let connector = element as Connector;
+      if (element.TAG === Connector.TAG) {
+        const connector = element as Connector;
         if (connector.isConnected(archMod.uid)) {
           connector.updateConnectionPoints();
         }
@@ -419,7 +419,7 @@ class Context {
    */
   public resetAllStateExceptFor(except: Element|null) {
     this.allElements.forEach( (element: Element) => {
-      if (except == element) return;
+      if (except === element) return;
       element.resetState();
       this.onDeselected(element);
     } );
@@ -451,10 +451,10 @@ class Context {
       selected.delete();
       this.removeElement(selected);
 
-      if (selected.TAG == ArchMod.TAG) {
+      if (selected.TAG === ArchMod.TAG) {
         this.allElements.forEach( (element) => {
-          if (element.TAG == Connector.TAG) {
-            let connector = element as Connector;
+          if (element.TAG === Connector.TAG) {
+            const connector = element as Connector;
             if (connector.isConnected(selected.uid)) {
               connector.delete();
               this.removeElement(connector);
@@ -479,12 +479,12 @@ class Context {
   }
 
   public copyToClipBoard() {
-    if (this.clipboard.length != 0) this.clipboard.length = 0; // Clear all.
+    if (this.clipboard.length !== 0) this.clipboard.length = 0; // Clear all.
 
     this.selectedElements.forEach( (selected: Element) => {
 
       // TODO: Consider to copy/paste Connector.
-      if (selected.TAG == Connector.TAG) return;
+      if (selected.TAG === Connector.TAG) return;
 
       this.clipboard.push(selected.serialize());
     } );
@@ -493,7 +493,7 @@ class Context {
   }
 
   public pasteFromClipBoard() {
-    if (this.clipboard.length == 0) return;
+    if (this.clipboard.length === 0) return;
 
     this.resetAllState();
 
@@ -547,9 +547,9 @@ class Context {
 
   public isLabelPresent(newLabel: string): boolean {
     return this.allElements.some( (element: Element) => {
-      if (element.TAG == ArchMod.TAG) {
-        let archMod = element as ArchMod;
-        return archMod.label == newLabel;
+      if (element.TAG === ArchMod.TAG) {
+        const archMod = element as ArchMod;
+        return archMod.label === newLabel;
       } else {
         return false;
       }
@@ -558,18 +558,18 @@ class Context {
 
   public recordHistory() {
     // Remove old history branch.
-    if (this.historyUndoCount != 0) {
+    if (this.historyUndoCount !== 0) {
       this.history.splice(-1 * this.historyUndoCount);
     }
 
-    let curJson: ArchitectureMapJson = this.serializeToJson();
+    const curJson: ArchitectureMapJson = this.serializeToJson();
 
-    let curSize = this.history.length;
+    const curSize = this.history.length;
     if (curSize > 0) {
-      let last = this.history[curSize - 1];
-      let lastStr = JSON.stringify(last);
-      let curStr = JSON.stringify(curJson);
-      if (lastStr == curStr) {
+      const last = this.history[curSize - 1];
+      const lastStr = JSON.stringify(last);
+      const curStr = JSON.stringify(curJson);
+      if (lastStr === curStr) {
         // Same as last state.
         return;
       }
@@ -595,7 +595,7 @@ class Context {
 
     this.historyUndoCount++;
 
-    let historyJson = this.history[this.history.length - 1 - this.historyUndoCount];
+    const historyJson = this.history[this.history.length - 1 - this.historyUndoCount];
 
     if (historyJson == null) {
       // No history.
@@ -613,7 +613,7 @@ class Context {
 
     this.historyUndoCount--;
 
-    let futureJson = this.history[this.history.length - 1 - this.historyUndoCount];
+    const futureJson = this.history[this.history.length - 1 - this.historyUndoCount];
 
     if (futureJson == null) {
       // No future.
@@ -666,22 +666,22 @@ class Context {
   }
 
   public queryElementUid(uid: number): Element {
-    let hit = this.allElements.find( (element: Element) => element.uid == uid );
-    if (hit == undefined) throw new Error(`UID = ${uid} is NOT Hit.`);
+    const hit = this.allElements.find( (element: Element) => element.uid === uid );
+    if (hit === undefined) throw new Error(`UID = ${uid} is NOT Hit.`);
     return hit;
   }
 
   public queryConnector(fromUid: number, toUid: number): Element|null {
-    let hit = this.allElements.find( (element: Element)=> {
-      if (element.TAG == Connector.TAG) {
-        let conn = element as Connector;
+    const hit = this.allElements.find( (element: Element)=> {
+      if (element.TAG === Connector.TAG) {
+        const conn = element as Connector;
         return conn.isConnectedFrom(fromUid) && conn.isConnectedTo(toUid);
       } else {
         // NO Hit.
         return false;
       }
     } );
-    if (hit == undefined) {
+    if (hit === undefined) {
       return null;
     } else {
       return hit;
@@ -718,14 +718,14 @@ class ArchModCallbackImpl implements ArchModCallback {
 
     if (CONTEXT.isAddNewConnectorMode) {
       if (CONTEXT.connectorBaseArchMod != null) {
-        let fromArchMod = CONTEXT.connectorBaseArchMod;
-        let toArchMod = selected;
+        const fromArchMod = CONTEXT.connectorBaseArchMod;
+        const toArchMod = selected;
 
-        if (fromArchMod.uid == toArchMod.uid) {
+        if (fromArchMod.uid === toArchMod.uid) {
           // NOP. Same one.
         } else {
           // Duplicate check.
-          let nit = CONTEXT.queryConnector(fromArchMod.uid, toArchMod.uid);
+          const nit = CONTEXT.queryConnector(fromArchMod.uid, toArchMod.uid);
 
           if (nit == null) {
             // Add new connector.
@@ -928,19 +928,19 @@ class ConnectorCallbackImpl implements ConnectorCallback {
     defaultLoadJson: string|null = null) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onArchitectureMapTopLoaded()");
 
-  let root: JQueryNode = $(`#${ROOT_ID}`);
+  const root: JQueryNode = $(`#${ROOT_ID}`);
   root.css("width", DEFAULT_TOTAL_WIDTH);
   root.css("height", DEFAULT_TOTAL_HEIGHT);
   CONTEXT.root = root;
 
-  let svg: D3Node.SVG = d3.select(`#${SVG_ROOT_ID}`);
+  const svg: D3Node.SVG = d3.select(`#${SVG_ROOT_ID}`);
   CONTEXT.svg = svg;
 
-  let html: JQueryNode = $(`#${HTML_ROOT_ID}`);
+  const html: JQueryNode = $(`#${HTML_ROOT_ID}`);
   html.css("display", "none");
   CONTEXT.html = html;
 
-  let outFrame = new OutFrame(html, svg);
+  const outFrame = new OutFrame(html, svg);
   outFrame.setCallback(new OutFrameCallbackImpl());
   outFrame.setXYWH(0, 0, DEFAULT_TOTAL_WIDTH, DEFAULT_TOTAL_HEIGHT);
   outFrame.render();
@@ -953,7 +953,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
 
   // Load JSON.
   if (defaultLoadJson != null) {
-    let serialized: ArchitectureMapJson = JSON.parse(defaultLoadJson);
+    const serialized: ArchitectureMapJson = JSON.parse(defaultLoadJson);
     CONTEXT.deserializeFromJson(serialized);
     CONTEXT.resetAllState();
     CONTEXT.recordHistory();
@@ -963,15 +963,15 @@ class ConnectorCallbackImpl implements ConnectorCallback {
 function prepareBrushLayer() {
   if (CONTEXT.brushLayer != null) return;
 
-  let brushLayer: D3Node.G = CONTEXT.svg.append("g")
+  const brushLayer: D3Node.G = CONTEXT.svg.append("g")
       .attr("class", "brushes")
       .lower();
   CONTEXT.brushLayer = brushLayer;
 
   // Max brush area size.
-  let {x, y, width, height} = CONTEXT.outFrame.getXYWH();
+  const {x, y, width, height} = CONTEXT.outFrame.getXYWH();
 
-  let brush: d3.BrushBehavior<any> = d3.brush()
+  const brush: d3.BrushBehavior<any> = d3.brush()
       .extent([[x, y], [x + width, y + height]])
       .filter( () => {
         return !d3.event.button;
@@ -987,7 +987,7 @@ function prepareBrushLayer() {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:brush");
 
         if (d3.event.selection != null) {
-          let brushArea: number[][] = d3.event.selection;
+          const brushArea: number[][] = d3.event.selection;
           if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `brushArea = ${brushArea}`);
 
           CONTEXT.updateBrushSelected(brushArea);
@@ -1028,7 +1028,7 @@ function registerGlobalCallbacks() {
     event.stopPropagation();
 
     let isHandledByGodMode = true;
-    if (CONTEXT.globalMode == GLOBAL_MODE_GOD) {
+    if (CONTEXT.globalMode === GLOBAL_MODE_GOD) {
       switch (event.key) {
         case "Control":
           prepareBrushLayer();
@@ -1115,7 +1115,7 @@ function registerGlobalCallbacks() {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeyup() : key=${event.key}`);
     event.stopPropagation();
 
-    if (CONTEXT.globalMode == GLOBAL_MODE_GOD) {
+    if (CONTEXT.globalMode === GLOBAL_MODE_GOD) {
       switch (event.key) {
         case "Control":
           releaseBrushLayer();
@@ -1200,8 +1200,8 @@ function prepareAddNewArchModMode() {
   CONTEXT.html.css("background-color", "#AAAAAAAA");
 
   CONTEXT.html.on("click", (e: JQuery.Event) => {
-    let posX: number = e.offsetX || 0;
-    let posY: number = e.offsetY || 0;
+    const posX: number = e.offsetX || 0;
+    const posY: number = e.offsetY || 0;
 
     CONTEXT.addNewArchMod(
         ArchMod.TAG,
@@ -1232,8 +1232,8 @@ function prepareAddNewLineMode() {
   CONTEXT.html.css("background-color", "#AAAAAAAA");
 
   CONTEXT.html.on("click", (e: JQuery.Event) => {
-    let posX: number = e.offsetX || 0;
-    let posY: number = e.offsetY || 0;
+    const posX: number = e.offsetX || 0;
+    const posY: number = e.offsetY || 0;
 
     CONTEXT.addNewLine(posX, posY);
 
@@ -1291,29 +1291,29 @@ function getExportFileNameBase(): string {
 (window as any).onSaveJsonClicked = () => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onSaveJsonClicked()");
 
-  let serialized: ArchitectureMapJson = CONTEXT.serializeToJson();
+  const serialized: ArchitectureMapJson = CONTEXT.serializeToJson();
 
   if (TraceLog.IS_DEBUG) {
     TraceLog.d(TAG, "#### TOTAL JSON OBJ");
     console.log(serialized);
   }
 
-  let jsonStr = JSON.stringify(serialized, null, 2);
-  let filename = getExportFileNameBase();
+  const jsonStr = JSON.stringify(serialized, null, 2);
+  const filename = getExportFileNameBase();
   Downloader.downloadJson(jsonStr, filename);
 };
 
 (window as any).onLoadJsonClicked = (event: Event) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onLoadJsonClicked()");
 
-  let target = event.target as HTMLInputElement;
-  let file: File = (target.files as FileList)[0];
-  let reader = new FileReader();
-  reader.onload = (event: Event) => {
-    let reader = event.target as FileReader;
-    let jsonStr: string = reader.result as string;
+  const target = event.target as HTMLInputElement;
+  const file: File = (target.files as FileList)[0];
+  const reader = new FileReader();
+  reader.onload = (e: Event) => {
+    const r = e.target as FileReader;
+    const jsonStr: string = r.result as string;
 
-    let serialized: ArchitectureMapJson = JSON.parse(jsonStr);
+    const serialized: ArchitectureMapJson = JSON.parse(jsonStr);
 
     if (TraceLog.IS_DEBUG) {
       TraceLog.d(TAG, "Imported JSON loaded.");
@@ -1334,15 +1334,15 @@ function getExportFileNameBase(): string {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "postJsonTo()");
   console.log(`## URL=${url}`);
 
-  let button = event!.target as HTMLButtonElement;
+  const button = event!.target as HTMLButtonElement;
 
   // Dim UI.
   button.disabled = true;
 
-  let serialized: ArchitectureMapJson = CONTEXT.serializeToJson();
-  let jsonStr = JSON.stringify(serialized, null, 2);
+  const serialized: ArchitectureMapJson = CONTEXT.serializeToJson();
+  const jsonStr = JSON.stringify(serialized, null, 2);
 
-  let xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   xhr.onload = (e: Event) => {
     if (xhr.readyState === 4) { // DONE
       if (xhr.status === 200) { // HTTP:OK
@@ -1377,7 +1377,7 @@ function getExportFileNameBase(): string {
 
   CONTEXT.resetAllState();
 
-  let outSize = CONTEXT.outFrame.getXYWH();
+  const outSize = CONTEXT.outFrame.getXYWH();
 
   Downloader.downloadSvgAsPng(
       CONTEXT.svg,
@@ -1389,10 +1389,10 @@ function getExportFileNameBase(): string {
 function changeGlobalModeTo(mode: string) {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `changeGlobalModeTo() : mode=$mode`);
 
-  let elm = document.getElementById(GLOBAL_MODE_LABEL_ID) as HTMLElement;
+  const elm = document.getElementById(GLOBAL_MODE_LABEL_ID) as HTMLElement;
   elm.textContent = mode;
 
-  let godModePanel = document.getElementById(GOD_MODE_UI_ID) as HTMLElement;
+  const godModePanel = document.getElementById(GOD_MODE_UI_ID) as HTMLElement;
 
   switch (mode) {
     case GLOBAL_MODE_GOD:
