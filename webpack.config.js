@@ -17,7 +17,10 @@ module.exports = (env, argv) => {
     // chunk name vs file path.
     entry: {
       entry: path.resolve(__dirname, "src/entry.js"),
-      architecture_map: path.resolve(__dirname, "src/architecture_map.js"),
+      architecture_map: [
+          path.resolve(__dirname, "src/architecture-map/javascript/packs/architecture_map.tsx"),
+          path.resolve(__dirname, "src/architecture-map/css/architecture_map.scss"),
+      ],
       sim_stats: path.resolve(__dirname, "src/sim-stats/js/sim_stats.tsx"),
       auth: path.resolve(__dirname, "src/auth/javascript/auth.tsx"),
     },
