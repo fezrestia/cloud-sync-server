@@ -19,6 +19,12 @@ th, td {
   border: 1px solid #000000;
 }
 
+td.no-border, table.no-border td {
+  border-style: none;
+  padding-right: 30px;
+  vertical-align: top;
+}
+
 .no-wrap {
   white-space: nowrap;
 }

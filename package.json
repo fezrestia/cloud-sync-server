@@ -4,6 +4,7 @@
   "description": "CloudSyncServer",
   "dependencies": {
     "d3": "^5.16.0",
+    "firebase": "^7.16.0",
     "jquery": "^3.5.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
@@ -16,6 +17,7 @@
     "@types/enzyme": "^3.10.5",
     "@types/enzyme-adapter-react-16": "^1.0.6",
     "@types/expect.js": "^0.3.29",
+    "@types/firebase": "^3.2.1",
     "@types/jest": "^25.2.1",
     "@types/jquery": "^3.3.38",
     "@types/mocha": "^7.0.2",

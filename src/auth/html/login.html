@@ -8,6 +8,106 @@
 
     <hr>
 
+    <h4>Create New User</h4>
+    <table class="no-border" ><tbody>
+      <tr>
+        <td>
+          MAIL
+        </td>
+        <td>
+          <input id="new_mail" type="email" />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          PASS
+        </td>
+        <td>
+          <input id="new_pass" type="password" />
+          <br>
+          <input id="new_pass_confirm" type="password" /> (confirm)
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <!-- NOP -->
+        </td>
+        <td>
+          <button id="create_new_user" type="button" onclick="onCreateNewUserClicked();" >Create</button>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <!-- NOP -->
+        </td>
+        <td>
+          <span id="new_user_message" />
+        </td>
+      </tr>
+    </tbody></table>
+
+    <br>
+
+    <h4>Login</h4>
+    <table class="no-border" ><tbody>
+      <tr>
+        <td>
+          MAIL
+        </td>
+        <td>
+          <input id="login_mail" type="email" />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          PASS
+        </td>
+        <td>
+          <input id="login_pass" type="password" />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <!-- NOP -->
+        </td>
+        <td>
+          <button id="login_user" type="button" onclick="onLoginUserClicked();" >Login</button>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <!-- NOP -->
+        </td>
+        <td>
+          <span id="login_message" />
+        </td>
+      </tr>
+    </tbody></table>
+
+    <br>
+
+    <h4>Logout</h4>
+    <table class="no-border" ><tbody>
+      <tr>
+        <td>
+          CURRENT
+        </td>
+        <td>
+          <span id="current_user" />
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <!-- NOP -->
+        </td>
+        <td>
+          <button id="logout" type="button" onclick="onLogoutClicked();" >Logout</button>
+        </td>
+      </tr>
+    </tbody></table>
+
+
+
     <script>
       onload = function() {
         onAuthLoaded();
