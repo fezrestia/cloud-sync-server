@@ -63,7 +63,8 @@
     "test:unit-coverage": "./node_modules/.bin/jest --coverage",
     "test:system": "./node_modules/.bin/mocha --require ts-node/register test/system/*.ts --timeout 60000",
     "test:system-headless": "./node_modules/.bin/mocha --require ts-node/register test/system/*.ts --headless --timeout 60000",
-    "start:dev": "webpack-dev-server"
+    "start:dev": "webpack-dev-server",
+    "deploy": "firebase deploy --only hosting"
   },
   "author": "",
   "license": "ISC",
