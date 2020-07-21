@@ -4,6 +4,8 @@ import * as $ from "jquery";
 import * as firebase from "firebase/app";
 import "firebase/auth";
 
+import { Context } from "../../context.ts";
+
 const IS_DEBUG = true;
 
 const ID_NEW_MAIL = "new_mail";
@@ -21,39 +23,22 @@ const ID_CURRENT_USER = "current_user";
 (window as any).onAuthLoaded = () => {
   if (IS_DEBUG) console.log(`onAuthLoaded()`);
 
-  //// AUTO GENERATED CODE FROM HERE.
-  const firebaseConfig = {
-    apiKey: "AIzaSyDuXyonRhnpud9nZxT2vtkrtLRySZd25Wo",
-    authDomain: "cloud-sync-service.firebaseapp.com",
-    databaseURL: "https://cloud-sync-service.firebaseio.com",
-    projectId: "cloud-sync-service",
-    storageBucket: "cloud-sync-service.appspot.com",
-    messagingSenderId: "222116558624",
-    appId: "1:222116558624:web:96a3c12db6310fd86b8945"
-  };
-  firebase.initializeApp(firebaseConfig);
-  //// AUTO GENERATED CODE TO HERE.
+  const context: Context = Context.getInstance();
 
-  // Auth state observer.
-  firebase.auth().onAuthStateChanged(
-      (user: firebase.User|null) => {
-        if (user != null) {
-          console.log(`Login : ${user.email}`);
-          const email = user.email;
-          if (email != null) {
-            showCurrentUser(email);
-          } else {
-            showCurrentUser("email == null");
-          }
-        } else {
-          console.log("Logout");
-          showCurrentUser("N/A");
-        }
-      },
-      (error: firebase.auth.Error) => {
-        console.log(`ERR: AuthStateChanged() : error.code=${error.code}`);
-        console.log(`ERR: AuthStateChanged() : error.message=${error.message}`);
-      } );
+  // Setup firebase.
+  context.setFirebaseCallback( (user: firebase.User|null) => {
+    if (user != null) {
+      const email = user.email;
+      if (email != null) {
+        showCurrentUser(email);
+      } else {
+        showCurrentUser("email == null");
+      }
+    } else {
+      console.log("Logout");
+      showCurrentUser("N/A");
+    }
+  } );
 
 }
 
