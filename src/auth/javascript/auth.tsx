@@ -45,12 +45,12 @@ const ID_CURRENT_USER = "current_user";
 (window as any).onCreateNewUserClicked = async () => {
   if (IS_DEBUG) console.log(`onCreateNewUserClicked()`);
 
-  let newMail: string|null = getInputString(ID_NEW_MAIL);
-  let newPass: string|null = getInputString(ID_NEW_PASS);
-  let newPassConfirm: string|null = getInputString(ID_NEW_PASS_CONFIRM);
+  const newMail: string|null = getInputString(ID_NEW_MAIL);
+  const newPass: string|null = getInputString(ID_NEW_PASS);
+  const newPassConfirm: string|null = getInputString(ID_NEW_PASS_CONFIRM);
 
   if (newMail != null && newPass != null && newPassConfirm != null) {
-    if (newPass == newPassConfirm) {
+    if (newPass === newPassConfirm) {
       // Create new user on Firebase.
       const cred: firebase.auth.UserCredential|void = await firebase.auth()
           .createUserWithEmailAndPassword(newMail, newPass)
@@ -69,7 +69,7 @@ const ID_CURRENT_USER = "current_user";
 
       if (IS_DEBUG) console.log("DONE");
 
-      if (cred != undefined) {
+      if (cred !== undefined) {
         showMessage(ID_NEW_USER_MESSAGE, "OK");
       }
 
@@ -85,8 +85,8 @@ const ID_CURRENT_USER = "current_user";
 (window as any).onLoginUserClicked = async () => {
   if (IS_DEBUG) console.log(`onLoginUserClicked()`);
 
-  let mail: string|null = getInputString(ID_LOGIN_MAIL);
-  let pass: string|null = getInputString(ID_LOGIN_PASS);
+  const mail: string|null = getInputString(ID_LOGIN_MAIL);
+  const pass: string|null = getInputString(ID_LOGIN_PASS);
 
   if (mail != null && pass != null) {
     // Login user to Firebase.
@@ -107,7 +107,7 @@ const ID_CURRENT_USER = "current_user";
 
     if (IS_DEBUG) console.log("DONE");
 
-    if (cred != undefined) {
+    if (cred !== undefined) {
       showMessage(ID_LOGIN_MESSAGE, "OK");
     }
 
@@ -128,7 +128,7 @@ function getInputString(inputId: string): string|null {
   const value = $(`#${inputId}`).val();
 
   if (typeof(value) === "string") {
-    if (value.length != 0) {
+    if (value.length !== 0) {
       return value;
     } else {
       console.log("input value is empty.");
@@ -142,14 +142,14 @@ function getInputString(inputId: string): string|null {
 
 function showMessage(id: string, msg: string) {
   const elm: JQuery<HTMLElement> = $(`#${id}`);
-  if (elm != undefined) {
+  if (elm !== undefined) {
     elm.text(msg);
   }
 }
 
 function showCurrentUser(user: string) {
   const elm: JQuery<HTMLElement> = $(`#${ID_CURRENT_USER}`);
-  if (elm != undefined) {
+  if (elm !== undefined) {
     elm.text(user);
   }
 }

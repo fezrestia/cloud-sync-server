@@ -84,12 +84,16 @@ function renderLatestSimStats(dcmMonthUsed: number, nuroMonthUsed: number, zeroS
   await requestUpdateSimStats(SRV_ZEROSIM);
 }
 
-async function requestUpdateSimStats(service: string) {
+async function requestUpdateSimStats(srv: string) {
   const callUpdateSimStats = firebase.app()
       .functions("asia-northeast1")
       .httpsCallable("callUpdateSimStats");
 
-  await callUpdateSimStats( { service: service } )
+  const params = {
+    service: srv,
+  };
+
+  await callUpdateSimStats(params)
       .then( (result: any) => {
         console.log("## result");
         console.log(result);
@@ -103,16 +107,16 @@ async function requestUpdateSimStats(service: string) {
           msg = result.data.message;
         }
 
-        $(`#update_${service}_stats_res`).text(msg);
+        $(`#update_${srv}_stats_res`).text(msg);
       } )
       .catch( (error: any) => {
         console.log("## error");
         console.log(error);
 
-        $(`#update_${service}_stats_res`).text(JSON.stringify(error));
+        $(`#update_${srv}_stats_res`).text(JSON.stringify(error));
       } );
 
-  $(`#update_${service}_stats`).prop("disabled", false);
+  $(`#update_${srv}_stats`).prop("disabled", false);
 
   console.log("DONE");
 }
