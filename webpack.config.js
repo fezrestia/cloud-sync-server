@@ -126,12 +126,14 @@ module.exports = (env, argv) => {
         filename: "auth/login.html",
         chunks: ["auth"],
       } ),
-      new CopyWebpackPlugin( [
-        {
-          from: "src/static/",
-          to: "",
-        },
-      ] ),
+      new CopyWebpackPlugin( {
+        patterns: [
+          {
+            from: "src/static/",
+            to: "",
+          },
+        ],
+      } ),
     ],
 
     devtool: 'inline-source-map',
