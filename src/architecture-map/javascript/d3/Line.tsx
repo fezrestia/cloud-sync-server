@@ -322,17 +322,19 @@ export class Line extends Element {
    * @return Line.
    */
   public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: LineJson): Line {
-    const divLine = new Line(
+    const line = new Line(
         json[Def.KEY_UID],
         html,
         svg);
-    divLine.setDimens(
+    line.setDimens(
         new Point(json[Def.KEY_DIMENS][Def.KEY_FROM_X], json[Def.KEY_DIMENS][Def.KEY_FROM_Y]),
         new Point(json[Def.KEY_DIMENS][Def.KEY_TO_X], json[Def.KEY_DIMENS][Def.KEY_TO_Y]),
         json[Def.KEY_DIMENS][Def.KEY_WIDTH]);
-    divLine.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
-    divLine.lineStyle = LineStyle.valueOf(json[Def.KEY_LINE_STYLE]);
-    return divLine;
+    line.lineStyle = LineStyle.valueOf(json[Def.KEY_LINE_STYLE]);
+    line.fromMarkerType = MarkerType.valueOf(json[Def.KEY_FROM_MARKER_TYPE]);
+    line.toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
+    line.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+    return line;
   }
 
   // Elements.
