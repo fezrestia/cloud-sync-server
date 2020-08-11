@@ -25,6 +25,11 @@ export enum LineStyle {
   BROKEN = "broken",
   DOTTED = "dotted",
 }
+export namespace LineStyle {
+  export function valueOf(value: string): LineStyle {
+    return value as LineStyle;
+  }
+}
 
 /**
  * Callback interface for Line.
@@ -60,6 +65,7 @@ export interface LineJson {
       [Def.KEY_TO_Y]: number,
       [Def.KEY_WIDTH]: number,
   },
+  [Def.KEY_LINE_STYLE]: string,
   [Def.KEY_FROM_MARKER_TYPE]: string,
   [Def.KEY_TO_MARKER_TYPE]: string,
   [Def.KEY_COLOR_SET]: string,
@@ -299,6 +305,7 @@ export class Line extends Element {
             [Def.KEY_TO_Y]: this.toPoint.y,
             [Def.KEY_WIDTH]: this.width,
         },
+        [Def.KEY_LINE_STYLE]: this.lineStyle,
         [Def.KEY_FROM_MARKER_TYPE]: this.fromMarkerType,
         [Def.KEY_TO_MARKER_TYPE]: this.toMarkerType,
         [Def.KEY_COLOR_SET]: this.colorSet,
@@ -324,6 +331,7 @@ export class Line extends Element {
         new Point(json[Def.KEY_DIMENS][Def.KEY_TO_X], json[Def.KEY_DIMENS][Def.KEY_TO_Y]),
         json[Def.KEY_DIMENS][Def.KEY_WIDTH]);
     divLine.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+    divLine.lineStyle = LineStyle.valueOf(json[Def.KEY_LINE_STYLE]);
     return divLine;
   }
 
