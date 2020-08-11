@@ -1,5 +1,6 @@
 import { D3Node } from "../TypeDef.ts";
 import { ColorSet } from "../Def.ts";
+import { LineStyle } from "../d3/Line";
 
 /**
  * Marker type.
@@ -136,6 +137,7 @@ export class Marker {
    * Update Marker state.
    *
    * @param path
+   * @param lineStyle
    * @param fromMarkerType
    * @param toMarkerType
    * @param colorSet
@@ -144,6 +146,7 @@ export class Marker {
    */
   public static updateMarkers(
       path: D3Node.Path,
+      lineStyle: LineStyle,
       fromMarkerType: MarkerType,
       toMarkerType: MarkerType,
       colorSet: ColorSet,
@@ -163,8 +166,20 @@ export class Marker {
       const endGap = Number(path.attr("stroke-width"));
       const lineLen = path.node()!.getTotalLength() - endGap * 2;
 
-      path.attr("stroke-dasharray", `0 ${endGap} ${lineLen} ${endGap}`);
-      path.attr("stroke-dashoffset", 0);
+      switch(lineStyle) {
+        case LineStyle.NORMAL:
+          path.attr("stroke-dasharray", `0 ${endGap} ${lineLen} ${endGap}`);
+          path.attr("stroke-dashoffset", 0);
+          break;
+
+        case LineStyle.BROKEN:
+          // fall-through.
+        case LineStyle.DOTTED:
+
+          // TODO: Consider terminator marker offset with broken/dotted line.
+
+          break;
+      }
 
     }
 

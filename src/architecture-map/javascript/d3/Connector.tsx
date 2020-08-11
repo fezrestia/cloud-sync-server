@@ -17,6 +17,7 @@ import { ElementItxMode } from "./Element";
 import { ArchMod } from "./ArchMod";
 import { Marker } from "./Marker";
 import { MarkerType } from "./Marker";
+import { LineStyle } from "../d3/Line";
 
 /**
  * Callback interface for Connector.
@@ -757,6 +758,7 @@ export class Connector extends Element {
       Marker.prepareMarkers(this.svg, this.colorSet);
       Marker.updateMarkers(
           this.path,
+          LineStyle.NORMAL,
           this.fromMarkerType,
           this.toMarkerType,
           this.colorSet,
@@ -806,6 +808,7 @@ export class Connector extends Element {
       Marker.prepareMarkers(this.svg, this.colorSet);
       Marker.updateMarkers(
           this.path,
+          LineStyle.NORMAL,
           this.fromMarkerType,
           this.toMarkerType,
           this.colorSet,

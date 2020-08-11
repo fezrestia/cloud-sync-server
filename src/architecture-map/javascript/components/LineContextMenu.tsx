@@ -5,6 +5,7 @@ import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { MarkerType } from "../d3/Marker";
+import { LineStyle } from "../d3/Line";
 
 interface Props {
   callback: LineContextMenuCallback,
@@ -17,6 +18,7 @@ interface State {
 
 export interface LineContextMenuCallback {
   close(): void;
+  changeLineStyle(lineStyle: LineStyle): void;
   changeFromMarkerType(markerType: MarkerType): void;
   changeToMarkerType(markerType: MarkerType): void;
   changeColorSet(colorSet: ColorSet): void;
@@ -88,6 +90,14 @@ export class LineContextMenu extends React.Component<Props, State> {
             onClick={ handleContextMenuClick }
         >
           <table className="context-menu-contents" ><tbody>
+            <tr>
+              <td className="no-wrap" >Line Style</td>
+              <td>
+                {this.genClickButton("line_style_normal", "Normal", () => { callback.changeLineStyle(LineStyle.NORMAL) })}
+                {this.genClickButton("line_style_broken", "Broken", () => { callback.changeLineStyle(LineStyle.BROKEN) })}
+                {this.genClickButton("line_style_dotted", "Dotted", () => { callback.changeLineStyle(LineStyle.DOTTED) })}
+              </td>
+            </tr>
             <tr>
               <td className="no-wrap" >FROM Marker</td>
               <td>

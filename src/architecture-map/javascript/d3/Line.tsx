@@ -18,6 +18,15 @@ import { Marker } from "./Marker";
 import { MarkerType } from "./Marker";
 
 /**
+ * Line style.
+ */
+export enum LineStyle {
+  NORMAL = "normal",
+  BROKEN = "broken",
+  DOTTED = "dotted",
+}
+
+/**
  * Callback interface for Line.
  */
 export interface LineCallback {
@@ -235,6 +244,14 @@ export class Line extends Element {
       }
       public set itxMode(mode: ElementItxMode) {
         this._itxMode = mode;
+      }
+
+  private _lineStyle: LineStyle = LineStyle.NORMAL;
+      public get lineStyle(): LineStyle {
+        return this._lineStyle;
+      }
+      public set lineStyle(lineStyle: LineStyle) {
+        this._lineStyle = lineStyle;
       }
 
   private _fromMarkerType: MarkerType = Line.DEFAULT_FROM_MARKER_TYPE;
@@ -708,10 +725,26 @@ export class Line extends Element {
           .attr("d", line)
           .attr("stroke-width", this.width);
 
+      // Line style.
+      switch(this.lineStyle) {
+        case LineStyle.NORMAL:
+          this.path.attr("stroke-dasharray", "");
+          break;
+
+        case LineStyle.BROKEN:
+          this.path.attr("stroke-dasharray", "16 16");
+          break;
+
+        case LineStyle.DOTTED:
+          this.path.attr("stroke-dasharray", "4 4");
+          break;
+      }
+
       // Marker.
       Marker.prepareMarkers(this.svg, this.colorSet);
       Marker.updateMarkers(
           this.path,
+          this.lineStyle,
           this.fromMarkerType,
           this.toMarkerType,
           this.colorSet,
@@ -746,6 +779,7 @@ export class Line extends Element {
       Marker.prepareMarkers(this.svg, this.colorSet);
       Marker.updateMarkers(
           this.path,
+          this.lineStyle,
           this.fromMarkerType,
           this.toMarkerType,
           this.colorSet,
@@ -767,6 +801,11 @@ export class Line extends Element {
       this.target.closeContextMenu();
 
       if (this.target.callback != null) this.target.callback.onHistoricalChanged(this.target);
+    }
+
+    changeLineStyle(lineStyle: LineStyle) {
+      this.target.lineStyle = lineStyle;
+      this.target.relayout();
     }
 
     changeFromMarkerType(markerType: MarkerType) {
