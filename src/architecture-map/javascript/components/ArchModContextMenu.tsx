@@ -177,6 +177,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
+                {this.genClickButton("color_set_white",   "White",   () => { callback.changeColorSet(ColorSet.WHITE) })}
                 {this.genClickButton("color_set_gray",    "Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
                 {this.genClickButton("color_set_orange",  "Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
                 {this.genClickButton("color_set_green",   "Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
