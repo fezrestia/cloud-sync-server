@@ -29,6 +29,19 @@ export namespace LineStyle {
   export function valueOf(value: string): LineStyle {
     return value as LineStyle;
   }
+
+  export function getStrokeDashArray(lineStyle: LineStyle, strokeWidth: number): string {
+    switch(lineStyle) {
+      case LineStyle.NORMAL:
+        return "";
+      case LineStyle.BROKEN:
+        return `${strokeWidth * 4} ${strokeWidth * 4}`;
+      case LineStyle.DOTTED:
+        return `${strokeWidth} ${strokeWidth}`;
+      default:
+        return "";
+    }
+  }
 }
 
 /**
@@ -736,19 +749,7 @@ export class Line extends Element {
           .attr("stroke-width", this.width);
 
       // Line style.
-      switch(this.lineStyle) {
-        case LineStyle.NORMAL:
-          this.path.attr("stroke-dasharray", "");
-          break;
-
-        case LineStyle.BROKEN:
-          this.path.attr("stroke-dasharray", "16 16");
-          break;
-
-        case LineStyle.DOTTED:
-          this.path.attr("stroke-dasharray", "4 4");
-          break;
-      }
+      this.path.attr("stroke-dasharray", LineStyle.getStrokeDashArray(this.lineStyle, this.width));
 
       // Marker.
       Marker.prepareMarkers(this.svg, this.colorSet);
