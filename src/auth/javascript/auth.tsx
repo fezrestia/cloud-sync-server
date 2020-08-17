@@ -35,9 +35,11 @@ const ID_CURRENT_USER = "current_user";
       } else {
         showCurrentUser("email == null");
       }
+      toggleCreateNewUserForm(true);
     } else {
       console.log("Logout");
       showCurrentUser("N/A");
+      toggleCreateNewUserForm(false);
     }
   } );
 
@@ -169,6 +171,17 @@ function showCurrentUser(user: string) {
   const elm: JQuery<HTMLElement> = $(`#${ID_CURRENT_USER}`);
   if (elm !== undefined) {
     elm.text(user);
+  }
+}
+
+function toggleCreateNewUserForm(isVisible: boolean) {
+  const div: JQuery<HTMLElement> = $("#div_create_new_user");
+  if (isVisible) {
+    div.removeClass("visibility-gone");
+    div.addClass("visibility-visible");
+  } else {
+    div.removeClass("visibility-visible");
+    div.addClass("visibility-gone");
   }
 }
 

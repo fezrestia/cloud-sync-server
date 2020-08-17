@@ -8,45 +8,47 @@
 
     <hr>
 
-    <h4>Create New User</h4>
-    <table class="no-border" ><tbody>
-      <tr>
-        <td>
-          MAIL
-        </td>
-        <td>
-          <input id="new_mail" type="email" />
-        </td>
-      </tr>
-      <tr>
-        <td>
-          PASS
-        </td>
-        <td>
-          <input id="new_pass" type="password" />
-          <br>
-          <input id="new_pass_confirm" type="password" /> (confirm)
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <!-- NOP -->
-        </td>
-        <td>
-          <button id="create_new_user" type="button" onclick="onCreateNewUserClicked();" >Create</button>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <!-- NOP -->
-        </td>
-        <td>
-          <span id="new_user_message" />
-        </td>
-      </tr>
-    </tbody></table>
+    <div id="div_create_new_user" class="visibility-gone" >
+      <h4>Create New User</h4>
+      <table class="no-border" ><tbody>
+        <tr>
+          <td>
+            MAIL
+          </td>
+          <td>
+            <input id="new_mail" type="email" />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            PASS
+          </td>
+          <td>
+            <input id="new_pass" type="password" />
+            <br>
+            <input id="new_pass_confirm" type="password" /> (confirm)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <!-- NOP -->
+          </td>
+          <td>
+            <button id="create_new_user" type="button" onclick="onCreateNewUserClicked();" >Create</button>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <!-- NOP -->
+          </td>
+          <td>
+            <span id="new_user_message" />
+          </td>
+        </tr>
+      </tbody></table>
 
-    <br>
+      <br>
+    </div>
 
     <h4>Login</h4>
     <table class="no-border" ><tbody>
