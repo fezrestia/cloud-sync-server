@@ -3,6 +3,7 @@ import * as $ from "jquery";
 
 import * as firebase from "firebase/app";
 import "firebase/auth";
+import "firebase/functions";
 
 import { Context } from "../../context.ts";
 
@@ -51,27 +52,44 @@ const ID_CURRENT_USER = "current_user";
 
   if (newMail != null && newPass != null && newPassConfirm != null) {
     if (newPass === newPassConfirm) {
-      // Create new user on Firebase.
-      const cred: firebase.auth.UserCredential|void = await firebase.auth()
-          .createUserWithEmailAndPassword(newMail, newPass)
-          .catch( (error: firebase.auth.Error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
 
+      const callCreateNewUser = firebase.app()
+          .functions("asia-northeast1")
+          .httpsCallable("callCreateNewUser");
+
+      const params = {
+        mail: newMail,
+        pass: newPass,
+      };
+
+      await callCreateNewUser(params)
+          .then( (result: any) => {
             if (IS_DEBUG) {
-              console.log(`ERR: errorCode=${errorCode}`);
-              console.log(`ERR: errorMessage=${errorMessage}`);
+              console.log("## result");
+              console.log(result);
             }
 
-            showMessage(ID_NEW_USER_MESSAGE, `CODE=${errorCode}, MSG=${errorMessage}`);
+            let msg: string;
 
+            const isError = result.data.is_error;
+            if (!isError) {
+              msg = "OK";
+            } else {
+              msg = result.data.message;
+            }
+
+            showMessage(ID_NEW_USER_MESSAGE, msg);
+          } )
+          .catch( (error: any) => {
+            if (IS_DEBUG) {
+              console.log("## error");
+              console.log(error);
+            }
+
+            showMessage(ID_NEW_USER_MESSAGE, JSON.stringify(error));
           } );
 
       if (IS_DEBUG) console.log("DONE");
-
-      if (cred !== undefined) {
-        showMessage(ID_NEW_USER_MESSAGE, "OK");
-      }
 
     } else {
       if (IS_DEBUG) console.log("pass and confirm is not matched.");
