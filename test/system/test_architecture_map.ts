@@ -911,6 +911,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
     let connector = await addNewConnector(fromMod, toMod);
 
+    let label = await addNewTextLabel();
+
     let actJson = await getLatestJson();
 
     let expJson = {
@@ -986,6 +988,20 @@ describe("Test Architecture Map Web SPA Interaction", () => {
           [Def.KEY_FROM_MARKER_TYPE]: "none",
           [Def.KEY_TO_MARKER_TYPE]: "none",
           [Def.KEY_COLOR_SET]: "gray",
+        },
+        {
+          [Def.KEY_UID]: 5,
+          [Def.KEY_CLASS]: "TextLabel",
+          [Def.KEY_LABEL]: "TextLabel",
+          [Def.KEY_DIMENS]: {
+            [Def.KEY_X]: DEFAULT_X,
+            [Def.KEY_Y]: DEFAULT_Y,
+            [Def.KEY_WIDTH]: DEFAULT_W,
+            [Def.KEY_HEIGHT]: DEFAULT_H,
+            [Def.KEY_LABEL_ROT_DEG]: 0,
+            [Def.KEY_LABEL_ALIGN]: "middle",
+           },
+           [Def.KEY_COLOR_SET]: "white",
         },
       ],
     };
@@ -1080,6 +1096,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     history.push(await getLatestJson());
 
     let connector = await addNewConnector(one, two);
+    assert.isTrue(await isElementUidsValid());
+    history.push(await getLatestJson());
+
+    await addNewTextLabel();
     assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
 
@@ -1225,6 +1245,13 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   async function resetArchMod(archMod: WebElement): Promise<WebElement> {
     await deleteElement(archMod);
     return await addNewArchMod();
+  }
+
+  async function addNewTextLabel(): Promise<WebElement> {
+    let addButton = await driver.findElement(By.id("add_textlabel"));
+    await addButton.click();
+    await click(html, DEFAULT_X, DEFAULT_Y);
+    return await svg.findElement(By.id("textlabel_TextLabel"));
   }
 
   async function addNewLine(): Promise<WebElement> {

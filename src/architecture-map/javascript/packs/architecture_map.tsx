@@ -7,6 +7,9 @@ import { ElementJson } from "../d3/Element";
 import { ArchMod } from "../d3/ArchMod";
 import { ArchModCallback } from "../d3/ArchMod";
 import { ArchModJson } from "../d3/ArchMod";
+import { TextLabel } from "../d3/TextLabel";
+import { TextLabelCallback } from "../d3/TextLabel";
+import { TextLabelJson } from "../d3/TextLabel";
 import { Line } from "../d3/Line";
 import { LineCallback } from "../d3/Line";
 import { LineJson } from "../d3/Line";
@@ -82,6 +85,7 @@ class Context {
 
   // State flags.
   public isAddNewArchModMode: boolean = false;
+  public isAddNewTextLabelMode: boolean = false;
   public isAddNewLineMode: boolean = false;
   public isAddNewConnectorMode: boolean = false;
   public globalMode: string = GLOBAL_MODE_GOD;
@@ -164,6 +168,11 @@ class Context {
           deserialized = this.deserializeArchMod(json);
           break;
 
+        case TextLabel.TAG:
+          json = element as TextLabelJson;
+          deserialized = this.deserializeTextLabel(json);
+          break;
+
         case Line.TAG:
           json = element as LineJson;
           deserialized = this.deserializeLine(json);
@@ -236,6 +245,37 @@ class Context {
 
     archMod.render();
     this.addElementToTop(archMod);
+  }
+
+  private deserializeTextLabel(json: TextLabelJson): TextLabel {
+    const textLabel = TextLabel.deserialize(this.html, this.svg, json);
+    this.validateElementUid(textLabel);
+    this.renderTextLabel(textLabel);
+    return textLabel;
+  }
+
+  public addNewTextLabel(label: string, x: number, y: number, width: number, height: number): TextLabel {
+    const uid = this.genNewElementUid();
+    const textLabel = new TextLabel(uid, this.html, this.svg, label);
+    textLabel.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
+    this.renderTextLabel(textLabel);
+    return textLabel;
+  }
+
+  private renderTextLabel(textLabel: TextLabel) {
+    textLabel.setCallback(new TextLabelCallbackImpl());
+
+    switch (this.globalMode) {
+      case GLOBAL_MODE_GOD:
+        textLabel.itxMode = ElementItxMode.EDITABLE;
+        break;
+      case GLOBAL_MODE_ITX:
+        textLabel.itxMode = ElementItxMode.SELECTABLE;
+        break;
+    }
+
+    textLabel.render();
+    this.addElementToTop(textLabel);
   }
 
   private deserializeLine(json: LineJson): Line {
@@ -335,20 +375,22 @@ class Context {
 
     this.allElements.forEach( (element: Element) => {
       switch (element.TAG) {
-        case ArchMod.TAG: {
-          const archMod = element as ArchMod;
+        case ArchMod.TAG:
+          // fall-through.
+        case TextLabel.TAG: {
+          const elm = element as ArchMod|TextLabel;
 
-          const {x, y, width, height} = archMod.getXYWH();
+          const {x, y, width, height} = elm.getXYWH();
 
           if (minX < x && minY < y && x + width < maxX && y + height < maxY) {
-            if (!this.selectedElements.includes(archMod)) {
-              archMod.select();
-              this.onMultiSelected(archMod);
+            if (!this.selectedElements.includes(elm)) {
+              elm.select();
+              this.onMultiSelected(elm);
             }
           } else {
-            if (this.selectedElements.includes(archMod)) {
-              archMod.deselect();
-              this.onDeselected(archMod);
+            if (this.selectedElements.includes(elm)) {
+              elm.deselect();
+              this.onDeselected(elm);
             }
           }
         }
@@ -515,6 +557,15 @@ class Context {
           element = this.deserializeArchMod(json);
           break;
 
+        case TextLabel.TAG:
+          json = serialized as TextLabelJson;
+
+          json[Def.KEY_DIMENS][Def.KEY_X] += COPY_PASTE_SLIDE_DIFF;
+          json[Def.KEY_DIMENS][Def.KEY_Y] += COPY_PASTE_SLIDE_DIFF;
+
+          element = this.deserializeTextLabel(json);
+          break;
+
         case Line.TAG:
           json = serialized as LineJson;
 
@@ -630,17 +681,7 @@ class Context {
 
     this.resetAllState();
     this.allElements.forEach( (element: Element) => {
-      switch (element.TAG) {
-        case ArchMod.TAG:
-          element.itxMode = ElementItxMode.EDITABLE;
-          break;
-        case Line.TAG:
-          element.itxMode = ElementItxMode.EDITABLE;
-          break;
-        case Connector.TAG:
-          element.itxMode = ElementItxMode.EDITABLE;
-          break;
-      }
+      element.itxMode = ElementItxMode.EDITABLE;
     } );
     this.outFrame.itxMode = ElementItxMode.EDITABLE;
   }
@@ -650,16 +691,10 @@ class Context {
 
     this.resetAllState();
     this.allElements.forEach( (element: Element) => {
-      switch (element.TAG) {
-        case ArchMod.TAG:
-          element.itxMode = ElementItxMode.SELECTABLE;
-          break;
-        case Line.TAG:
-          element.itxMode = ElementItxMode.RIGID;
-          break;
-        case Connector.TAG:
-          element.itxMode = ElementItxMode.RIGID;
-          break;
+      if (element.TAG == ArchMod.TAG) {
+        element.itxMode = ElementItxMode.SELECTABLE;
+      } else {
+        element.itxMode = ElementItxMode.RIGID;
       }
     } );
     this.outFrame.itxMode = ElementItxMode.RIGID;
@@ -809,6 +844,62 @@ class ArchModCallbackImpl implements ArchModCallback {
   onClipAreaChanged(archMod: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onClipAreaChanged() : label=${archMod.label}`);
     CONTEXT.updateConnectorsRelatedTo(archMod);
+  }
+}
+
+// Common callback implementation for ALL TextLabel instances.
+class TextLabelCallbackImpl implements TextLabelCallback {
+  onSelected(selected: TextLabel, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onSelected() : ${selected.label}, isMulti=${isMulti}`);
+    CONTEXT.onSelected(selected, isMulti);
+  }
+
+  onDeselected(deselected: TextLabel) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onDeselected() : ${deselected.label}`);
+    CONTEXT.onDeselected(deselected);
+  }
+
+  onEditing(editing: TextLabel, isMulti: boolean) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onEditing() : ${editing.label}, isMulti=${isMulti}`);
+    CONTEXT.onSelected(editing, isMulti);
+  }
+
+  onEdited(edited: TextLabel) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onEdited() : ${edited.label}`);
+    CONTEXT.onDeselected(edited);
+  }
+
+  onDragStart(moved: TextLabel) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onDragStart()`);
+    // NOP.
+  }
+
+  onDrag(moved: TextLabel, plusX: number, plusY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onDrag() : plusX=${plusX}, plusY=${plusY}`);
+    CONTEXT.moveSelectedElements(plusX, plusY, moved);
+  }
+
+  onDragEnd(moved: TextLabel) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onDragEnd()`);
+  }
+
+  onRaised(raised: TextLabel) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onRaised()`);
+    CONTEXT.raise(raised);
+  }
+
+  onLowered(lowered: TextLabel) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onLowered()`);
+    CONTEXT.lower(lowered);
+  }
+
+  onLabelChanged(textLabel: TextLabel, oldLabel: string, newLabel: string) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onLabelChanged() : old=${oldLabel}, new=${newLabel}`);
+  }
+
+  onHistoricalChanged(textLabel: TextLabel) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onHistoricalChanged() : label=${textLabel.label}`);
+    CONTEXT.recordHistory();
   }
 }
 
@@ -1168,6 +1259,17 @@ function registerGlobalCallbacks() {
       }
       break;
 
+    case "add_textlabel":
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "Finish add new TextLabel");
+
+      if (CONTEXT.isAddNewTextLabelMode) {
+        finishAddNewTextLabelMode();
+        clicked.checked = false;
+      } else {
+        prepareAddNewTextLabelMode();
+      }
+      break;
+
     case "add_line":
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "Finish add new Line");
 
@@ -1223,6 +1325,38 @@ function finishAddNewArchModMode() {
   CONTEXT.isAddNewArchModMode = false;
 
   (document.getElementById("add_archmod") as HTMLInputElement).checked = false;
+}
+
+function prepareAddNewTextLabelMode() {
+  CONTEXT.resetAllState();
+
+  CONTEXT.html.css("display", "block");
+  CONTEXT.html.css("background-color", "#AAAAAAAA");
+
+  CONTEXT.html.on("click", (e: JQuery.Event) => {
+    const posX: number = e.offsetX || 0;
+    const posY: number = e.offsetY || 0;
+
+    CONTEXT.addNewTextLabel(
+        TextLabel.TAG,
+        posX,
+        posY,
+        DEFAULT_SIZE,
+        DEFAULT_SIZE);
+
+    CONTEXT.recordHistory();
+
+    finishAddNewTextLabelMode();
+  } );
+
+  CONTEXT.isAddNewTextLabelMode = true;
+}
+
+function finishAddNewTextLabelMode() {
+  resetHtmlRoot();
+  CONTEXT.isAddNewTextLabelMode = false;
+
+  (document.getElementById("add_textlabel") as HTMLInputElement).checked = false;
 }
 
 function prepareAddNewLineMode() {
