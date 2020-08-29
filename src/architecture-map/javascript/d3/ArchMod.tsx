@@ -40,6 +40,7 @@ export interface ArchModCallback {
   onHistoricalChanged(archMod: ArchMod): void;
 
   onSizeChanged(archMod: ArchMod): void;
+  onSizeChangeDone(archMod: ArchMod): void;
 
   onClipAreaChanged(archMod: ArchMod): void;
 
@@ -899,6 +900,7 @@ export class ArchMod extends Element {
               d3.event.target.startX = 0;
               d3.event.target.startY = 0;
 
+              if (this.callback != null) this.callback.onSizeChangeDone(this);
               if (this.callback != null) this.callback.onHistoricalChanged(this);
           } )
     );
@@ -1304,7 +1306,7 @@ export class ArchMod extends Element {
    * Delete this instance.
    */
   public delete() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `delete()`);
     this.resetState();
     this.root.remove();
   }

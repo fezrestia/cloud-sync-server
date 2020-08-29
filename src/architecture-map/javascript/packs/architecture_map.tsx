@@ -51,6 +51,61 @@ interface ArchitectureMapJson {
   [Def.KEY_ARCHITECTURE_MAP]: ElementJson[],
 }
 
+// @return Modified or not.
+function resolveOverlappingArchMod(elements: Element[]): boolean {
+
+  const overlapComparator = (a: Element, b: Element): number => {
+    if (a.TAG == ArchMod.TAG && b.TAG == ArchMod.TAG) {
+      const rectA: {x: number, y: number, width: number, height: number } = (a as ArchMod).getXYWH();
+      const aL = rectA.x;
+      const aT = rectA.y;
+      const aR = rectA.x + rectA.width;
+      const aB = rectA.y + rectA.height;
+
+      const rectB: {x: number, y: number, width: number, height: number } = (b as ArchMod).getXYWH();
+      const bL = rectB.x;
+      const bT = rectB.y;
+      const bR = rectB.x + rectB.width;
+      const bB = rectB.y + rectB.height;
+
+      if (aL < bL && bR < aR && aT < bT && bB < aB) {
+        // a > b, sort A to B.
+        return -1;
+      } else if (bL < aL && aR < bR && bT < aT && aB < bB) {
+        // b > a, sort B to A.
+        return 1;
+      } else {
+        // Same size, not sort.
+        return 0;
+      }
+
+    } else {
+      // Target is only ArchMod, not sort.
+      return 0;
+    }
+  };
+
+  let original: Element[] = [];
+  original = original.concat(elements);
+
+  elements.sort(overlapComparator);
+
+  let isChanged = false;
+  for (let i = 0; i < elements.length; i++) {
+    if (elements[i].uid != original[i].uid) {
+      isChanged = true;
+      break;
+    }
+  }
+
+  if (isChanged) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "resolveOverlappingArchMod()");
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // Current interaction context.
 class Context {
 
@@ -343,11 +398,15 @@ class Context {
   public addElementToTop(element: Element) {
     this.allElements.push(element);
     this.elementUids.push(element.uid);
+
+    this.relayout();
   }
 
   public addElementToBottom(element: Element) {
     this.allElements.unshift(element);
     this.elementUids.unshift(element.uid);
+
+    this.relayout();
   }
 
   public removeElement(element: Element) {
@@ -441,6 +500,10 @@ class Context {
       }
 
     } );
+  }
+
+  public onMoveResizeDone() {
+    this.relayout();
   }
 
   public updateConnectorsRelatedTo(archMod: ArchMod) {
@@ -676,6 +739,22 @@ class Context {
     this.recoverJson(futureJson);
   }
 
+  public relayout() {
+    if (resolveOverlappingArchMod(this.allElements)) {
+      this.allElements.forEach ( (element: Element) => {
+        element.delete();
+      } );
+
+      this.allElements.forEach ( (element: Element) => {
+        element.render();
+      } );
+
+      this.selectedElements.forEach( (element: Element) => {
+        element.select();
+      } );
+    }
+  }
+
   public changeToGodMode() {
     this.globalMode = GLOBAL_MODE_GOD;
 
@@ -810,6 +889,7 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onDragEnd(moved: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragEnd()`);
+    CONTEXT.onMoveResizeDone();
   }
 
   onRaised(raised: ArchMod) {
@@ -839,6 +919,11 @@ class ArchModCallbackImpl implements ArchModCallback {
   onSizeChanged(archMod: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSizeChanged() : label=${archMod.label}`);
     CONTEXT.updateConnectorsRelatedTo(archMod);
+  }
+
+  onSizeChangeDone(archMod: ArchMod) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onSizeChangeDone() : label=${archMod.label}`);
+    CONTEXT.onMoveResizeDone();
   }
 
   onClipAreaChanged(archMod: ArchMod) {
@@ -881,6 +966,7 @@ class TextLabelCallbackImpl implements TextLabelCallback {
 
   onDragEnd(moved: TextLabel) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onDragEnd()`);
+    CONTEXT.onMoveResizeDone();
   }
 
   onRaised(raised: TextLabel) {
@@ -937,7 +1023,7 @@ class LineCallbackImpl implements LineCallback {
 
   onDragEnd(moved: Line) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onDragEnd()`);
-    // NOP.
+    CONTEXT.onMoveResizeDone();
   }
 
   onRaised(raised: Line) {
@@ -990,7 +1076,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
 
   onDragEnd(moved: Connector) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onDragEnd()`);
-    // NOP.
+    CONTEXT.onMoveResizeDone();
   }
 
   onRaised(raised: Connector) {
