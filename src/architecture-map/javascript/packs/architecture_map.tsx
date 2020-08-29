@@ -106,6 +106,43 @@ function resolveOverlappingArchMod(elements: Element[]): boolean {
   }
 }
 
+function updateHierarchy(elements: Element[]) {
+  let original: Element[] = [];
+  original = original.concat(elements);
+
+  const reversed = original.reverse();
+
+  while (reversed.length != 0) {
+    const topElm = reversed.shift();
+    if (topElm == undefined) {
+      TraceLog.e(TAG, "updateHierarchy(): Unexpected State. topElm is undefined.");
+    } else {
+      if (topElm.TAG == ArchMod.TAG) {
+        const topArchMod = topElm as ArchMod;
+
+        const parentElm = reversed.find( (element: Element) => {
+          if (element.TAG == ArchMod.TAG) {
+            const archMod = element as ArchMod;
+
+            return archMod.isChild(topArchMod);
+          } else {
+            return false;
+          }
+        } );
+
+        if (parentElm != undefined) {
+          // Parent is existing.
+          const parentArchMod = parentElm as ArchMod;
+          topArchMod.parentUid = parentArchMod.uid;
+        } else {
+          // No parent.
+          topArchMod.parentUid = null;
+        }
+      }
+    }
+  }
+}
+
 // Current interaction context.
 class Context {
 
@@ -753,6 +790,8 @@ class Context {
         element.select();
       } );
     }
+
+    updateHierarchy(this.allElements);
   }
 
   public changeToGodMode() {
@@ -909,6 +948,25 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onLabelChanged() : old=${oldLabel}, new=${newLabel}`);
+  }
+
+  getParentLabel(parentUid: number|null): string {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.getParentLabel() : parentUid=${parentUid}`);
+
+    if (parentUid == null) {
+      return "";
+    }
+
+    const parentLabels: string[] = [];
+
+    let nextUid: number|null = parentUid;
+    while (nextUid != null) {
+      const parentArchMod = CONTEXT.queryElementUid(nextUid) as ArchMod;
+      parentLabels.unshift(parentArchMod.label);
+      nextUid = parentArchMod.parentUid;
+    }
+
+    return parentLabels.join(" - ");
   }
 
   onHistoricalChanged(archMod: ArchMod) {

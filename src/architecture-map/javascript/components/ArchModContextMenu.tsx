@@ -9,6 +9,7 @@ import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 
 interface Props {
+  parentLabel: string,
   label: string,
   callback: ArchModContextMenuCallback,
   leftPix: number,
@@ -132,6 +133,12 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             onClick={ handleContextMenuClick }
         >
           <table className="context-menu-contents" ><tbody>
+            <tr>
+              <td className="no-wrap" >Parent Modules</td>
+              <td className="no-wrap" >
+                <label>{this.props.parentLabel}</label>
+              </td>
+            </tr>
             <tr>
               <td className="no-wrap" >Module ID Label</td>
               <td className="no-wrap" >

@@ -37,6 +37,8 @@ export interface ArchModCallback {
   canChangeLabel(archMod: ArchMod, newLabel: string): boolean;
   onLabelChanged(archMod: ArchMod, oldLabel: string, newLabel: string): void;
 
+  getParentLabel(parentUid: number|null): string;
+
   onHistoricalChanged(archMod: ArchMod): void;
 
   onSizeChanged(archMod: ArchMod): void;
@@ -51,6 +53,7 @@ export interface ArchModCallback {
  */
 export interface ArchModJson {
   [Def.KEY_UID]: number,
+  [Def.KEY_PARENT_UID]: number|null,
   [Def.KEY_CLASS]: string,
   [Def.KEY_LABEL]: string,
   [Def.KEY_DIMENS]: {
@@ -245,6 +248,14 @@ export class ArchMod extends Element {
         this._itxMode = mode;
       }
 
+  private _parentUid: number|null = null;
+      public get parentUid(): number|null {
+        return this._parentUid;
+      }
+      public set parentUid(parentUid: number|null) {
+        this._parentUid = parentUid;
+      }
+
   /**
    * Serialize ArchMod object to ArchModJson Object.
    *
@@ -253,6 +264,7 @@ export class ArchMod extends Element {
   public serialize(): ArchModJson {
     const jsonObj = {
         [Def.KEY_UID]: this.uid,
+        [Def.KEY_PARENT_UID]: this.parentUid,
         [Def.KEY_CLASS]: ArchMod.TAG,
         [Def.KEY_LABEL]: this.label,
         [Def.KEY_DIMENS]: {
@@ -286,6 +298,7 @@ export class ArchMod extends Element {
         html,
         svg,
         json[Def.KEY_LABEL]);
+    archMod.parentUid = json[Def.KEY_PARENT_UID];
     archMod.setDimens(
         json[Def.KEY_DIMENS][Def.KEY_X],
         json[Def.KEY_DIMENS][Def.KEY_Y],
@@ -372,6 +385,22 @@ export class ArchMod extends Element {
    */
   public getXYWH(): {x: number, y: number, width: number, height:number} {
     return {x: this.x, y: this.y, width: this.width, height: this.height};
+  }
+
+  /**
+   * Check @child is included in this ArchMod or not.
+   *
+   * @param Check child or not target.
+   * @return Is child or not.
+   */
+  public isChild(child: ArchMod): boolean {
+    const childRect = child.getXYWH();
+    const childL = childRect.x;
+    const childT = childRect.y;
+    const childR = childRect.x + childRect.width;
+    const childB = childRect.y + childRect.height;
+
+    return this.x < childL && childR < this.x + this.width && this.y < childT && childB < this.y + this.height;
   }
 
   /**
@@ -1242,8 +1271,11 @@ export class ArchMod extends Element {
 
     this.html.css("display", "block");
 
+    const parentLabel = this.callback == null ? "" : this.callback.getParentLabel(this.parentUid);
+
     ReactDOM.render(
         <ArchModContextMenu
+            parentLabel={parentLabel}
             label={this.label}
             callback={new this.ContextMenuCallbackImpl(this)}
             leftPix={clickX}
