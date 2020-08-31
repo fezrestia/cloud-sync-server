@@ -143,6 +143,10 @@ function updateHierarchy(elements: Element[]) {
   }
 }
 
+export interface ContextCallback {
+  onArchModSelected(archMod: ArchMod): void;
+}
+
 // Current interaction context.
 class Context {
 
@@ -188,10 +192,24 @@ class Context {
   // Selected list.
   private readonly selectedElements: Element[] = [];
 
+  private _callback: ContextCallback|null = null;
+      get callback(): ContextCallback|null {
+        return this._callback;
+      }
+      set callback(callback: ContextCallback|null) {
+        this._callback = callback;
+      }
+
   public onSelected(selected: Element, isMulti: boolean) {
     this.selectedElements.push(selected);
     if (!isMulti) {
       this.resetAllStateExceptFor(selected);
+
+      if (this.callback != null) {
+        if (selected.TAG == ArchMod.TAG) {
+          this.callback.onArchModSelected(selected as ArchMod);
+        }
+      }
     }
   }
 
