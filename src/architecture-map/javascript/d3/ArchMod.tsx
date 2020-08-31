@@ -16,6 +16,7 @@ import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
+import { KeyValuePopupMenu, KeyValuePopupMenuCallback } from "../components/KeyValuePopupMenu";
 
 /**
  * Callback interface for ArchMod.
@@ -1357,6 +1358,55 @@ export class ArchMod extends Element {
 
     if (this.callback != null) this.callback.onLabelChanged(this, oldLabel, newLabel);
   }
+
+  private KeyValuePopupMenuCallbackImpl = class implements KeyValuePopupMenuCallback {
+    private target: ArchMod;
+
+    constructor(target: ArchMod) {
+      this.target = target;
+    }
+
+    close() {
+      this.target.closeDetailMenu();
+    }
+  }
+
+  private openDetailMenu(clickX: number, clickY: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "openDetailMenu()");
+
+    this.html.css("display", "block");
+
+    const parentLabel = this.callback == null ? "" : this.callback.getParentLabel(this.parentUid);
+
+    const contents: { key: string, value: any }[] = [];
+
+    contents.push( { key: "Test Key", value: "Test Value" } );
+    contents.push( { key: "something", value: "anything" } );
+
+    ReactDOM.render(
+        <KeyValuePopupMenu
+            parentLabel={parentLabel}
+            label={this.label}
+            callback={new this.KeyValuePopupMenuCallbackImpl(this)}
+            leftPix={clickX}
+            topPix={clickY}
+            keyValueList={contents}
+        />,
+        document.getElementById(this.html[0].id));
+  }
+
+  private closeDetailMenu() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "closeDetailMenu()");
+
+    const container = document.getElementById(this.html[0].id);
+    if (container != null) {
+      ReactDOM.unmountComponentAtNode(container);
+    }
+
+    this.html.css("display", "none");
+  }
+
+
 
 }
 
