@@ -1371,17 +1371,20 @@ export class ArchMod extends Element {
     }
   }
 
+  private _details: { key: string, value: any }[] = [];
+      set details(details: { key: string, value: any }[]) {
+        this._details = details;
+      }
+      get details(): { key: string, value: any }[] {
+        return this._details;
+      }
+
   private openDetailMenu(clickX: number, clickY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "openDetailMenu()");
 
     this.html.css("display", "block");
 
     const parentLabel = this.callback == null ? "" : this.callback.getParentLabel(this.parentUid);
-
-    const contents: { key: string, value: any }[] = [];
-
-    contents.push( { key: "Test Key", value: "Test Value" } );
-    contents.push( { key: "something", value: "anything" } );
 
     ReactDOM.render(
         <KeyValuePopupMenu
@@ -1390,7 +1393,7 @@ export class ArchMod extends Element {
             callback={new this.KeyValuePopupMenuCallbackImpl(this)}
             leftPix={clickX}
             topPix={clickY}
-            keyValueList={contents}
+            keyValueList={this.details}
         />,
         document.getElementById(this.html[0].id));
   }

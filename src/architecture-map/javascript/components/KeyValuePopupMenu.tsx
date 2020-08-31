@@ -60,13 +60,40 @@ export class KeyValuePopupMenu extends React.Component<Props, State> {
     const callback = this.props.callback;
 
     const contentTrs: any[] = [];
-    this.props.keyValueList.forEach( (content: { key: string, value: any }, index: number) => {
-      contentTrs.push(
-        <tr key={index} >
-          <td className="no-wrap" >{content.key}</td>
-          <td className="no-wrap" >{content.value}</td>
+    contentTrs.push(
+        <tr key={-1} >
+          <td className="no-wrap" ><strong>{"Details"}</strong></td>
+          <td></td>
         </tr>
-      );
+    );
+    this.props.keyValueList.forEach( (content: { key: string, value: any }, index: number) => {
+      if (Array.isArray(content.value)) {
+        const rowspan = content.value.length;
+
+        content.value.forEach( (val: string, rowCount: number) => {
+          if (rowCount == 0) {
+            contentTrs.push(
+              <tr key={`${index}-${rowCount}`} >
+                <td className="no-wrap" rowSpan={rowspan} >{content.key}</td>
+                <td className="no-wrap" >{val}</td>
+              </tr>
+            );
+          } else {
+            contentTrs.push(
+              <tr key={`${index}-${rowCount}`} >
+                <td className="no-wrap" >{val}</td>
+              </tr>
+            );
+          }
+        } );
+      } else {
+        contentTrs.push(
+          <tr key={index} >
+            <td className="no-wrap" >{content.key}</td>
+            <td className="no-wrap" >{content.value}</td>
+          </tr>
+        );
+      }
     } );
 
     return (
