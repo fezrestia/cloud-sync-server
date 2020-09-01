@@ -11,6 +11,15 @@ hr {
   margin-bottom: 1.5em;
 }
 
+hr.less-margin {
+  border: none;
+  border-top: solid;
+  height: 0.5px;
+  color: #DDDDDD;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
 table {
   border-collapse: collapse;
 }

@@ -60,12 +60,6 @@ export class KeyValuePopupMenu extends React.Component<Props, State> {
     const callback = this.props.callback;
 
     const contentTrs: any[] = [];
-    contentTrs.push(
-        <tr key={-1} >
-          <td className="no-wrap" ><strong>{"Details"}</strong></td>
-          <td></td>
-        </tr>
-    );
     this.props.keyValueList.forEach( (content: { key: string, value: any }, index: number) => {
       if (Array.isArray(content.value)) {
         const rowspan = content.value.length;
@@ -111,6 +105,24 @@ export class KeyValuePopupMenu extends React.Component<Props, State> {
             style={style}
             onClick={ handleContextMenuClick }
         >
+          <table className="context-menu-contents no-border" ><tbody>
+            <tr>
+              <td className="no-wrap" >Parent Modules : </td>
+              <td className="no-wrap" >
+                <label>{this.props.parentLabel}</label>
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Module ID Label : </td>
+              <td className="no-wrap" >
+                <label>{this.props.label}</label>
+              </td>
+            </tr>
+          </tbody></table>
+
+          <hr className="less-margin" />
+
+          Detail:
           <table className="context-menu-contents" ><tbody>
             {contentTrs}
           </tbody></table>
