@@ -801,7 +801,8 @@ export class TextLabel extends Element {
   }
 
   private recolor() {
-    this.polygon.attr("stroke", this.colorResolver.stroke);
+    // TextLabel stroke is invisible.
+    this.polygon.attr("stroke", null);
     this.polygon.attr("fill", this.colorResolver.bg)
 
     this.text.attr("fill", this.colorResolver.text);
