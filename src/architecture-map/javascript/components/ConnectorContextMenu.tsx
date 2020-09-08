@@ -112,6 +112,7 @@ export class ConnectorContextMenu extends React.Component<Props, State> {
                 {this.genClickButton("color_set_green",   "Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
                 {this.genClickButton("color_set_blue",    "Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
                 {this.genClickButton("color_set_yellow",  "Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
+                {this.genClickButton("color_set_purple",  "Purple",  () => { callback.changeColorSet(ColorSet.PURPLE) })}
               </td>
             </tr>
             <tr>
