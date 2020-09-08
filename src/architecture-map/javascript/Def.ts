@@ -83,7 +83,7 @@ export namespace ColorSet {
     switch (colorSet) {
       //                                                 bg,              stroke,       bgHighlight,   text?,
       case ColorSet.NONE:       return new ColorResolver("none",         "none",       "none");
-      case ColorSet.WHITE:      return new ColorResolver("whitesmoke",   "darkgray",   "lightgray");
+      case ColorSet.WHITE:      return new ColorResolver("whitesmoke",   "lightgray",  "gainsboro");
       case ColorSet.LIGHT_GRAY: return new ColorResolver("dimgray",      "#AAAAAA",    "dimgray");
       case ColorSet.GRAY:       return new ColorResolver("gainsboro",    "dimgray",    "dimgray");
       case ColorSet.ORANGE:     return new ColorResolver("peachpuff",    "darkorange", "darkorange");

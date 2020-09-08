@@ -7,6 +7,7 @@ import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
+import { genColorSetClickButtons } from "./Common";
 
 interface Props {
   parentLabel: string,
@@ -184,13 +185,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
-                {this.genClickButton("color_set_white",   "White",   () => { callback.changeColorSet(ColorSet.WHITE) })}
-                {this.genClickButton("color_set_gray",    "Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
-                {this.genClickButton("color_set_orange",  "Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
-                {this.genClickButton("color_set_green",   "Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
-                {this.genClickButton("color_set_blue",    "Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
-                {this.genClickButton("color_set_yellow",  "Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
-                {this.genClickButton("color_set_purple",  "Purple",  () => { callback.changeColorSet(ColorSet.PURPLE) })}
+                {genColorSetClickButtons( (colorSet: ColorSet) => { callback.changeColorSet(colorSet) } )}
               </td>
             </tr>
             <tr>

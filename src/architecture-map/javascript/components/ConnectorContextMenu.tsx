@@ -5,6 +5,7 @@ import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { MarkerType } from "../d3/Marker";
+import { genColorSetClickButtons } from "./Common";
 
 interface Props {
   callback: ConnectorContextMenuCallback,
@@ -107,12 +108,7 @@ export class ConnectorContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
-                {this.genClickButton("color_set_gray",    "Gray",    () => { callback.changeColorSet(ColorSet.GRAY) })}
-                {this.genClickButton("color_set_orange",  "Orange",  () => { callback.changeColorSet(ColorSet.ORANGE) })}
-                {this.genClickButton("color_set_green",   "Green",   () => { callback.changeColorSet(ColorSet.GREEN) })}
-                {this.genClickButton("color_set_blue",    "Blue",    () => { callback.changeColorSet(ColorSet.BLUE) })}
-                {this.genClickButton("color_set_yellow",  "Yellow",  () => { callback.changeColorSet(ColorSet.YELLOW) })}
-                {this.genClickButton("color_set_purple",  "Purple",  () => { callback.changeColorSet(ColorSet.PURPLE) })}
+                {genColorSetClickButtons( (colorSet: ColorSet) => { callback.changeColorSet(colorSet) } )}
               </td>
             </tr>
             <tr>
