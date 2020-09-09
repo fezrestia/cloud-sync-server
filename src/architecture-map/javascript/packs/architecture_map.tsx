@@ -55,7 +55,7 @@ interface ArchitectureMapJson {
 function resolveOverlappingArchMod(elements: Element[]): boolean {
 
   const overlapComparator = (a: Element, b: Element): number => {
-    if (a.TAG == ArchMod.TAG && b.TAG == ArchMod.TAG) {
+    if (a.TAG === ArchMod.TAG && b.TAG === ArchMod.TAG) {
       const rectA: {x: number, y: number, width: number, height: number } = (a as ArchMod).getXYWH();
       const aL = rectA.x;
       const aT = rectA.y;
@@ -92,7 +92,7 @@ function resolveOverlappingArchMod(elements: Element[]): boolean {
 
   let isChanged = false;
   for (let i = 0; i < elements.length; i++) {
-    if (elements[i].uid != original[i].uid) {
+    if (elements[i].uid !== original[i].uid) {
       isChanged = true;
       break;
     }
@@ -112,16 +112,16 @@ function updateHierarchy(elements: Element[]) {
 
   const reversed = original.reverse();
 
-  while (reversed.length != 0) {
+  while (reversed.length !== 0) {
     const topElm = reversed.shift();
-    if (topElm == undefined) {
+    if (topElm === undefined) {
       TraceLog.e(TAG, "updateHierarchy(): Unexpected State. topElm is undefined.");
     } else {
-      if (topElm.TAG == ArchMod.TAG) {
+      if (topElm.TAG === ArchMod.TAG) {
         const topArchMod = topElm as ArchMod;
 
         const parentElm = reversed.find( (element: Element) => {
-          if (element.TAG == ArchMod.TAG) {
+          if (element.TAG === ArchMod.TAG) {
             const archMod = element as ArchMod;
 
             return archMod.isChild(topArchMod);
@@ -130,7 +130,7 @@ function updateHierarchy(elements: Element[]) {
           }
         } );
 
-        if (parentElm != undefined) {
+        if (parentElm !== undefined) {
           // Parent is existing.
           const parentArchMod = parentElm as ArchMod;
           topArchMod.parentUid = parentArchMod.uid;
@@ -206,7 +206,7 @@ class Context {
       this.resetAllStateExceptFor(selected);
 
       if (this.callback != null) {
-        if (selected.TAG == ArchMod.TAG) {
+        if (selected.TAG === ArchMod.TAG) {
           this.callback.onArchModSelected(selected as ArchMod);
         }
       }
@@ -827,7 +827,7 @@ class Context {
 
     this.resetAllState();
     this.allElements.forEach( (element: Element) => {
-      if (element.TAG == ArchMod.TAG) {
+      if (element.TAG === ArchMod.TAG) {
         element.itxMode = ElementItxMode.SELECTABLE;
       } else {
         element.itxMode = ElementItxMode.RIGID;

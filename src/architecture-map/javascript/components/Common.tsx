@@ -17,7 +17,7 @@ export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void):
   }
 
   let buttonKey: number = 0;
-  function genClickButton(param: Param, callback: () => void ): React.ReactElement {
+  function genClickButton(param: Param, cb: () => void ): React.ReactElement {
     const resolver: ColorResolver = ColorSet.resolve(param.colorSet);
     const style = {
       border: `2px solid ${resolver.stroke}`,
@@ -31,7 +31,7 @@ export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void):
           className={"color-set-selector"}
           style={style}
           onClick={ (e: ReactMouseEvent) => {
-            callback();
+            cb();
             e.stopPropagation();
           } }
       />

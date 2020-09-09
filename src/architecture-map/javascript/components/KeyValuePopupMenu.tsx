@@ -65,7 +65,7 @@ export class KeyValuePopupMenu extends React.Component<Props, State> {
         const rowspan = content.value.length;
 
         content.value.forEach( (val: string, rowCount: number) => {
-          if (rowCount == 0) {
+          if (rowCount === 0) {
             contentTrs.push(
               <tr key={`${index}-${rowCount}`} >
                 <td className="no-wrap" rowSpan={rowspan} >{content.key}</td>
