@@ -39,14 +39,16 @@ export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void):
   }
 
   const params: Param[] = [
-      //        id,                 ColorSet,
-      new Param("color_set_white",  ColorSet.WHITE),
-      new Param("color_set_gray",   ColorSet.GRAY),
-      new Param("color_set_orange", ColorSet.ORANGE),
-      new Param("color_set_green",  ColorSet.GREEN),
-      new Param("color_set_blue",   ColorSet.BLUE),
-      new Param("color_set_yellow", ColorSet.YELLOW),
-      new Param("color_set_purple", ColorSet.PURPLE),
+      //        id,                     ColorSet,
+      new Param("color_set_white",      ColorSet.WHITE),
+      new Param("color_set_light_gray", ColorSet.LIGHT_GRAY),
+      new Param("color_set_gray",       ColorSet.GRAY),
+      new Param("color_set_red",        ColorSet.RED),
+      new Param("color_set_orange",     ColorSet.ORANGE),
+      new Param("color_set_yellow",     ColorSet.YELLOW),
+      new Param("color_set_green",      ColorSet.GREEN),
+      new Param("color_set_purple",     ColorSet.PURPLE),
+      new Param("color_set_blue",       ColorSet.BLUE),
   ];
 
   const buttons: React.ReactElement[] = [];

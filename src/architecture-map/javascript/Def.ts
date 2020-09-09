@@ -73,6 +73,7 @@ export enum ColorSet {
   YELLOW      = "yellow",
   RED         = "red",
   PURPLE      = "purple",
+  ALERT_RED   = "alert_red",
 }
 export namespace ColorSet {
   export function valueOf(value: string): ColorSet {
@@ -81,19 +82,33 @@ export namespace ColorSet {
 
   export function resolve(colorSet: ColorSet): ColorResolver {
     switch (colorSet) {
-      //                                                 bg,              stroke,       bgHighlight,   text?,
-      case ColorSet.NONE:       return new ColorResolver("none",         "none",       "none");
-      case ColorSet.WHITE:      return new ColorResolver("whitesmoke",   "lightgray",  "gainsboro");
-      case ColorSet.LIGHT_GRAY: return new ColorResolver("dimgray",      "#AAAAAA",    "dimgray");
-      case ColorSet.GRAY:       return new ColorResolver("gainsboro",    "dimgray",    "dimgray");
-      case ColorSet.ORANGE:     return new ColorResolver("peachpuff",    "darkorange", "darkorange");
-      case ColorSet.GREEN:      return new ColorResolver("palegreen",    "limegreen",  "limegreen");
-      case ColorSet.BLUE:       return new ColorResolver("lightskyblue", "royalblue",  "dodgerblue");
-      case ColorSet.YELLOW:     return new ColorResolver("khaki",        "gold",       "gold");
-      case ColorSet.RED:        return new ColorResolver("red",          "red",        "red");
-      case ColorSet.PURPLE:     return new ColorResolver("lavender",     "darkorchid", "mediumpurple");
+      //                         bg,             stroke,        bgHighlight,   strokeHighlight, text?,
+      case ColorSet.NONE:
+        return new ColorResolver("none",       "none",      "none",      "none");
+      case ColorSet.WHITE:
+        return new ColorResolver("white",      "white",     "gainsboro", "gainsboro");
+      case ColorSet.LIGHT_GRAY:
+        return new ColorResolver("whitesmoke", "lightgray", "gainsboro", "silver");
+      case ColorSet.GRAY:
+        return new ColorResolver("silver",     "gray",      "darkgray",  "dimgray");
+      case ColorSet.ORANGE:
+        return new ColorResolver("#FFE0C1", "#FFC993", "#FFD6AD", "#FFBF7F");
+      case ColorSet.GREEN:
+        return new ColorResolver("#C1FFC1", "#93FF93", "#ADFFAD", "#7FFF7F");
+      case ColorSet.BLUE:
+        return new ColorResolver("#C1C1FF", "#9393FF", "#ADADFF", "#7F7FFF");
+      case ColorSet.YELLOW:
+        return new ColorResolver("#FFFFC1", "#FFFF93", "#FFFFAD", "#FFFF7F");
+      case ColorSet.RED:
+        return new ColorResolver("#FFC1C1", "#FF9393", "#FFADAD", "#FF7F7F");
+      case ColorSet.PURPLE:
+        return new ColorResolver("#E0C1FF", "#C993FF", "#D6ADFF", "#BF7FFF");
 
-      default:                  return ColorSet.resolve(ColorSet.NONE);
+      case ColorSet.ALERT_RED:
+        return new ColorResolver("red", "red", "red", "red");
+
+      default:
+        return ColorSet.resolve(ColorSet.NONE);
     }
   }
 }
