@@ -2,52 +2,57 @@ import * as React from "react";
 
 import { ReactMouseEvent } from "../TypeDef.ts";
 import { ColorSet } from "../Def.ts";
+import { ColorResolver } from "../d3/resolver/ColorResolver";
 
 export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void): React.ReactElement[] {
 
   class Param {
     readonly id: string;
-    readonly label: string;
     readonly colorSet: ColorSet;
 
-    constructor(id: string, label: string, colorSet: ColorSet) {
+    constructor(id: string, colorSet: ColorSet) {
       this.id = id;
-      this.label = label;
       this.colorSet = colorSet;
     }
   }
 
   let buttonKey: number = 0;
-  function genClickButton(id: string, label: string, callback: () => void ): React.ReactElement {
+  function genClickButton(param: Param, callback: () => void ): React.ReactElement {
+    const resolver: ColorResolver = ColorSet.resolve(param.colorSet);
+    const style = {
+      border: `2px solid ${resolver.stroke}`,
+      backgroundColor: resolver.bg,
+    };
+
     return (
-      <button
+      <div
           key={buttonKey++}
-          id={id}
+          id={param.id}
+          className={"color-set-selector"}
+          style={style}
           onClick={ (e: ReactMouseEvent) => {
             callback();
             e.stopPropagation();
           } }
-      >
-        {label}
-      </button>
+      />
     );
   }
 
   const params: Param[] = [
-      //        id,                 label,    ColorSet,
-      new Param("color_set_white",  "White",  ColorSet.WHITE),
-      new Param("color_set_gray",   "Gray",   ColorSet.GRAY),
-      new Param("color_set_orange", "Orange", ColorSet.ORANGE),
-      new Param("color_set_green",  "Green",  ColorSet.GREEN),
-      new Param("color_set_blue",   "Blue",   ColorSet.BLUE),
-      new Param("color_set_yellow", "Yellow", ColorSet.YELLOW),
-      new Param("color_set_purple", "Purple", ColorSet.PURPLE),
+      //        id,                 ColorSet,
+      new Param("color_set_white",  ColorSet.WHITE),
+      new Param("color_set_gray",   ColorSet.GRAY),
+      new Param("color_set_orange", ColorSet.ORANGE),
+      new Param("color_set_green",  ColorSet.GREEN),
+      new Param("color_set_blue",   ColorSet.BLUE),
+      new Param("color_set_yellow", ColorSet.YELLOW),
+      new Param("color_set_purple", ColorSet.PURPLE),
   ];
 
   const buttons: React.ReactElement[] = [];
 
   params.forEach( (param: Param) => {
-    buttons.push( genClickButton(param.id, param.label, () => { callback(param.colorSet) }) );
+    buttons.push( genClickButton(param, () => { callback(param.colorSet) }) );
   } );
 
   return buttons;
