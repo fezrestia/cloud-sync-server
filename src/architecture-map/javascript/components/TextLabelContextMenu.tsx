@@ -6,7 +6,10 @@ import { ReactTextAreaChangeEvent } from "../TypeDef.ts";
 import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { genColorSetClickButtons, genLabelAlignClickButtons, genLabelRotClickButtons} from "./Common";
+import { genColorSetClickButtons,
+         genLabelAlignClickButtons,
+         genLabelRotClickButtons,
+         genZOrderClickButtons } from "./Common";
 
 interface Props {
   label: string,
@@ -149,8 +152,7 @@ export class TextLabelContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Z-Order</td>
               <td className="no-wrap" >
-                {this.genClickButton("z_order_front", "to Front End",  () => { callback.moveToFrontEnd() })}
-                {this.genClickButton("z_order_back",  "to Back End",   () => { callback.moveToBackEnd() })}
+                {genZOrderClickButtons( () => { callback.moveToFrontEnd() }, () => { callback.moveToBackEnd() } )}
               </td>
             </tr>
           </tbody></table>

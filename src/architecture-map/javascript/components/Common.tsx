@@ -267,3 +267,87 @@ export function genLabelRotClickButtons(callback: (labelRot: number) => void): R
   return buttons;
 }
 
+export function genZOrderClickButtons(frontCallback: () => void, backCallback: () => void): React.ReactElement[] {
+  class Param {
+    readonly id: string;
+    readonly callback: () => void;
+
+    constructor(id: string, callback: () => void) {
+      this.id = id;
+      this.callback = callback;
+    }
+  }
+
+  let buttonKey: number = 0;
+  function genClickButton(param: Param): React.ReactElement {
+    const SIZE = BUTTON_SIZE_PIX;
+
+    const selectedPolygon: React.ReactElement = (
+        <polygon
+            key={0}
+            strokeWidth={2}
+            stroke={"dimgray"}
+            fill={"darkgray"}
+            points={`0,0 ${SIZE * 2 / 3},0 ${SIZE * 2 / 3},${SIZE * 2 / 3} 0,${SIZE * 2 / 3} 0,0`}
+        />
+    );
+
+    const unselectedPolygon: React.ReactElement = (
+        <polygon
+            key={1}
+            strokeWidth={2}
+            stroke={"silver"}
+            fill={"gainsboro"}
+            points={`${SIZE / 3},${SIZE / 3} ${SIZE},${SIZE / 3} ${SIZE},${SIZE} ${SIZE / 3},${SIZE} ${SIZE / 3},${SIZE / 3}`}
+        />
+    );
+
+    const contents: React.ReactElement[] = [];
+    switch(param.id) {
+      case "z_order_front":
+        contents.push(unselectedPolygon);
+        contents.push(selectedPolygon);
+        break;
+
+      case "z_order_back":
+        contents.push(selectedPolygon);
+        contents.push(unselectedPolygon);
+        break;
+    }
+
+    return (
+      <div
+          key={buttonKey++}
+          id={param.id}
+          className={"z-order-selector"}
+          onClick={ (e: ReactMouseEvent) => {
+            param.callback();
+            e.stopPropagation();
+          } }
+      >
+        <svg
+            width="100%"
+            height="100%"
+            overflow="visible"
+        >
+          {contents}
+        </svg>
+      </div>
+    );
+  }
+
+  const params: Param[] = [
+      //        id,              ColorSet,
+      new Param("z_order_front", frontCallback),
+      new Param("z_order_back",  backCallback),
+  ];
+
+  const buttons: React.ReactElement[] = [];
+
+  params.forEach( (param: Param) => {
+    buttons.push( genClickButton(param) );
+  } );
+
+  return buttons;
+}
+

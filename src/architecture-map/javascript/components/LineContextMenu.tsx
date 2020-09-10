@@ -6,7 +6,7 @@ import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { MarkerType } from "../d3/Marker";
 import { LineStyle } from "../d3/Line";
-import { genColorSetClickButtons } from "./Common";
+import { genColorSetClickButtons, genZOrderClickButtons } from "./Common";
 
 interface Props {
   callback: LineContextMenuCallback,
@@ -124,8 +124,7 @@ export class LineContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Z-Order</td>
               <td className="no-wrap" >
-                {this.genClickButton("z_order_front", "to Front End",  () => { callback.moveToFrontEnd() })}
-                {this.genClickButton("z_order_back", "to Back End",   () => { callback.moveToBackEnd() })}
+                {genZOrderClickButtons( () => { callback.moveToFrontEnd() }, () => { callback.moveToBackEnd() } )}
               </td>
             </tr>
           </tbody></table>

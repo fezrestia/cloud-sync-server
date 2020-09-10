@@ -7,7 +7,11 @@ import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { genColorSetClickButtons, genClipAreaClickButtons, genLabelAlignClickButtons, genLabelRotClickButtons } from "./Common";
+import { genColorSetClickButtons,
+         genClipAreaClickButtons,
+         genLabelAlignClickButtons,
+         genLabelRotClickButtons,
+         genZOrderClickButtons } from "./Common";
 
 interface Props {
   parentLabel: string,
@@ -182,8 +186,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Z-Order</td>
               <td className="no-wrap" >
-                {this.genClickButton("z_order_front", "to Front End",  () => { callback.moveToFrontEnd() })}
-                {this.genClickButton("z_order_back",  "to Back End",   () => { callback.moveToBackEnd() })}
+                {genZOrderClickButtons( () => { callback.moveToFrontEnd() }, () => { callback.moveToBackEnd() } )}
               </td>
             </tr>
           </tbody></table>
