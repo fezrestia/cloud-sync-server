@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { ReactMouseEvent } from "../TypeDef.ts";
-import { ColorSet, ClipArea } from "../Def.ts";
+import { Def, ColorSet, ClipArea } from "../Def.ts";
 import { ColorResolver } from "../d3/resolver/ColorResolver";
 
 const BUTTON_SIZE_PIX = 24;
@@ -194,6 +194,68 @@ export function genLabelAlignClickButtons(callback: (labelAlign: string) => void
       new Param("label_align_top",    "top"),
       new Param("label_align_middle", "middle"),
       new Param("label_align_bottom", "bottom"),
+  ];
+
+  const buttons: React.ReactElement[] = [];
+
+  params.forEach( (param: Param) => {
+    buttons.push( genClickButton(param) );
+  } );
+
+  return buttons;
+}
+
+export function genLabelRotClickButtons(callback: (labelRot: number) => void): React.ReactElement[] {
+
+  class Param {
+    readonly id: string;
+    readonly rotDeg: number;
+
+    constructor(id: string, rotDeg: number) {
+      this.id = id;
+      this.rotDeg = rotDeg;
+    }
+  }
+
+  let buttonKey: number = 0;
+  function genClickButton(param: Param): React.ReactElement {
+    const style = {
+      display: "table-cell",
+      width: `${BUTTON_SIZE_PIX}px`,
+      height: `${BUTTON_SIZE_PIX}px`,
+      textAlign: "center" as const,
+      verticalAlign: "middle",
+      fontSize: "4px",
+    };
+
+    let verticalClass = "";
+    if (param.rotDeg === Def.DEG_VERTICAL) {
+      verticalClass = "label-rot-vertical";
+    }
+
+    return (
+      <div
+          key={buttonKey++}
+          id={param.id}
+          className={`label-rot-selector ${verticalClass}`}
+          onClick={ (e: ReactMouseEvent) => {
+            callback(param.rotDeg);
+            e.stopPropagation();
+          } }
+      >
+        <div
+            style={style}
+        >
+          {"mod"}
+        </div>
+      </div>
+    );
+  }
+
+  const params: Param[] = [
+      //        id,                     rot deg,
+      new Param("label_rot_horizontal", Def.DEG_HORIZONTAL),
+      new Param("label_rot_vertical",   Def.DEG_VERTICAL),
   ];
 
   const buttons: React.ReactElement[] = [];

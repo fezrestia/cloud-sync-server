@@ -7,7 +7,7 @@ import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { genColorSetClickButtons, genClipAreaClickButtons, genLabelAlignClickButtons } from "./Common";
+import { genColorSetClickButtons, genClipAreaClickButtons, genLabelAlignClickButtons, genLabelRotClickButtons } from "./Common";
 
 interface Props {
   parentLabel: string,
@@ -158,8 +158,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Label Direction</td>
               <td className="no-wrap" >
-                {this.genClickButton("label_rot_horizontal",  "Horizontal",  () => { callback.changeLabelRotDeg(Def.DEG_HORIZONTAL) })}
-                {this.genClickButton("label_rot_vertical",    "Vertical",    () => { callback.changeLabelRotDeg(Def.DEG_VERTICAL) })}
+                {genLabelRotClickButtons( (rotDeg: number) => { callback.changeLabelRotDeg(rotDeg) } )}
               </td>
             </tr>
             <tr>
