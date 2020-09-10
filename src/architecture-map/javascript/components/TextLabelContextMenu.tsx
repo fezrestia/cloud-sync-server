@@ -6,7 +6,7 @@ import { ReactTextAreaChangeEvent } from "../TypeDef.ts";
 import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { genColorSetClickButtons } from "./Common";
+import { genColorSetClickButtons, genLabelAlignClickButtons, genLabelRotClickButtons} from "./Common";
 
 interface Props {
   label: string,
@@ -131,18 +131,13 @@ export class TextLabelContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Label Direction</td>
               <td className="no-wrap" >
-                {this.genClickButton("label_rot_horizontal",  "Horizontal",  () => { callback.changeLabelRotDeg(Def.DEG_HORIZONTAL) })}
-                {this.genClickButton("label_rot_vertical",    "Vertical",    () => { callback.changeLabelRotDeg(Def.DEG_VERTICAL) })}
+                {genLabelRotClickButtons( (rotDeg: number) => { callback.changeLabelRotDeg(rotDeg) } )}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >Label Align</td>
               <td className="no-wrap" >
-                {this.genClickButton("label_align_top",     "Top",      () => { callback.changeLabelAlign("top") })}
-                <br/>
-                {this.genClickButton("label_align_middle",  "Middle",   () => { callback.changeLabelAlign("middle") })}
-                <br/>
-                {this.genClickButton("label_align_bottom",  "Bottom",   () => { callback.changeLabelAlign("bottom") })}
+                {genLabelAlignClickButtons( (labelAlign: string) => { callback.changeLabelAlign(labelAlign) } )}
               </td>
             </tr>
             <tr>
