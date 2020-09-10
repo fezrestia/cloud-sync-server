@@ -7,7 +7,7 @@ import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { genColorSetClickButtons } from "./Common";
+import { genColorSetClickButtons, genClipAreaClickButtons } from "./Common";
 
 interface Props {
   parentLabel: string,
@@ -175,11 +175,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Clip Area</td>
               <td className="no-wrap" >
-                {this.genClickButton("clip_area_none",          "None",          () => { callback.changeClipArea(ClipArea.NONE) })}
-                {this.genClickButton("clip_area_left_top",      "Left-Top",      () => { callback.changeClipArea(ClipArea.LEFT_TOP) })}
-                {this.genClickButton("clip_area_right_top",     "Right-Top",     () => { callback.changeClipArea(ClipArea.RIGHT_TOP) })}
-                {this.genClickButton("clip_area_left_bottom",   "Left-Bottom",   () => { callback.changeClipArea(ClipArea.LEFT_BOTTOM) })}
-                {this.genClickButton("clip_area_right_bottom",  "Right-Bottom",  () => { callback.changeClipArea(ClipArea.RIGHT_BOTTOM) })}
+                {genClipAreaClickButtons( (clipArea: ClipArea) => { callback.changeClipArea(clipArea) } )}
               </td>
             </tr>
             <tr>
