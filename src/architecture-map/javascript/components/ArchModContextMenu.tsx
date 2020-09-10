@@ -7,7 +7,7 @@ import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { genColorSetClickButtons, genClipAreaClickButtons } from "./Common";
+import { genColorSetClickButtons, genClipAreaClickButtons, genLabelAlignClickButtons } from "./Common";
 
 interface Props {
   parentLabel: string,
@@ -165,11 +165,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Label Align</td>
               <td className="no-wrap" >
-                {this.genClickButton("label_align_top",     "Top",      () => { callback.changeLabelAlign("top") })}
-                <br/>
-                {this.genClickButton("label_align_middle",  "Middle",   () => { callback.changeLabelAlign("middle") })}
-                <br/>
-                {this.genClickButton("label_align_bottom",  "Bottom",   () => { callback.changeLabelAlign("bottom") })}
+                {genLabelAlignClickButtons( (labelAlign: string) => { callback.changeLabelAlign(labelAlign) } )}
               </td>
             </tr>
             <tr>

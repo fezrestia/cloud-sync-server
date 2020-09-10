@@ -4,6 +4,8 @@ import { ReactMouseEvent } from "../TypeDef.ts";
 import { ColorSet, ClipArea } from "../Def.ts";
 import { ColorResolver } from "../d3/resolver/ColorResolver";
 
+const BUTTON_SIZE_PIX = 24;
+
 export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void): React.ReactElement[] {
 
   class Param {
@@ -17,7 +19,7 @@ export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void):
   }
 
   let buttonKey: number = 0;
-  function genClickButton(param: Param, cb: () => void ): React.ReactElement {
+  function genClickButton(param: Param): React.ReactElement {
     const resolver: ColorResolver = ColorSet.resolve(param.colorSet);
     const style = {
       border: `2px solid ${resolver.stroke}`,
@@ -31,7 +33,7 @@ export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void):
           className={"color-set-selector"}
           style={style}
           onClick={ (e: ReactMouseEvent) => {
-            cb();
+            callback(param.colorSet);
             e.stopPropagation();
           } }
       />
@@ -54,7 +56,7 @@ export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void):
   const buttons: React.ReactElement[] = [];
 
   params.forEach( (param: Param) => {
-    buttons.push( genClickButton(param, () => { callback(param.colorSet) }) );
+    buttons.push( genClickButton(param) );
   } );
 
   return buttons;
@@ -72,8 +74,8 @@ export function genClipAreaClickButtons(callback: (clipArea: ClipArea) => void):
   }
 
   let buttonKey: number = 0;
-  function genClickButton(param: Param, callback: (clipArea: ClipArea) => void ): React.ReactElement {
-    const SIZE = 24;
+  function genClickButton(param: Param): React.ReactElement {
+    const SIZE = BUTTON_SIZE_PIX;
     const CENTER = SIZE / 2;
 
     let points: string = "";
@@ -139,7 +141,65 @@ export function genClipAreaClickButtons(callback: (clipArea: ClipArea) => void):
   const buttons: React.ReactElement[] = [];
 
   params.forEach( (param: Param) => {
-    buttons.push( genClickButton(param, callback) );
+    buttons.push( genClickButton(param) );
+  } );
+
+  return buttons;
+}
+
+export function genLabelAlignClickButtons(callback: (labelAlign: string) => void): React.ReactElement[] {
+
+  class Param {
+    readonly id: string;
+    readonly labelAlign: string;
+
+    constructor(id: string, labelAlign: string) {
+      this.id = id;
+      this.labelAlign = labelAlign;
+    }
+  }
+
+  let buttonKey: number = 0;
+  function genClickButton(param: Param): React.ReactElement {
+    const style = {
+      display: "table-cell",
+      width: `${BUTTON_SIZE_PIX}px`,
+      height: `${BUTTON_SIZE_PIX}px`,
+      textAlign: "center" as const,
+      verticalAlign: param.labelAlign,
+      fontSize: "4px",
+    };
+
+    return (
+      <div
+          key={buttonKey++}
+          id={param.id}
+          className={"label-align-selector"}
+          onClick={ (e: ReactMouseEvent) => {
+            callback(param.labelAlign);
+            e.stopPropagation();
+          } }
+      >
+        <div
+            style={style}
+        >
+          {"mod"}
+        </div>
+      </div>
+    );
+  }
+
+  const params: Param[] = [
+      //        id,                   label align,
+      new Param("label_align_top",    "top"),
+      new Param("label_align_middle", "middle"),
+      new Param("label_align_bottom", "bottom"),
+  ];
+
+  const buttons: React.ReactElement[] = [];
+
+  params.forEach( (param: Param) => {
+    buttons.push( genClickButton(param) );
   } );
 
   return buttons;

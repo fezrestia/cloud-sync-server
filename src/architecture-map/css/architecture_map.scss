@@ -181,3 +181,13 @@ div.clip-area-selector {
   margin: 6px;
 }
 
+div.label-align-selector {
+  display: inline-block;
+  vertical-align: middle;
+  width: 24px;
+  height: 24px;
+  margin: 4px;
+  border: 2px solid darkgray;
+  background-color: lightgray;
+  user-select: none;
+}
