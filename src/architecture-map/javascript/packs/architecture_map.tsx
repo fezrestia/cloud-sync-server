@@ -28,6 +28,7 @@ import { Util } from "../util/Util";
 import { Downloader } from "../util/Downloader";
 import { MarkerType } from "../d3/Marker";
 import { convertJsonToLatest } from "../JsonConverter";
+import { openModuleHierarchyViewWindow } from "../itx/open_module_hierarchy_view";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
@@ -148,7 +149,7 @@ export interface ContextCallback {
 }
 
 // Current interaction context.
-class Context {
+export class Context {
 
   public elementUids: number[] = [0]; // 0 is OutFrame UID.
 
@@ -174,6 +175,10 @@ class Context {
 
   // Total elements. Head->Tail = Z-Low->Z-High = SVG/HTML Order Top->Bottom.
   private readonly allElements: Element[] = [];
+
+  public forEachAllElements(callback: (element: Element) => void) {
+    this.allElements.forEach(callback);
+  }
 
   // UNDO history.
   private readonly history: ArchitectureMapJson[] = [];
@@ -1455,6 +1460,11 @@ function registerGlobalCallbacks() {
       break;
   }
 
+};
+
+// Open module hierarchy viewer on new popup window.
+(window as any).onModuleHierarchyViewClicked = (event: MouseEvent, clicked: HTMLInputElement) => {
+  openModuleHierarchyViewWindow(CONTEXT, event.screenX, event.screenY);
 };
 
 function prepareAddNewArchModMode() {
