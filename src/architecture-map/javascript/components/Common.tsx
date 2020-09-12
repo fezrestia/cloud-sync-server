@@ -372,24 +372,23 @@ function genMarkerTypeClickButtons(idPrefix: string, callback: (markerType: Mark
 
   let buttonKey: number = 0;
   function genClickButton(param: Param): React.ReactElement {
-    const SIZE = BUTTON_SIZE_PIX;
-    const CENTER = SIZE / 2;
-    const QUART = SIZE / 4;
+    const W = 24;
+    const H = 12;
 
     let points: string = "";
     switch(param.markerType) {
       case MarkerType.NONE:
         // fall-through.
       default:
-        points = `${QUART},${CENTER} ${SIZE},${CENTER}`;
+        points = `${W / 4},${H / 2} ${W},${H / 2}`;
         break;
 
       case MarkerType.ARROW:
-        points = `${QUART},${CENTER} ${SIZE - QUART},${QUART} ${SIZE - QUART},${CENTER} ${SIZE},${CENTER} ${SIZE - QUART},${CENTER} ${SIZE - QUART},${SIZE - QUART} ${QUART},${CENTER}`
+        points = `${W / 4},${H / 2} ${W - W / 4},0 ${W - W / 4},${H / 2} ${W},${H / 2} ${W - W / 4},${H / 2} ${W - W / 4},${H} ${W / 4},${H / 2}`
         break;
 
       case MarkerType.RECT:
-        points = `${QUART},${QUART} ${SIZE - QUART},${QUART} ${SIZE - QUART},${CENTER} ${SIZE},${CENTER} ${SIZE - QUART},${CENTER} ${SIZE - QUART},${SIZE - QUART} ${QUART},${SIZE - QUART} ${QUART},${QUART}`;
+        points = `${W / 4},0 ${W / 4 + H},0 ${W / 4 + H},${H / 2} ${W},${H / 2} ${W / 4 + H},${H / 2} ${W / 4 + H},${H} ${W / 4},${H} ${W / 4},0`;
         break;
     }
 
@@ -448,8 +447,8 @@ export function genLineStyleClickButtons(callback: (lineStyle: LineStyle) => voi
 
   let buttonKey: number = 0;
   function genClickButton(param: Param): React.ReactElement {
-    const SIZE = BUTTON_SIZE_PIX;
-    const CENTER = SIZE / 2;
+    const WIDTH = 48;
+    const HEIGHT = 12;
 
     return (
       <div
@@ -467,7 +466,7 @@ export function genLineStyleClickButtons(callback: (lineStyle: LineStyle) => voi
             overflow="visible"
         >
           <path
-              d={`M0,${CENTER}L${SIZE},${CENTER}`}
+              d={`M0,${HEIGHT / 2}L${WIDTH},${HEIGHT / 2}`}
               strokeWidth={2}
               stroke={"darkgray"}
               strokeDasharray={LineStyle.getStrokeDashArray(param.lineStyle, 2)}
