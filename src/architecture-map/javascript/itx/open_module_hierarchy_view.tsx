@@ -81,7 +81,7 @@ export function openModuleHierarchyViewWindow(context: Context, screenX: number,
   const root: Nd = {};
 
   context.forEachAllElements( (element: Element) => {
-    if (element.TAG == ArchMod.TAG) {
+    if (element.TAG === ArchMod.TAG) {
       const archMod: ArchMod = element as ArchMod;
 
       // Create single hierarchy.
@@ -95,12 +95,12 @@ export function openModuleHierarchyViewWindow(context: Context, screenX: number,
 
       // Register to root node.
       let curNd: Nd = root;
-      hierarchy.forEach( (archMod: ArchMod) => {
-        const curChildren: Nd = curNd[archMod.label];
+      hierarchy.forEach( (mod: ArchMod) => {
+        const curChildren: Nd = curNd[mod.label];
         if (curChildren === undefined) {
-          curNd[archMod.label] = {};
+          curNd[mod.label] = {};
         }
-        curNd = curNd[archMod.label];
+        curNd = curNd[mod.label];
       } );
     }
   } );
@@ -135,9 +135,9 @@ export function openModuleHierarchyViewWindow(context: Context, screenX: number,
 
   const contentNode: Nd = { "<strong>Module Hierarchy</strong>": root };
 
-  const content = getNestedUlLi(contentNode);
+  const contentInjection = getNestedUlLi(contentNode);
 
-  const injectedHtml = HTML.replace(HTML_CONTENT_PLACEHOLDER, content);
+  const injectedHtml = HTML.replace(HTML_CONTENT_PLACEHOLDER, contentInjection);
 
   // Open new window.
   const newWin: WindowProxy|null = window.open(
