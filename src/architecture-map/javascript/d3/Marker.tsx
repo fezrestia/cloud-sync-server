@@ -1,20 +1,6 @@
 import { D3Node } from "../TypeDef.ts";
-import { ColorSet } from "../Def.ts";
+import { ColorSet, MarkerType } from "../Def.ts";
 import { LineStyle } from "../d3/Line";
-
-/**
- * Marker type.
- */
-export enum MarkerType {
-  NONE  = "none",
-  ARROW = "arrow",
-  RECT  = "rect",
-}
-export namespace MarkerType {
-  export function valueOf(value: string): MarkerType {
-    return value as MarkerType;
-  }
-}
 
 export class Marker {
   public static readonly TAG = "Marker";
@@ -155,11 +141,15 @@ export class Marker {
     const fromMarkerId = Marker.genMarkerId(fromMarkerType, colorSet, isHighlight);
     if (fromMarkerId != null) {
       path.attr("marker-start", `url(#${fromMarkerId})`);
+    } else {
+      path.attr("marker-start", null);
     }
 
     const toMarkerId = Marker.genMarkerId(toMarkerType, colorSet, isHighlight);
     if (toMarkerId != null) {
       path.attr("marker-end", `url(#${toMarkerId})`);
+    } else {
+      path.attr("marker-end", null);
     }
 
     if (!isHighSpeedRenderingMode) {

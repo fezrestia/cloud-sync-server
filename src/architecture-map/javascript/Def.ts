@@ -113,3 +113,17 @@ export namespace ColorSet {
   }
 }
 
+/**
+ * Marker type.
+ */
+export enum MarkerType {
+  NONE  = "none",
+  ARROW = "arrow",
+  RECT  = "rect",
+}
+export namespace MarkerType {
+  export function valueOf(value: string): MarkerType {
+    return value as MarkerType;
+  }
+}
+

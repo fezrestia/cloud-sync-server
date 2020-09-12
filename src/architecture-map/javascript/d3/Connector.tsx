@@ -8,15 +8,13 @@ import { Point } from "./Util.ts";
 import { TraceLog } from "../util/TraceLog.ts";
 import { ConnectorContextMenu } from "../components/ConnectorContextMenu.tsx";
 import { ConnectorContextMenuCallback } from "../components/ConnectorContextMenu.tsx";
-import { Def } from "../Def.ts";
-import { ColorSet } from "../Def.ts";
+import { Def, ColorSet, MarkerType } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
 import { ArchMod } from "./ArchMod";
 import { Marker } from "./Marker";
-import { MarkerType } from "./Marker";
 import { LineStyle } from "../d3/Line";
 
 /**

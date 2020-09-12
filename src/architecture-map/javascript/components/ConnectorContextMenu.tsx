@@ -2,10 +2,11 @@ import * as React from "react";
 
 import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
-import { Def } from "../Def.ts";
-import { ColorSet } from "../Def.ts";
-import { MarkerType } from "../d3/Marker";
-import { genColorSetClickButtons, genZOrderClickButtons } from "./Common";
+import { Def, ColorSet, MarkerType } from "../Def.ts";
+import { genColorSetClickButtons,
+         genZOrderClickButtons,
+         genFromMarkerTypeClickButtons,
+         genToMarkerTypeClickButtons } from "./Common";
 
 interface Props {
   callback: ConnectorContextMenuCallback,
@@ -92,17 +93,13 @@ export class ConnectorContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >FROM Marker</td>
               <td>
-                {this.genClickButton("from_marker_type_none",   "None",   () => { callback.changeFromMarkerType(MarkerType.NONE) })}
-                {this.genClickButton("from_marker_type_arrow",  "Arrow",  () => { callback.changeFromMarkerType(MarkerType.ARROW) })}
-                {this.genClickButton("from_marker_type_rect",   "Rect",   () => { callback.changeFromMarkerType(MarkerType.RECT) })}
+                {genFromMarkerTypeClickButtons( (markerType: MarkerType) => { callback.changeFromMarkerType(markerType) } )}
               </td>
             </tr>
             <tr>
               <td className="no-wrap" >TO Marker</td>
               <td>
-                {this.genClickButton("to_marker_type_none",   "None",   () => { callback.changeToMarkerType(MarkerType.NONE) })}
-                {this.genClickButton("to_marker_type_arrow",  "Arrow",  () => { callback.changeToMarkerType(MarkerType.ARROW) })}
-                {this.genClickButton("to_marker_type_rect",   "Rect",   () => { callback.changeToMarkerType(MarkerType.RECT) })}
+                {genToMarkerTypeClickButtons( (markerType: MarkerType) => { callback.changeToMarkerType(markerType) } )}
               </td>
             </tr>
             <tr>

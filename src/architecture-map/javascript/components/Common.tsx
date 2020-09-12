@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { ReactMouseEvent } from "../TypeDef.ts";
-import { Def, ColorSet, ClipArea } from "../Def.ts";
+import { Def, ColorSet, ClipArea, MarkerType } from "../Def.ts";
 import { ColorResolver } from "../d3/resolver/ColorResolver";
 
 const BUTTON_SIZE_PIX = 24;
@@ -340,6 +340,90 @@ export function genZOrderClickButtons(frontCallback: () => void, backCallback: (
       //        id,              ColorSet,
       new Param("z_order_front", frontCallback),
       new Param("z_order_back",  backCallback),
+  ];
+
+  const buttons: React.ReactElement[] = [];
+
+  params.forEach( (param: Param) => {
+    buttons.push( genClickButton(param) );
+  } );
+
+  return buttons;
+}
+
+export function genFromMarkerTypeClickButtons(callback: (markerType: MarkerType) => void): React.ReactElement[] {
+  return genMarkerTypeClickButtons("front", callback);
+}
+
+export function genToMarkerTypeClickButtons(callback: (markerType: MarkerType) => void): React.ReactElement[] {
+  return genMarkerTypeClickButtons("to", callback);
+}
+
+function genMarkerTypeClickButtons(idPrefix: string, callback: (markerType: MarkerType) => void): React.ReactElement[] {
+  class Param {
+    readonly id: string;
+    readonly markerType: MarkerType;
+
+    constructor(id: string, markerType: MarkerType) {
+      this.id = id;
+      this.markerType = markerType;
+    }
+  }
+
+  let buttonKey: number = 0;
+  function genClickButton(param: Param): React.ReactElement {
+    const SIZE = BUTTON_SIZE_PIX;
+    const CENTER = SIZE / 2;
+    const QUART = SIZE / 4;
+
+    let points: string = "";
+    switch(param.markerType) {
+      case MarkerType.NONE:
+        // fall-through.
+      default:
+        points = `${QUART},${CENTER} ${SIZE},${CENTER}`;
+        break;
+
+      case MarkerType.ARROW:
+        points = `${QUART},${CENTER} ${SIZE - QUART},${QUART} ${SIZE - QUART},${CENTER} ${SIZE},${CENTER} ${SIZE - QUART},${CENTER} ${SIZE - QUART},${SIZE - QUART} ${QUART},${CENTER}`
+        break;
+
+      case MarkerType.RECT:
+        points = `${QUART},${QUART} ${SIZE - QUART},${QUART} ${SIZE - QUART},${CENTER} ${SIZE},${CENTER} ${SIZE - QUART},${CENTER} ${SIZE - QUART},${SIZE - QUART} ${QUART},${SIZE - QUART} ${QUART},${QUART}`;
+        break;
+    }
+
+    return (
+      <div
+          key={buttonKey++}
+          id={param.id}
+          className={"marker-type-selector"}
+          onClick={ (e: ReactMouseEvent) => {
+            callback(param.markerType);
+            e.stopPropagation();
+          } }
+      >
+        <svg
+            width="100%"
+            height="100%"
+            overflow="visible"
+        >
+          <polygon
+              strokeWidth={2}
+              stroke={"darkgray"}
+              fill={"darkgray"}
+              points={points}
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  const params: Param[] = [
+      //        id,                              marker type,
+      new Param(`${idPrefix}_marker_type_none`,  MarkerType.NONE),
+      new Param(`${idPrefix}_marker_type_arrow`, MarkerType.ARROW),
+      new Param(`${idPrefix}_marker_type_rect`,  MarkerType.RECT),
   ];
 
   const buttons: React.ReactElement[] = [];

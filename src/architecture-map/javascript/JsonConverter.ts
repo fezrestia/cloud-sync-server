@@ -1,8 +1,7 @@
 import { TraceLog } from "./util/TraceLog";
-import { Def } from "./Def";
+import { Def, MarkerType } from "./Def";
 import { Connector } from "./d3/Connector";
 import { ConnectorJson } from "./d3/Connector";
-import { MarkerType } from "./d3/Marker";
 import { Line } from "./d3/Line";
 import { LineJson } from "./d3/Line";
 import { ElementJson } from "./d3/Element";
