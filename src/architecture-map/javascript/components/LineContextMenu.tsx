@@ -3,12 +3,12 @@ import * as React from "react";
 import { TraceLog } from "../util/TraceLog.ts";
 import { ReactMouseEvent } from "../TypeDef.ts";
 import { Def, MarkerType } from "../Def.ts";
-import { ColorSet } from "../Def.ts";
-import { LineStyle } from "../d3/Line";
+import { ColorSet, LineStyle } from "../Def.ts";
 import { genColorSetClickButtons,
          genZOrderClickButtons,
          genFromMarkerTypeClickButtons,
-         genToMarkerTypeClickButtons } from "./Common";
+         genToMarkerTypeClickButtons,
+         genLineStyleClickButtons } from "./Common";
 
 interface Props {
   callback: LineContextMenuCallback,
@@ -96,9 +96,7 @@ export class LineContextMenu extends React.Component<Props, State> {
             <tr>
               <td className="no-wrap" >Line Style</td>
               <td>
-                {this.genClickButton("line_style_normal", "Normal", () => { callback.changeLineStyle(LineStyle.NORMAL) })}
-                {this.genClickButton("line_style_broken", "Broken", () => { callback.changeLineStyle(LineStyle.BROKEN) })}
-                {this.genClickButton("line_style_dotted", "Dotted", () => { callback.changeLineStyle(LineStyle.DOTTED) })}
+                {genLineStyleClickButtons( (lineStyle: LineStyle) => { callback.changeLineStyle(lineStyle) } )}
               </td>
             </tr>
             <tr>

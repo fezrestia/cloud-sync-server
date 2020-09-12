@@ -127,3 +127,30 @@ export namespace MarkerType {
   }
 }
 
+/**
+ * Line style.
+ */
+export enum LineStyle {
+  NORMAL = "normal",
+  BROKEN = "broken",
+  DOTTED = "dotted",
+}
+export namespace LineStyle {
+  export function valueOf(value: string): LineStyle {
+    return value as LineStyle;
+  }
+
+  export function getStrokeDashArray(lineStyle: LineStyle, strokeWidth: number): string {
+    switch(lineStyle) {
+      case LineStyle.NORMAL:
+        return "";
+      case LineStyle.BROKEN:
+        return `${strokeWidth * 4} ${strokeWidth * 4}`;
+      case LineStyle.DOTTED:
+        return `${strokeWidth} ${strokeWidth}`;
+      default:
+        return "";
+    }
+  }
+}
+

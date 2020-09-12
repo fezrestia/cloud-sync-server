@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { ReactMouseEvent } from "../TypeDef.ts";
-import { Def, ColorSet, ClipArea, MarkerType } from "../Def.ts";
+import { Def, ColorSet, ClipArea, MarkerType, LineStyle } from "../Def.ts";
 import { ColorResolver } from "../d3/resolver/ColorResolver";
 
 const BUTTON_SIZE_PIX = 24;
@@ -424,6 +424,64 @@ function genMarkerTypeClickButtons(idPrefix: string, callback: (markerType: Mark
       new Param(`${idPrefix}_marker_type_none`,  MarkerType.NONE),
       new Param(`${idPrefix}_marker_type_arrow`, MarkerType.ARROW),
       new Param(`${idPrefix}_marker_type_rect`,  MarkerType.RECT),
+  ];
+
+  const buttons: React.ReactElement[] = [];
+
+  params.forEach( (param: Param) => {
+    buttons.push( genClickButton(param) );
+  } );
+
+  return buttons;
+}
+
+export function genLineStyleClickButtons(callback: (lineStyle: LineStyle) => void): React.ReactElement[] {
+  class Param {
+    readonly id: string;
+    readonly lineStyle: LineStyle;
+
+    constructor(id: string, lineStyle: LineStyle) {
+      this.id = id;
+      this.lineStyle = lineStyle;
+    }
+  }
+
+  let buttonKey: number = 0;
+  function genClickButton(param: Param): React.ReactElement {
+    const SIZE = BUTTON_SIZE_PIX;
+    const CENTER = SIZE / 2;
+
+    return (
+      <div
+          key={buttonKey++}
+          id={param.id}
+          className={"line-style-selector"}
+          onClick={ (e: ReactMouseEvent) => {
+            callback(param.lineStyle);
+            e.stopPropagation();
+          } }
+      >
+        <svg
+            width="100%"
+            height="100%"
+            overflow="visible"
+        >
+          <path
+              d={`M0,${CENTER}L${SIZE},${CENTER}`}
+              strokeWidth={2}
+              stroke={"darkgray"}
+              strokeDasharray={LineStyle.getStrokeDashArray(param.lineStyle, 2)}
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  const params: Param[] = [
+      //        id,                  line style,
+      new Param("line_style_normal", LineStyle.NORMAL),
+      new Param("line_style_broken", LineStyle.BROKEN),
+      new Param("line_style_dotted", LineStyle.DOTTED),
   ];
 
   const buttons: React.ReactElement[] = [];

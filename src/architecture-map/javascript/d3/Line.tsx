@@ -8,39 +8,12 @@ import { Point } from "./Util.ts";
 import { TraceLog } from "../util/TraceLog.ts";
 import { LineContextMenu } from "../components/LineContextMenu.tsx";
 import { LineContextMenuCallback } from "../components/LineContextMenu.tsx";
-import { Def, ColorSet, MarkerType } from "../Def.ts";
+import { Def, ColorSet, MarkerType, LineStyle } from "../Def.ts";
 import { D3Node } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
 import { Marker } from "./Marker";
-
-/**
- * Line style.
- */
-export enum LineStyle {
-  NORMAL = "normal",
-  BROKEN = "broken",
-  DOTTED = "dotted",
-}
-export namespace LineStyle {
-  export function valueOf(value: string): LineStyle {
-    return value as LineStyle;
-  }
-
-  export function getStrokeDashArray(lineStyle: LineStyle, strokeWidth: number): string {
-    switch(lineStyle) {
-      case LineStyle.NORMAL:
-        return "";
-      case LineStyle.BROKEN:
-        return `${strokeWidth * 4} ${strokeWidth * 4}`;
-      case LineStyle.DOTTED:
-        return `${strokeWidth} ${strokeWidth}`;
-      default:
-        return "";
-    }
-  }
-}
 
 /**
  * Callback interface for Line.
