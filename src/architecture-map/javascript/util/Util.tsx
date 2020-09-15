@@ -47,4 +47,14 @@ export class Util {
     return Array.from(uniqElements);
   }
 
+  public static escapeHtml(html: string): string {
+    html = html.replace(/&/gi, "&amp;");
+    html = html.replace(/>/gi, "&gt;");
+    html = html.replace(/</gi, "&lt;");
+    html = html.replace(/"/gi, "&quot;");
+    html = html.replace(/'/gi, "&#x27;");
+    html = html.replace(/`/gi, "&#x60;");
+    return html;
+  }
+
 }

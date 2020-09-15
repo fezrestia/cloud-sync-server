@@ -67,7 +67,7 @@ const HTML = `
 
       <script type="text/javascript" >
         ${JAVASCRIPT}
-      </script>
+      ${"<"}${"/script>"}
 
     </body>
   </html>

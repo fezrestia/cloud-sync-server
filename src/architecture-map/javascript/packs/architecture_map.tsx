@@ -28,6 +28,7 @@ import { Util } from "../util/Util";
 import { Downloader } from "../util/Downloader";
 import { convertJsonToLatest } from "../JsonConverter";
 import { openModuleHierarchyViewWindow } from "../itx/open_module_hierarchy_view";
+import { downloadStaticHtml } from "../itx/download_static_html";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
@@ -1464,6 +1465,11 @@ function registerGlobalCallbacks() {
 // Open module hierarchy viewer on new popup window.
 (window as any).onModuleHierarchyViewClicked = (event: MouseEvent, clicked: HTMLInputElement) => {
   openModuleHierarchyViewWindow(CONTEXT, event.screenX, event.screenY);
+};
+
+// Download static HTML.
+(window as any).downloadStaticHtml = (clicked: HTMLInputElement) => {
+  downloadStaticHtml(clicked);
 };
 
 function prepareAddNewArchModMode() {

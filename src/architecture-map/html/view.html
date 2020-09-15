@@ -10,9 +10,21 @@
     <!-- for compatibility -->
     <span id="global_mode_label" style="display: none;" ></span>
 
-    <strong>Save as Image</strong>
-    <button class="fixed-button" onClick="onSaveSvgClicked();" >SVG</button>
-    <button class="fixed-button" onClick="onSavePngClicked();" >PNG</button>
+    <table><tbody>
+      <tr>
+        <td nowrap class="no-border" >
+          <strong>Save as Image</strong>
+          <br>
+          <button class="fixed-button" onClick="onSaveSvgClicked();" >SVG</button>
+          <button class="fixed-button" onClick="onSavePngClicked();" >PNG</button>
+        </td>
+        <td nowrap class="no-border" >
+          <strong>Download static HTML for Off-Line</strong>
+          <br>
+          <button class="fixed-button" onClick="downloadStaticHtml(this);" >Download ALL</button>
+        </td>
+      </tr>
+    </tbody></table>
 
     <!-- for compatibility -->
     <div id="god_mode_ui" style="display: none;" ></div>

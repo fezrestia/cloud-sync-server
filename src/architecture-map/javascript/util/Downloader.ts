@@ -5,6 +5,18 @@ export class Downloader {
   public static readonly TAG = "Downloader";
 
   /**
+   * Download text contents.
+   *
+   * @param text
+   * @param defaultFileName
+   */
+  public static downloadText(text: string, defaultFileName: string): void {
+    const blob = new Blob([ text ], { "type": "text/html" });
+
+    Downloader.doDownloadBlob(blob, defaultFileName);
+  }
+
+  /**
    * Download string content as CSV.
    *
    * @param csv CSV string.
