@@ -18,7 +18,7 @@ export async function downloadStaticHtml(clicked: HTMLInputElement) {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, contents);
 
   // Parse javascript link tag.
-  const jsPattern: RegExp = /<script\s+src="(.+\.js)"\s*(><\/script>|\/>)/i;
+  const jsPattern: RegExp = /<script\s+?src="(.+?\.js)"\s*?(><\/script>|\/>)/i;
   const jsResults: string[]|null = contents.match(jsPattern);
   if (jsResults !== null) {
     const jsLine: string = jsResults[0];
@@ -79,7 +79,7 @@ export async function downloadStaticHtml(clicked: HTMLInputElement) {
   }
 
   // Parse css link tag.
-  const cssPattern: RegExp = /<link\s.*href="(.+\.css)(|\?.+)".*(>|><\/link>|\/>)/i;
+  const cssPattern: RegExp = /<link\s.*?href="(.+?\.css)(|\?.+?)".*?(>|><\/link>|\/>)/i;
   const cssResults: string[]|null = contents.match(cssPattern);
   if (cssResults !== null) {
     const cssLine: string = cssResults[0];
