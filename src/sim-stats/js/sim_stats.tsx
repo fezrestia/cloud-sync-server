@@ -1,7 +1,7 @@
 import * as $ from "jquery";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as firebase from "firebase/app";
+import firebase from "firebase";
 import "firebase/auth";
 import "firebase/functions";
 

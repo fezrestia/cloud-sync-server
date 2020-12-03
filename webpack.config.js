@@ -93,7 +93,7 @@ module.exports = (env, argv) => {
         verbose: true,
       } ),
       new MiniCssExtractPlugin( {
-        moduleFilename: ( { name } ) => {
+        filename: ( { name } ) => {
           if (name == "entry") {
             return "[name].css";
           } else {

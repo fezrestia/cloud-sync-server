@@ -565,27 +565,27 @@ export class Connector extends Element {
   }
 
   private registerCallbacks() {
-    this.path.on("click", () => {
+    this.path.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "on:click");
 
-        if (d3.event.ctrlKey) {
-          this.currentState.onLeftClicked(d3.event.x, d3.event.y, true);
+        if (event.ctrlKey) {
+          this.currentState.onLeftClicked(event.x, event.y, true);
         } else {
-          this.currentState.onLeftClicked(d3.event.x, d3.event.y, false);
+          this.currentState.onLeftClicked(event.x, event.y, false);
         }
 
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
+        event.stopPropagation();
+        event.preventDefault();
     });
 
-    this.path.on("contextmenu", () => {
+    this.path.on("contextmenu", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "on:contextmenu");
 
         // NOTICE: Click offset X-Y is based on viewport of polygon. (same as svg)
-        this.currentState.onRightClicked(d3.event.offsetX, d3.event.offsetY);
+        this.currentState.onRightClicked(event.offsetX, event.offsetY);
 
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
+        event.stopPropagation();
+        event.preventDefault();
     });
 
   }
@@ -617,33 +617,33 @@ export class Connector extends Element {
     const grip = this.editor.append("rect")
         .attr("id", id);
 
-    grip.on("click", () => {
+    grip.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
-        d3.event.stopPropagation();
+        event.stopPropagation();
     });
 
 //    grip.call(
 //      d3.drag<SVGRectElement, any, any>()
-//          .on("start", () => {
+//          .on("start", (event: MouseEvent) => {
 //              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:start");
 //
-//              d3.event.target.origFromPoint = this.fromPoint;
-//              d3.event.target.origToPoint = this.toPoint;
-//              d3.event.target.startX = d3.event.x;
-//              d3.event.target.startY = d3.event.y;
+//              event.target.origFromPoint = this.fromPoint;
+//              event.target.origToPoint = this.toPoint;
+//              event.target.startX = event.x;
+//              event.target.startY = event.y;
 //
 //          } )
-//          .on("drag", () => {
+//          .on("drag", (event: MouseEvent) => {
 //              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 //
-//              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
-//              let isRadialSnapEnabled = d3.event.sourceEvent.shiftKey;
+//              let isSnapDragEnabled = event.altKey;
+//              let isRadialSnapEnabled = event.shiftKey;
 //
-//              let origFromPoint = d3.event.target.origFromPoint;
-//              let origToPoint = d3.event.target.origToPoint;
+//              let origFromPoint = event.target.origFromPoint;
+//              let origToPoint = event.target.origToPoint;
 //
-//              let dx = d3.event.x - d3.event.target.startX;
-//              let dy = d3.event.y - d3.event.target.startY;
+//              let dx = event.x - event.target.startX;
+//              let dy = event.y - event.target.startY;
 //
 //              // cX/cY = Center Point
 //              // pX/pY = Snap Point
@@ -713,13 +713,13 @@ export class Connector extends Element {
 //              this.relayout();
 //
 //          } )
-//          .on("end", () => {
+//          .on("end", (event: MouseEvent) => {
 //              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:end");
 //
-//              d3.event.target.origFromPoint = new Point(0, 0);
-//              d3.event.target.origToPoint = new Point(0, 0);
-//              d3.event.target.startX = 0;
-//              d3.event.target.startY = 0;
+//              event.target.origFromPoint = new Point(0, 0);
+//              event.target.origToPoint = new Point(0, 0);
+//              event.target.startX = 0;
+//              event.target.startY = 0;
 //
 //              if (this.callback != null) this.callback.onHistoricalChanged(this);
 //          } )

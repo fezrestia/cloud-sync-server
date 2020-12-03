@@ -475,52 +475,55 @@ export class Line extends Element {
   }
 
   private registerCallbacks() {
-    this.path.on("click", () => {
+    this.path.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:click");
 
-        if (d3.event.ctrlKey) {
-          this.currentState.onLeftClicked(d3.event.x, d3.event.y, true);
+        if (event.ctrlKey) {
+          this.currentState.onLeftClicked(event.x, event.y, true);
         } else {
-          this.currentState.onLeftClicked(d3.event.x, d3.event.y, false);
+          this.currentState.onLeftClicked(event.x, event.y, false);
         }
 
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
+        event.stopPropagation();
+        event.preventDefault();
     });
 
-    this.path.on("contextmenu", () => {
+    this.path.on("contextmenu", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:contextmenu");
 
         // NOTICE: Click offset X-Y is based on viewport of polygon. (same as svg)
-        this.currentState.onRightClicked(d3.event.offsetX, d3.event.offsetY);
+        this.currentState.onRightClicked(event.offsetX, event.offsetY);
 
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
+        event.stopPropagation();
+        event.preventDefault();
     });
 
     this.root.call(
       d3.drag<SVGGElement, any, any>()
-          .on("start", () => {
+          .on("start", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:start");
               if (this.currentState.isMovable()) {
-                d3.event.target.origFromPoint = this.fromPoint;
-                d3.event.target.origToPoint = this.toPoint;
-                d3.event.target.startX = d3.event.x;
-                d3.event.target.startY = d3.event.y;
+                const target = event.target as any;
+
+                target.origFromPoint = this.fromPoint;
+                target.origToPoint = this.toPoint;
+                target.startX = event.x;
+                target.startY = event.y;
 
                 if (this.callback != null) this.callback.onDragStart(this);
               }
           } )
-          .on("drag", () => {
+          .on("drag", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:drag");
               if (this.currentState.isMovable()) {
-                const isSnapDragEnabled = d3.event.sourceEvent.altKey;
+                const isSnapDragEnabled = event.altKey;
+                const target = event.target as any;
 
-                const origFromPoint = d3.event.target.origFromPoint;
-                const origToPoint = d3.event.target.origToPoint;
+                const origFromPoint = target.origFromPoint;
+                const origToPoint = target.origToPoint;
 
-                const dx = d3.event.x - d3.event.target.startX;
-                const dy = d3.event.y - d3.event.target.startY;
+                const dx = event.x - target.startX;
+                const dy = event.y - target.startY;
 
                 const oldFromPoint = this.fromPoint; // to calc diff of this step.
 
@@ -545,13 +548,15 @@ export class Line extends Element {
                 if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
               }
           } )
-          .on("end", () => {
+          .on("end", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:end");
               if (this.currentState.isMovable()) {
-                d3.event.target.origFromPoint = new Point(0, 0);
-                d3.event.target.origToPoint = new Point(0, 0);
-                d3.event.target.startX = 0;
-                d3.event.target.startY = 0;
+                const target = event.target as any;
+
+                target.origFromPoint = new Point(0, 0);
+                target.origToPoint = new Point(0, 0);
+                target.startX = 0;
+                target.startY = 0;
 
                 if (this.callback != null) this.callback.onDragEnd(this);
 
@@ -585,33 +590,36 @@ export class Line extends Element {
         .attr("fill", this.colorResolver.bgHighlight)
         .attr("r", Line.EDIT_GRIP_RADIUS_PIX);
 
-    circle.on("click", () => {
+    circle.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
-        d3.event.stopPropagation();
+        event.stopPropagation();
     });
 
     circle.call(
       d3.drag<SVGCircleElement, any, any>()
-          .on("start", () => {
+          .on("start", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:start");
 
-              d3.event.target.origFromPoint = this.fromPoint;
-              d3.event.target.origToPoint = this.toPoint;
-              d3.event.target.startX = d3.event.x;
-              d3.event.target.startY = d3.event.y;
+              const target = event.target as any;
+
+              target.origFromPoint = this.fromPoint;
+              target.origToPoint = this.toPoint;
+              target.startX = event.x;
+              target.startY = event.y;
 
           } )
-          .on("drag", () => {
+          .on("drag", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              const isSnapDragEnabled = d3.event.sourceEvent.altKey;
-              const isRadialSnapEnabled = d3.event.sourceEvent.shiftKey;
+              const isSnapDragEnabled = event.altKey;
+              const isRadialSnapEnabled = event.shiftKey;
+              const target = event.target as any;
 
-              const origFromPoint = d3.event.target.origFromPoint;
-              const origToPoint = d3.event.target.origToPoint;
+              const origFromPoint = target.origFromPoint;
+              const origToPoint = target.origToPoint;
 
-              const dx = d3.event.x - d3.event.target.startX;
-              const dy = d3.event.y - d3.event.target.startY;
+              const dx = event.x - target.startX;
+              const dy = event.y - target.startY;
 
               // cX/cY = Center Point
               // pX/pY = Snap Point
@@ -681,13 +689,15 @@ export class Line extends Element {
               this.relayout();
 
           } )
-          .on("end", () => {
+          .on("end", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:end");
 
-              d3.event.target.origFromPoint = new Point(0, 0);
-              d3.event.target.origToPoint = new Point(0, 0);
-              d3.event.target.startX = 0;
-              d3.event.target.startY = 0;
+              const target = event.target as any;
+
+              target.origFromPoint = new Point(0, 0);
+              target.origToPoint = new Point(0, 0);
+              target.startX = 0;
+              target.startY = 0;
 
               if (this.callback != null) this.callback.onHistoricalChanged(this);
           } )

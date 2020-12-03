@@ -1231,8 +1231,8 @@ function prepareBrushLayer() {
 
   const brush: d3.BrushBehavior<any> = d3.brush()
       .extent([[x, y], [x + width, y + height]])
-      .filter( () => {
-        return !d3.event.button;
+      .filter( (event: MouseEvent) => {
+        return !event.button;
       } )
       .on("start", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:start");
@@ -1241,27 +1241,30 @@ function prepareBrushLayer() {
 
         brushLayer.raise();
       } )
-      .on("brush", () => {
+      .on("brush", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:brush");
 
-        if (d3.event.selection != null) {
-          const brushArea: number[][] = d3.event.selection;
+        const brushArea: number[][]|null = (event as any).selection;
+
+        if (brushArea != null) {
           if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `brushArea = ${brushArea}`);
 
           CONTEXT.updateBrushSelected(brushArea);
         }
       } )
-      .on("end", () => {
+      .on("end", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "brush:end");
 
-        d3.event.target.on("start", null);
-        d3.event.target.on("brush", null);
-        d3.event.target.on("end", null);
+        const target = event.target as any;
+
+        target.on("start", null);
+        target.on("brush", null);
+        target.on("end", null);
 
         // Immediately cancel selection.
         // After cleared, brush callback is called again with null selection.
         // So, unregister callbacks above here to avoid infinite loop.
-        brushLayer.call(d3.event.target.clear);
+        brushLayer.call(target.clear);
 
         // After unregister callbacks, brush behavior is back to default.
         // So, release brush layer here before ctrl key is released.
@@ -1388,18 +1391,18 @@ function registerGlobalCallbacks() {
     }
   };
 
-  CONTEXT.svg.on("click", () => {
+  CONTEXT.svg.on("click", (event: MouseEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
     CONTEXT.resetAllState();
-    d3.event.stopPropagation();
-    d3.event.preventDefault();
+    event.stopPropagation();
+    event.preventDefault();
   } );
 
-  CONTEXT.svg.on("contextmenu", () => {
+  CONTEXT.svg.on("contextmenu", (event: MouseEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:contextmenu");
     // NOP.
-    d3.event.stopPropagation();
-    d3.event.preventDefault();
+    event.stopPropagation();
+    event.preventDefault();
   } );
 
   CONTEXT.html.on("contextmenu", (event: JQuery.Event) => {

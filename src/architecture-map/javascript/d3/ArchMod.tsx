@@ -625,59 +625,62 @@ export class ArchMod extends Element {
   }
 
   private registerCallbacks() {
-    this.polygon.on("click", () => {
+    this.polygon.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:click");
 
-        if (d3.event.ctrlKey) {
-          this.currentState.onLeftClicked(d3.event.x, d3.event.y, true);
+        if (event.ctrlKey) {
+          this.currentState.onLeftClicked(event.x, event.y, true);
         } else {
-          this.currentState.onLeftClicked(d3.event.x, d3.event.y, false);
+          this.currentState.onLeftClicked(event.x, event.y, false);
         }
 
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
+        event.stopPropagation();
+        event.preventDefault();
     });
 
-    this.polygon.on("contextmenu", () => {
+    this.polygon.on("contextmenu", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:contextmenu");
 
         // NOTICE: Click offset X-Y is based on viewport of polygon. (same as svg)
-        this.currentState.onRightClicked(d3.event.offsetX, d3.event.offsetY);
+        this.currentState.onRightClicked(event.offsetX, event.offsetY);
 
-        d3.event.stopPropagation();
-        d3.event.preventDefault();
+        event.stopPropagation();
+        event.preventDefault();
     });
 
     this.root.call(
       d3.drag<SVGGElement, any, any>()
-          .on("start", () => {
+          .on("start", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:start");
               if (this.currentState.isMovable()) {
-                d3.event.target.origX = this.x;
-                d3.event.target.origY = this.y;
-                d3.event.target.origPinX = this.pinX;
-                d3.event.target.origPinY = this.pinY;
-                d3.event.target.startX = d3.event.x;
-                d3.event.target.startY = d3.event.y;
+                const target = event.target as any;
+
+                target.origX = this.x;
+                target.origY = this.y;
+                target.origPinX = this.pinX;
+                target.origPinY = this.pinY;
+                target.startX = event.x;
+                target.startY = event.y;
 
                 if (this.callback != null) this.callback.onDragStart(this);
               }
           } )
-          .on("drag", () => {
+          .on("drag", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:drag");
               if (this.currentState.isMovable()) {
-                const isSnapDragEnabled = d3.event.sourceEvent.altKey;
+                const isSnapDragEnabled = event.altKey;
+                const target = event.target as any;
 
-                const dx = d3.event.x - d3.event.target.startX;
-                const dy = d3.event.y - d3.event.target.startY;
+                const dx = event.x - target.startX;
+                const dy = event.y - target.startY;
 
                 const oldX = this.x;
                 const oldY = this.y;
 
-                this.x = d3.event.target.origX + dx;
-                this.y = d3.event.target.origY + dy;
-                this.pinX = d3.event.target.origPinX + dx;
-                this.pinY = d3.event.target.origPinY + dy;
+                this.x = target.origX + dx;
+                this.y = target.origY + dy;
+                this.pinX = target.origPinX + dx;
+                this.pinY = target.origPinY + dy;
 
                 // Position snapping.
                 if (isSnapDragEnabled) {
@@ -697,15 +700,17 @@ export class ArchMod extends Element {
                 if (this.callback != null) this.callback.onDrag(this, plusX, plusY);
               }
           } )
-          .on("end", () => {
+          .on("end", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "on:drag:end");
               if (this.currentState.isMovable()) {
-                d3.event.target.origX = 0;
-                d3.event.target.origY = 0;
-                d3.event.target.origPinX = 0;
-                d3.event.target.origPinY = 0;
-                d3.event.target.startX = 0;
-                d3.event.target.startY = 0;
+                const target = event.target as any;
+
+                target.origX = 0;
+                target.origY = 0;
+                target.origPinX = 0;
+                target.origPinY = 0;
+                target.startX = 0;
+                target.startY = 0;
 
                 if (this.callback != null) this.callback.onDragEnd(this);
 
@@ -745,41 +750,44 @@ export class ArchMod extends Element {
         .attr("fill", this.colorResolver.stroke)
         .attr("r", this.EDIT_GRIP_RADIUS_PIX);
 
-    circle.on("click", () => {
+    circle.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
-        d3.event.stopPropagation();
+        event.stopPropagation();
     });
 
     circle.call(
       d3.drag<SVGCircleElement, any, any>()
-          .on("start", () => {
+          .on("start", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:start");
 
-              d3.event.target.origX = this.x;
-              d3.event.target.origY = this.y;
-              d3.event.target.origWidth = this.width;
-              d3.event.target.origHeight = this.height;
-              d3.event.target.origPinX = this.pinX;
-              d3.event.target.origPinY = this.pinY;
+              const target = event.target as any;
 
-              d3.event.target.startX = d3.event.x;
-              d3.event.target.startY = d3.event.y;
+              target.origX = this.x;
+              target.origY = this.y;
+              target.origWidth = this.width;
+              target.origHeight = this.height;
+              target.origPinX = this.pinX;
+              target.origPinY = this.pinY;
+
+              target.startX = event.x;
+              target.startY = event.y;
 
           } )
-          .on("drag", () => {
+          .on("drag", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              const isSnapDragEnabled = d3.event.sourceEvent.altKey;
+              const isSnapDragEnabled = event.altKey;
+              const target = event.target as any;
 
-              const origX = d3.event.target.origX;
-              const origY = d3.event.target.origY;
-              const origWidth = d3.event.target.origWidth;
-              const origHeight = d3.event.target.origHeight;
-              const origPinX = d3.event.target.origPinX;
-              const origPinY = d3.event.target.origPinY;
+              const origX = target.origX;
+              const origY = target.origY;
+              const origWidth = target.origWidth;
+              const origHeight = target.origHeight;
+              const origPinX = target.origPinX;
+              const origPinY = target.origPinY;
 
-              let dx = d3.event.x - d3.event.target.startX;
-              let dy = d3.event.y - d3.event.target.startY;
+              let dx = event.x - target.startX;
+              let dy = event.y - target.startY;
 
               switch (id) {
                 case this.GRIP_ID_LEFT_TOP: {
@@ -917,18 +925,20 @@ export class ArchMod extends Element {
               if (this.callback != null) this.callback.onSizeChanged(this);
 
           } )
-          .on("end", () => {
+          .on("end", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:end");
 
-              d3.event.target.origX = 0;
-              d3.event.target.origY = 0;
-              d3.event.target.origWidth = 0;
-              d3.event.target.origHeight = 0;
-              d3.event.target.origPinX = 0;
-              d3.event.target.origPinY = 0;
+              const target = event.target as any;
 
-              d3.event.target.startX = 0;
-              d3.event.target.startY = 0;
+              target.origX = 0;
+              target.origY = 0;
+              target.origWidth = 0;
+              target.origHeight = 0;
+              target.origPinX = 0;
+              target.origPinY = 0;
+
+              target.startX = 0;
+              target.startY = 0;
 
               if (this.callback != null) this.callback.onSizeChangeDone(this);
               if (this.callback != null) this.callback.onHistoricalChanged(this);

@@ -245,14 +245,14 @@ export class OutFrame extends Element {
         }
     });
 
-    this.path.on("click", () => {
+    this.path.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:click");
 
         if (this.itxMode == ElementItxMode.EDITABLE) {
           this.isEditing = !this.isEditing;
         }
 
-        d3.event.stopPropagation();
+        event.stopPropagation();
     });
   }
 
@@ -276,34 +276,37 @@ export class OutFrame extends Element {
         .attr("id", id)
         .attr("r", this.EDIT_GRIP_RADIUS_PIX);
 
-    circle.on("click", () => {
+    circle.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:click");
-        d3.event.stopPropagation();
+        event.stopPropagation();
     });
 
     circle.call(
       d3.drag<SVGCircleElement, any, any>()
-          .on("start", () => {
+          .on("start", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:start");
 
-              d3.event.target.origWidth = this.width;
-              d3.event.target.origHeight = this.height;
+              const target = event.target as any;
 
-              d3.event.target.startX = d3.event.x;
-              d3.event.target.startY = d3.event.y;
+              target.origWidth = this.width;
+              target.origHeight = this.height;
+
+              target.startX = event.x;
+              target.startY = event.y;
 
               if (this.callback != null) this.callback.onSizeChangeStart();
           } )
-          .on("drag", () => {
+          .on("drag", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              let isSnapDragEnabled = d3.event.sourceEvent.altKey;
+              let isSnapDragEnabled = event.altKey;
+              const target = event.target as any;
 
-              let origWidth = d3.event.target.origWidth;
-              let origHeight = d3.event.target.origHeight;
+              let origWidth = target.origWidth;
+              let origHeight = target.origHeight;
 
-              let dx = d3.event.x - d3.event.target.startX;
-              let dy = d3.event.y - d3.event.target.startY;
+              let dx = event.x - target.startX;
+              let dy = event.y - target.startY;
 
               switch (id) {
                 case this.GRIP_ID_RIGHT_BOTTOM: {
@@ -327,14 +330,16 @@ export class OutFrame extends Element {
 
               this.relayout();
           } )
-          .on("end", () => {
+          .on("end", (event: MouseEvent) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:end");
 
-              d3.event.target.origWidth = 0;
-              d3.event.target.origHeight = 0;
+              const target = event.target as any;
 
-              d3.event.target.startX = 0;
-              d3.event.target.startY = 0;
+              target.origWidth = 0;
+              target.origHeight = 0;
+
+              target.startX = 0;
+              target.startY = 0;
 
               if (this.callback != null) this.callback.onSizeChangeEnd();
           } )

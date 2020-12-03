@@ -1,7 +1,7 @@
 import "../css/auth.scss";
 import * as $ from "jquery";
 
-import * as firebase from "firebase/app";
+import firebase from "firebase";
 import "firebase/auth";
 import "firebase/functions";
 
