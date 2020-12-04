@@ -18,7 +18,7 @@ import { ElementJson } from "./Element";
 export interface OutFrameCallback {
   onSizeChangeStart(): void;
   onSizeChange(width: number, height: number): void;
-  onSizeChangeEnd(): void;
+  onSizeChangeEnd(width: number, height: number): void;
 
 }
 
@@ -341,7 +341,7 @@ export class OutFrame extends Element {
               target.startX = 0;
               target.startY = 0;
 
-              if (this.callback != null) this.callback.onSizeChangeEnd();
+              if (this.callback != null) this.callback.onSizeChangeEnd(this.width, this.height);
           } )
     );
 

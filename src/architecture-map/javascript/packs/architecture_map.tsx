@@ -38,6 +38,7 @@ const HTML_ROOT_ID = "html_root";
 const DEFAULT_SIZE = 120;
 const DEFAULT_TOTAL_WIDTH = 640;
 const DEFAULT_TOTAL_HEIGHT = 640;
+const ROOT_DIV_RIGHT_BOTTOM_CLEARANCE = 200;
 const COPY_PASTE_SLIDE_DIFF = 30;
 const MAX_UNDO_HISTORY_SIZE = 100;
 
@@ -645,8 +646,8 @@ export class Context {
   }
 
   public changeOutFrameSize(width:number, height: number) {
-    this.root.css("width", width);
-    this.root.css("height", height);
+    this.root.css("width", width + ROOT_DIV_RIGHT_BOTTOM_CLEARANCE);
+    this.root.css("height", height + ROOT_DIV_RIGHT_BOTTOM_CLEARANCE);
   }
 
   public raise(raised: Element) {
@@ -925,11 +926,12 @@ class OutFrameCallbackImpl implements OutFrameCallback {
 
   onSizeChange(width: number, height: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChange() : width=${width}, height=${height}`);
-    CONTEXT.changeOutFrameSize(width, height);
+    // NOP.
   }
 
-  onSizeChangeEnd() {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChangeEnd()`);
+  onSizeChangeEnd(width: number, height: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChangeEnd() : width=${width}, height=${height}`);
+    CONTEXT.changeOutFrameSize(width, height);
     CONTEXT.recordHistory();
   }
 }
@@ -1235,8 +1237,8 @@ class ConnectorCallbackImpl implements ConnectorCallback {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onArchitectureMapTopLoaded()");
 
   const root: JQueryNode = $(`#${ROOT_ID}`);
-  root.css("width", DEFAULT_TOTAL_WIDTH);
-  root.css("height", DEFAULT_TOTAL_HEIGHT);
+  root.css("width", DEFAULT_TOTAL_WIDTH + ROOT_DIV_RIGHT_BOTTOM_CLEARANCE);
+  root.css("height", DEFAULT_TOTAL_HEIGHT + ROOT_DIV_RIGHT_BOTTOM_CLEARANCE);
   CONTEXT.root = root;
 
   const svg: D3Node.SVG = d3.select(`#${SVG_ROOT_ID}`);
