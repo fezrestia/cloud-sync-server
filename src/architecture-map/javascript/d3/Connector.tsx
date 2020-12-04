@@ -9,7 +9,7 @@ import { TraceLog } from "../util/TraceLog.ts";
 import { ConnectorContextMenu } from "../components/ConnectorContextMenu.tsx";
 import { ConnectorContextMenuCallback } from "../components/ConnectorContextMenu.tsx";
 import { Def, ColorSet, MarkerType, LineStyle } from "../Def.ts";
-import { D3Node } from "../TypeDef.ts";
+import { D3Node, D3Event } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
@@ -633,11 +633,11 @@ export class Connector extends Element {
 //              event.target.startY = event.y;
 //
 //          } )
-//          .on("drag", (event: MouseEvent) => {
+//          .on("drag", (event: D3Event.Drag) => {
 //              if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 //
-//              let isSnapDragEnabled = event.altKey;
-//              let isRadialSnapEnabled = event.shiftKey;
+//              let isSnapDragEnabled = event.sourceEvent.altKey;
+//              let isRadialSnapEnabled = event.sourceEvent.shiftKey;
 //
 //              let origFromPoint = event.target.origFromPoint;
 //              let origToPoint = event.target.origToPoint;

@@ -11,7 +11,7 @@ import { TextLabelContextMenu } from "../components/TextLabelContextMenu.tsx";
 import { TextLabelContextMenuCallback } from "../components/TextLabelContextMenu.tsx";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
-import { D3Node } from "../TypeDef.ts";
+import { D3Node, D3Event } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
@@ -500,10 +500,10 @@ export class TextLabel extends Element {
                 if (this.callback != null) this.callback.onDragStart(this);
               }
           } )
-          .on("drag", (event: MouseEvent) => {
+          .on("drag", (event: D3Event.Drag) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TextLabel.TAG, "on:drag:drag");
               if (this.currentState.isMovable()) {
-                const isSnapDragEnabled = event.altKey;
+                const isSnapDragEnabled = event.sourceEvent.altKey;
                 const target = event.target as any;
 
                 const dx = event.x - target.startX;
@@ -595,10 +595,10 @@ export class TextLabel extends Element {
               target.startY = event.y;
 
           } )
-          .on("drag", (event: MouseEvent) => {
+          .on("drag", (event: D3Event.Drag) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              const isSnapDragEnabled = event.altKey;
+              const isSnapDragEnabled = event.sourceEvent.altKey;
               const target = event.target as any;
 
               const origX = target.origX;

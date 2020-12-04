@@ -9,7 +9,7 @@ import { TraceLog } from "../util/TraceLog.ts";
 import { LineContextMenu } from "../components/LineContextMenu.tsx";
 import { LineContextMenuCallback } from "../components/LineContextMenu.tsx";
 import { Def, ColorSet, MarkerType, LineStyle } from "../Def.ts";
-import { D3Node } from "../TypeDef.ts";
+import { D3Node, D3Event } from "../TypeDef.ts";
 import { JQueryNode } from "../TypeDef.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
@@ -513,10 +513,10 @@ export class Line extends Element {
                 if (this.callback != null) this.callback.onDragStart(this);
               }
           } )
-          .on("drag", (event: MouseEvent) => {
+          .on("drag", (event: D3Event.Drag) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(Line.TAG, "on:drag:drag");
               if (this.currentState.isMovable()) {
-                const isSnapDragEnabled = event.altKey;
+                const isSnapDragEnabled = event.sourceEvent.altKey;
                 const target = event.target as any;
 
                 const origFromPoint = target.origFromPoint;
@@ -608,11 +608,11 @@ export class Line extends Element {
               target.startY = event.y;
 
           } )
-          .on("drag", (event: MouseEvent) => {
+          .on("drag", (event: D3Event.Drag) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              const isSnapDragEnabled = event.altKey;
-              const isRadialSnapEnabled = event.shiftKey;
+              const isSnapDragEnabled = event.sourceEvent.altKey;
+              const isRadialSnapEnabled = event.sourceEvent.shiftKey;
               const target = event.target as any;
 
               const origFromPoint = target.origFromPoint;

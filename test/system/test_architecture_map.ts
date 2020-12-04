@@ -1594,6 +1594,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 function getDownloadedFileFullPaths(): string[] {
   let fullPaths: string[] = [];
 
+  fs.mkdirSync(TestDef.DOWNLOAD_PATH, { recursive: true });
+
   let files = fs.readdirSync(TestDef.DOWNLOAD_PATH);
   files.forEach( (file: string) => {
     fullPaths.push(`${TestDef.DOWNLOAD_PATH}/${file}`);

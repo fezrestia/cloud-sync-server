@@ -19,5 +19,9 @@ export namespace D3Node {
   export type Marker = d3.Selection<SVGMarkerElement, any, HTMLElement, any>;
 }
 
+export namespace D3Event {
+  export type Drag = d3.D3DragEvent<any, any, any>;
+}
+
 export type JQueryNode = JQuery<HTMLElement>;
 

@@ -6,7 +6,7 @@ import { ColorResolver } from "./resolver/ColorResolver.ts";
 import { TraceLog } from "../util/TraceLog.ts";
 import { Def } from "../Def.ts";
 import { JQueryNode } from "../TypeDef.ts";
-import { D3Node } from "../TypeDef.ts";
+import { D3Node, D3Event } from "../TypeDef.ts";
 import { ColorSet } from "../Def.ts";
 import { Element } from "./Element";
 import { ElementItxMode } from "./Element";
@@ -296,10 +296,10 @@ export class OutFrame extends Element {
 
               if (this.callback != null) this.callback.onSizeChangeStart();
           } )
-          .on("drag", (event: MouseEvent) => {
+          .on("drag", (event: D3Event.Drag) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              let isSnapDragEnabled = event.altKey;
+              let isSnapDragEnabled = event.sourceEvent.altKey;
               const target = event.target as any;
 
               let origWidth = target.origWidth;
