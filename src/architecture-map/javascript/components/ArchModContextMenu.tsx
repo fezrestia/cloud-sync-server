@@ -32,6 +32,7 @@ export interface ArchModContextMenuCallback {
   changeLabelAlign(align: string): void;
   changeClipArea(clipArea: ClipArea): void;
   changeColorSet(colorSet: ColorSet): void;
+  changeEdgeColorSet(edgeColorSet: ColorSet): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
   canChangeLabel(newLabel: string): boolean;
@@ -181,6 +182,12 @@ export class ArchModContextMenu extends React.Component<Props, State> {
               <td className="no-wrap" >Color Set</td>
               <td className="no-wrap" >
                 {genColorSetClickButtons( (colorSet: ColorSet) => { callback.changeColorSet(colorSet) } )}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Edge Color Set</td>
+              <td className="no-wrap" >
+                {genColorSetClickButtons( (edgeColorSet: ColorSet) => { callback.changeEdgeColorSet(edgeColorSet) } )}
               </td>
             </tr>
             <tr>

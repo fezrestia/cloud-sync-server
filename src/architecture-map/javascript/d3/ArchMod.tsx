@@ -69,6 +69,7 @@ export interface ArchModJson {
   },
   [Def.KEY_CLIP_AREA]: string,
   [Def.KEY_COLOR_SET]: string,
+  [Def.KEY_EDGE_COLOR_SET]: string,
 }
 
 /**
@@ -222,6 +223,7 @@ export class ArchMod extends Element {
 
     this._label = label;
     this.colorSet = this.colorSet; // Load defaut
+    this.edgeColorSet = this.edgeColorSet; // Load default
 
     this._currentState = new ArchMod.IdleState(this);
   }
@@ -280,6 +282,7 @@ export class ArchMod extends Element {
         },
         [Def.KEY_CLIP_AREA]: this.clipArea,
         [Def.KEY_COLOR_SET]: this.colorSet,
+        [Def.KEY_EDGE_COLOR_SET]: this.edgeColorSet,
     };
     return jsonObj;
   }
@@ -310,6 +313,14 @@ export class ArchMod extends Element {
         json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
         json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN]);
     archMod.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    const edgeColorSet = json[Def.KEY_EDGE_COLOR_SET];
+    if (edgeColorSet === undefined) {
+      archMod.edgeColorSet = archMod.colorSet;
+    } else {
+      archMod.edgeColorSet = ColorSet.valueOf(edgeColorSet);
+    }
+
     archMod.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
     return archMod;
   }
@@ -352,6 +363,18 @@ export class ArchMod extends Element {
       }
 
   private colorResolver!: ColorResolver;
+
+  // Edge color resolver functions.
+  private _edgeColorSet: ColorSet = ColorSet.GRAY;
+      public get edgeColorSet(): ColorSet {
+        return this._edgeColorSet;
+      }
+      public set edgeColorSet(edgeColorSet: ColorSet) {
+        this._edgeColorSet = edgeColorSet;
+        this.edgeColorResolver = ColorSet.resolve(edgeColorSet);
+      }
+
+  private edgeColorResolver!: ColorResolver;
 
   // Callback.
   private callback: ArchModCallback|null = null;
@@ -747,7 +770,7 @@ export class ArchMod extends Element {
         .attr("id", id)
         .attr("cx", cx)
         .attr("cy", cy)
-        .attr("fill", this.colorResolver.stroke)
+        .attr("fill", this.edgeColorResolver.stroke)
         .attr("r", this.EDIT_GRIP_RADIUS_PIX);
 
     circle.on("click", (event: MouseEvent) => {
@@ -1168,7 +1191,7 @@ export class ArchMod extends Element {
   }
 
   private recolor() {
-    this.polygon.attr("stroke", this.colorResolver.stroke);
+    this.polygon.attr("stroke", this.edgeColorResolver.stroke);
     this.polygon.attr("fill", this.colorResolver.bg)
 
     this.text.attr("fill", this.colorResolver.text);
@@ -1252,6 +1275,15 @@ export class ArchMod extends Element {
 
     changeColorSet(colorSet: ColorSet) {
       this.target.colorSet = colorSet;
+
+      // Re-construction and re-color.
+      this.target.disableEditMode();
+      this.target.enableEditMode();
+      this.target.recolor();
+    }
+
+    changeEdgeColorSet(edgeColorSet: ColorSet) {
+      this.target.edgeColorSet = edgeColorSet;
 
       // Re-construction and re-color.
       this.target.disableEditMode();

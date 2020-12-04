@@ -938,9 +938,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
             [Def.KEY_PIN_Y]: DEFAULT_Y + DEFAULT_H / 2,
             [Def.KEY_LABEL_ROT_DEG]: 0,
             [Def.KEY_LABEL_ALIGN]: "middle",
-           },
-           [Def.KEY_CLIP_AREA]: "none",
-           [Def.KEY_COLOR_SET]: "gray",
+          },
+          [Def.KEY_CLIP_AREA]: "none",
+          [Def.KEY_COLOR_SET]: "gray",
+          [Def.KEY_EDGE_COLOR_SET]: "gray",
         },
         {
           [Def.KEY_UID]: 2,
@@ -956,9 +957,10 @@ describe("Test Architecture Map Web SPA Interaction", () => {
             [Def.KEY_PIN_Y]: DEFAULT_Y + DEFAULT_H / 2 + dragDiff,
             [Def.KEY_LABEL_ROT_DEG]: 0,
             [Def.KEY_LABEL_ALIGN]: "middle",
-           },
-           [Def.KEY_CLIP_AREA]: "none",
-           [Def.KEY_COLOR_SET]: "gray",
+          },
+          [Def.KEY_CLIP_AREA]: "none",
+          [Def.KEY_COLOR_SET]: "gray",
+          [Def.KEY_EDGE_COLOR_SET]: "gray",
         },
         {
           [Def.KEY_UID]: 3,
@@ -1395,10 +1397,15 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   async function changeColorTo(element: WebElement, buttonId: string) {
     let contextMenu = await openContextMenu(element);
-    let button = await contextMenu.findElement(By.id(buttonId));
-    await button.click();
-    await closeContextMenu(element);
 
+    // Change both of colorSet and edgeColorSet.
+    let buttons = await contextMenu.findElements(By.id(buttonId));
+
+    buttons.forEach( async (button) => {
+      await button.click();
+    } );
+
+    await closeContextMenu(element);
   }
 
   async function raise(element: WebElement) {

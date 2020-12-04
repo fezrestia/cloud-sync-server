@@ -8,7 +8,7 @@ export class Def {
   public static readonly RADIAL_SNAP_STEP_RAD = Math.PI * 2 / 24; // 15 deg
 
   public static readonly KEY_VERSION = "version";
-  public static readonly VAL_VERSION = "10";
+  public static readonly VAL_VERSION = "11";
 
   public static readonly KEY_ARCHITECTURE_MAP = "architecture_map";
   public static readonly KEY_OUT_FRAME = "out_frame";
@@ -28,6 +28,7 @@ export class Def {
   public static readonly KEY_LABEL_ALIGN = "label_align";
   public static readonly KEY_CLIP_AREA = "clip_area";
   public static readonly KEY_COLOR_SET = "color_set";
+  public static readonly KEY_EDGE_COLOR_SET = "edge_color_set";
 
   public static readonly KEY_FROM_X = "from_x";
   public static readonly KEY_FROM_Y = "from_y";
