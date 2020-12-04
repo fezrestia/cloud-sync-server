@@ -229,6 +229,54 @@ export class Context {
     }
   }
 
+  public tryToOpenContextMenuOfSingleSelectedElement() {
+    if (this.selectedElements.length == 1) {
+      const element: Element = this.selectedElements[0];
+
+      switch(element.TAG) {
+        case ArchMod.TAG: {
+            const archMod = element as ArchMod;
+            const size = archMod.getXYWH();
+            const clickX = size.x + size.width / 2;
+            const clickY = size.y + size.height / 2;
+            archMod.openContextMenu(clickX, clickY);
+          }
+          break;
+
+        case Line.TAG: {
+            const line = element as Line;
+            const size = line.getFromToXY();
+            const width = Math.abs(size.toX - size.fromX);
+            const height = Math.abs(size.toY - size.fromY);
+            const clickX = Math.min(size.fromX, size.toX) + width / 2;
+            const clickY = Math.min(size.fromY, size.toY) + height / 2;
+            line.openContextMenu(clickX, clickY);
+          }
+          break;
+
+        case Connector.TAG: {
+            const conn = element as Connector;
+            const size = conn.getFromToXY();
+            const width = Math.abs(size.toX - size.fromX);
+            const height = Math.abs(size.toY - size.fromY);
+            const clickX = Math.min(size.fromX, size.toX) + width / 2;
+            const clickY = Math.min(size.fromY, size.toY) + height / 2;
+            conn.openContextMenu(clickX, clickY);
+          }
+          break;
+
+        case TextLabel.TAG: {
+            const label = element as TextLabel;
+            const size = label.getXYWH();
+            const clickX = size.x + size.width / 2;
+            const clickY = size.y + size.height / 2;
+            label.openContextMenu(clickX, clickY);
+          }
+          break;
+      }
+    }
+  }
+
   /**
    * Serialize current static context to JSON object.
    * @return ArchitectureMapJson object.
@@ -1329,6 +1377,10 @@ function registerGlobalCallbacks() {
           if (event.ctrlKey) {
             (window as any).onSaveJsonClicked();
           }
+          break;
+
+        case "F2":
+          CONTEXT.tryToOpenContextMenuOfSingleSelectedElement();
           break;
 
         case "F5":

@@ -1309,7 +1309,7 @@ export class ArchMod extends Element {
 
   }
 
-  private openContextMenu(clickX: number, clickY: number) {
+  public openContextMenu(clickX: number, clickY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, "openContextMenu()");
 
     this.html.css("display", "block");

@@ -862,7 +862,7 @@ export class Connector extends Element {
 
   }
 
-  private openContextMenu(clickX: number, clickY: number) {
+  public openContextMenu(clickX: number, clickY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, "openContextMenu()");
 
     this.html.css("display", "block");
