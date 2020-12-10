@@ -23,5 +23,10 @@ export namespace D3Event {
   export type Drag = d3.D3DragEvent<any, any, any>;
 }
 
+export namespace CSS {
+  export type TextAlign = "left"|"center"|"right";
+  export type VerticalAlign = "top"|"middle"|"bottom";
+}
+
 export type JQueryNode = JQuery<HTMLElement>;
 

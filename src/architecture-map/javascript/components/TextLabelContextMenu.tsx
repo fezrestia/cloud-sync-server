@@ -7,7 +7,8 @@ import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
 import { Def } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { genColorSetClickButtons,
-         genLabelAlignClickButtons,
+         genLabelHorizontalAlignClickButtons,
+         genLabelVerticalAlignClickButtons,
          genLabelRotClickButtons,
          genZOrderClickButtons } from "./Common";
 
@@ -25,7 +26,8 @@ interface State {
 export interface TextLabelContextMenuCallback {
   close(): void;
   changeLabelRotDeg(rotDeg: number): void;
-  changeLabelAlign(align: string): void;
+  changeLabelHorizontalAlign(align: string): void;
+  changeLabelVerticalAlign(align: string): void;
   changeColorSet(colorSet: ColorSet): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
@@ -138,9 +140,15 @@ export class TextLabelContextMenu extends React.Component<Props, State> {
               </td>
             </tr>
             <tr>
-              <td className="no-wrap" >Label Align</td>
+              <td className="no-wrap" >Horizontal Label Align</td>
               <td className="no-wrap" >
-                {genLabelAlignClickButtons( (labelAlign: string) => { callback.changeLabelAlign(labelAlign) } )}
+                {genLabelHorizontalAlignClickButtons( (labelAlign: string) => { callback.changeLabelHorizontalAlign(labelAlign) } )}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Vertical Label Align</td>
+              <td className="no-wrap" >
+                {genLabelVerticalAlignClickButtons( (labelAlign: string) => { callback.changeLabelVerticalAlign(labelAlign) } )}
               </td>
             </tr>
             <tr>

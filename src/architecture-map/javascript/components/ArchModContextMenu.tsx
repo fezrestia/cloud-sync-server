@@ -9,7 +9,8 @@ import { ClipArea } from "../Def.ts";
 import { ColorSet } from "../Def.ts";
 import { genColorSetClickButtons,
          genClipAreaClickButtons,
-         genLabelAlignClickButtons,
+         genLabelHorizontalAlignClickButtons,
+         genLabelVerticalAlignClickButtons,
          genLabelRotClickButtons,
          genZOrderClickButtons } from "./Common";
 
@@ -29,7 +30,8 @@ interface State {
 export interface ArchModContextMenuCallback {
   close(): void;
   changeLabelRotDeg(rotDeg: number): void;
-  changeLabelAlign(align: string): void;
+  changeLabelHorizontalAlign(align: string): void;
+  changeLabelVerticalAlign(align: string): void;
   changeClipArea(clipArea: ClipArea): void;
   changeColorSet(colorSet: ColorSet): void;
   changeEdgeColorSet(edgeColorSet: ColorSet): void;
@@ -167,9 +169,15 @@ export class ArchModContextMenu extends React.Component<Props, State> {
               </td>
             </tr>
             <tr>
-              <td className="no-wrap" >Label Align</td>
+              <td className="no-wrap" >Horizontal Label Align</td>
               <td className="no-wrap" >
-                {genLabelAlignClickButtons( (labelAlign: string) => { callback.changeLabelAlign(labelAlign) } )}
+                {genLabelHorizontalAlignClickButtons( (labelAlign: string) => { callback.changeLabelHorizontalAlign(labelAlign) } )}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Vertical Label Align</td>
+              <td className="no-wrap" >
+                {genLabelVerticalAlignClickButtons( (labelAlign: string) => { callback.changeLabelVerticalAlign(labelAlign) } )}
               </td>
             </tr>
             <tr>

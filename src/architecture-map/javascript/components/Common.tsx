@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { ReactMouseEvent } from "../TypeDef.ts";
+import { ReactMouseEvent, CSS } from "../TypeDef.ts";
 import { Def, ColorSet, ClipArea, MarkerType, LineStyle } from "../Def.ts";
 import { ColorResolver } from "../d3/resolver/ColorResolver";
 
@@ -147,13 +147,71 @@ export function genClipAreaClickButtons(callback: (clipArea: ClipArea) => void):
   return buttons;
 }
 
-export function genLabelAlignClickButtons(callback: (labelAlign: string) => void): React.ReactElement[] {
+export function genLabelHorizontalAlignClickButtons(callback: (labelAlign: string) => void): React.ReactElement[] {
 
   class Param {
     readonly id: string;
-    readonly labelAlign: string;
+    readonly labelAlign: CSS.TextAlign;
 
-    constructor(id: string, labelAlign: string) {
+    constructor(id: string, labelAlign: CSS.TextAlign) {
+      this.id = id;
+      this.labelAlign = labelAlign;
+    }
+  }
+
+  let buttonKey: number = 0;
+  function genClickButton(param: Param): React.ReactElement {
+    const style = {
+      display: "table-cell",
+      width: `${BUTTON_SIZE_PIX}px`,
+      height: `${BUTTON_SIZE_PIX}px`,
+      textAlign: param.labelAlign,
+      verticalAlign: "middle",
+      fontSize: "4px",
+    };
+
+    return (
+      <div
+          key={buttonKey++}
+          id={param.id}
+          className={"label-align-selector"}
+          onClick={ (e: ReactMouseEvent) => {
+            callback(param.labelAlign);
+            e.stopPropagation();
+          } }
+      >
+        <div
+            style={style}
+        >
+          {"|||"}
+        </div>
+      </div>
+    );
+  }
+
+  const params: Param[] = [
+      //        id,                   label align,
+      new Param("label_align_left",   "left"),
+      new Param("label_align_center", "center"),
+      new Param("label_align_right",  "right"),
+  ];
+
+  const buttons: React.ReactElement[] = [];
+
+  params.forEach( (param: Param) => {
+    buttons.push( genClickButton(param) );
+  } );
+
+  return buttons;
+}
+
+export function genLabelVerticalAlignClickButtons(callback: (labelAlign: string) => void): React.ReactElement[] {
+
+  class Param {
+    readonly id: string;
+    readonly labelAlign: CSS.VerticalAlign;
+
+    constructor(id: string, labelAlign: CSS.VerticalAlign) {
       this.id = id;
       this.labelAlign = labelAlign;
     }
@@ -183,7 +241,7 @@ export function genLabelAlignClickButtons(callback: (labelAlign: string) => void
         <div
             style={style}
         >
-          {"mod"}
+          {"|||"}
         </div>
       </div>
     );

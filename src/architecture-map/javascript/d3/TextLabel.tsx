@@ -52,7 +52,8 @@ export interface TextLabelJson {
       [Def.KEY_WIDTH]: number,
       [Def.KEY_HEIGHT]: number,
       [Def.KEY_LABEL_ROT_DEG]: number,
-      [Def.KEY_LABEL_ALIGN]: string,
+      [Def.KEY_LABEL_HORIZONTAL_ALIGN]: string,
+      [Def.KEY_LABEL_VERTICAL_ALIGN]: string,
   },
   [Def.KEY_COLOR_SET]: string,
 }
@@ -250,7 +251,8 @@ export class TextLabel extends Element {
             [Def.KEY_WIDTH]: this.width,
             [Def.KEY_HEIGHT]: this.height,
             [Def.KEY_LABEL_ROT_DEG]: this.labelRotDeg,
-            [Def.KEY_LABEL_ALIGN]: this.labelAlign,
+            [Def.KEY_LABEL_HORIZONTAL_ALIGN]: this.labelHorizontalAlign,
+            [Def.KEY_LABEL_VERTICAL_ALIGN]: this.labelVerticalAlign,
         },
         [Def.KEY_COLOR_SET]: this.colorSet,
     };
@@ -272,13 +274,28 @@ export class TextLabel extends Element {
         html,
         svg,
         json[Def.KEY_LABEL]);
+
+    const oldLabelAlign = (json[Def.KEY_DIMENS] as any)[Def.KEY_LABEL_ALIGN];
+    let labelHorizontalAlign: string;
+    let labelVerticalAlign: string;
+    if (oldLabelAlign !== undefined) {
+      // This is old version JSON format. (ver < 12)
+      labelHorizontalAlign = Def.DEFAULT_LABEL_HORIZONTAL_ALIGN;
+      labelVerticalAlign = oldLabelAlign;
+    } else {
+      labelHorizontalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN];
+      labelVerticalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN];
+    }
+
     textLabel.setDimens(
         json[Def.KEY_DIMENS][Def.KEY_X],
         json[Def.KEY_DIMENS][Def.KEY_Y],
         json[Def.KEY_DIMENS][Def.KEY_WIDTH],
         json[Def.KEY_DIMENS][Def.KEY_HEIGHT],
         json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
-        json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN]);
+        labelHorizontalAlign,
+        labelVerticalAlign);
+
     textLabel.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
     return textLabel;
   }
@@ -295,7 +312,8 @@ export class TextLabel extends Element {
   private width: number = 0;
   private height: number = 0;
   private labelRotDeg: number = 0;
-  private labelAlign: string = "middle";
+  private labelHorizontalAlign: string = Def.DEFAULT_LABEL_HORIZONTAL_ALIGN;
+  private labelVerticalAlign: string = Def.DEFAULT_LABEL_VERTICAL_ALIGN;
 
   // Font.
   private fontSize: number = 12;
@@ -330,7 +348,7 @@ export class TextLabel extends Element {
    * @param height Pixels
    */
   public setXYWH(x: number, y: number, width: number, height: number) {
-    this.setDimens(x, y, width, height, null, null);
+    this.setDimens(x, y, width, height, null, null, null);
   }
 
   /**
@@ -348,7 +366,8 @@ export class TextLabel extends Element {
    * @param width
    * @param height
    * @param labelRotDeg
-   * @param labelAlign
+   * @param labelHorizontalAlign
+   * @param labelVerticalAlign
    */
   public setDimens(
       x: number|null,
@@ -356,13 +375,15 @@ export class TextLabel extends Element {
       width: number|null,
       height: number|null,
       labelRotDeg: number|null,
-      labelAlign: string|null) {
+      labelHorizontalAlign: string|null,
+      labelVerticalAlign: string|null) {
     if (x != null) this.x = x;
     if (y != null) this.y = y;
     if (width != null) this.width = width;
     if (height != null) this.height = height;
     if (labelRotDeg != null) this.labelRotDeg = labelRotDeg;
-    if (labelAlign != null) this.labelAlign = labelAlign;
+    if (labelHorizontalAlign != null) this.labelHorizontalAlign = labelHorizontalAlign;
+    if (labelVerticalAlign != null) this.labelVerticalAlign = labelVerticalAlign;
   }
 
   /**
@@ -747,39 +768,59 @@ export class TextLabel extends Element {
     let labelY: number = 0;
     switch (this.labelRotDeg) {
       case Def.DEG_HORIZONTAL:
-        switch (this.labelAlign) {
-          case "top":
+        switch (this.labelHorizontalAlign) {
+          case "left":
+            labelX = left;
+            break;
+          case "center":
+            // Fall-through.
+          default:
             labelX = centerX;
+            break;
+          case "right":
+            labelX = right;
+            break
+        }
+        switch (this.labelVerticalAlign) {
+          case "top":
             labelY = top + this.LABEL_ALIGN_MARGIN;
             break;
           case "bottom":
-            labelX = centerX;
             labelY = bottom - this.LABEL_ALIGN_MARGIN;
             break;
           case "middle":
             // Fall-through.
           default:
-            labelX = centerX;
             labelY = centerY;
             break;
         }
         break;
 
       case Def.DEG_VERTICAL:
-        switch (this.labelAlign) {
+        switch (this.labelHorizontalAlign) {
+          case "left":
+            labelY = bottom;
+            break;
+          case "center":
+            // Fall-through.
+          default:
+            labelY = centerY;
+            break;
+          case "right":
+            labelY = top;
+            break
+        }
+        switch (this.labelVerticalAlign) {
           case "top":
             labelX = left + this.LABEL_ALIGN_MARGIN;
-            labelY = centerY;
             break;
           case "bottom":
             labelX = right - this.LABEL_ALIGN_MARGIN;
-            labelY = centerY;
             break;
           case "middle":
             // Fall-through.
           default:
             labelX = centerX;
-            labelY = centerY;
             break;
         }
         break;
@@ -839,8 +880,27 @@ export class TextLabel extends Element {
 
     const lines: string[] = this.label.split("\n");
 
+    let textAnchor: string;
+    let dx: string;
+    switch (this.labelHorizontalAlign) {
+      case "left":
+        textAnchor = "start";
+        dx = "0.8em";
+        break;
+      case "center":
+        // Fall-through.
+      default:
+        textAnchor = "middle";
+        dx = "0";
+        break;
+      case "right":
+        textAnchor = "end";
+        dx = "-0.8em";
+        break;
+    }
+
     let startDY: number;
-    switch (this.labelAlign) {
+    switch (this.labelVerticalAlign) {
       case "top":
         startDY = 0;
         break;
@@ -862,8 +922,9 @@ export class TextLabel extends Element {
       this.text.append("tspan")
           .attr("x", labelX)
           .attr("y", labelY)
+          .attr("text-anchor", textAnchor)
+          .attr("dx", dx)
           .attr("dy", `${dy}em`)
-          .attr("text-anchor", "middle")
           .text(line);
     } );
 
@@ -886,8 +947,12 @@ export class TextLabel extends Element {
       this.target.rotateLabel(rotDeg);
     }
 
-    changeLabelAlign(align: string) {
-      this.target.alignLabel(align);
+    changeLabelHorizontalAlign(align: string) {
+      this.target.alignLabel(align, null);
+    }
+
+    changeLabelVerticalAlign(align: string) {
+      this.target.alignLabel(null, align);
     }
 
     changeColorSet(colorSet: ColorSet) {
@@ -945,9 +1010,14 @@ export class TextLabel extends Element {
     this.relayout();
   }
 
-  private alignLabel(align: string) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TextLabel.TAG, `alignLabel() : align=${align}`);
-    this.labelAlign = align;
+  private alignLabel(horizontalAlign: string|null, verticalAlign: string|null) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TextLabel.TAG, `alignLabel() : horizontalAlign=${horizontalAlign}, verticalAlign=${verticalAlign}`);
+    if (horizontalAlign !== null) {
+      this.labelHorizontalAlign = horizontalAlign;
+    }
+    if (verticalAlign !== null) {
+      this.labelVerticalAlign = verticalAlign;
+    }
     this.relayout();
   }
 

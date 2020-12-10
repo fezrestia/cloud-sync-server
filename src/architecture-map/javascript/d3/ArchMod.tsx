@@ -65,7 +65,8 @@ export interface ArchModJson {
       [Def.KEY_PIN_X]: number,
       [Def.KEY_PIN_Y]: number,
       [Def.KEY_LABEL_ROT_DEG]: number,
-      [Def.KEY_LABEL_ALIGN]: string,
+      [Def.KEY_LABEL_HORIZONTAL_ALIGN]: string,
+      [Def.KEY_LABEL_VERTICAL_ALIGN]: string,
   },
   [Def.KEY_CLIP_AREA]: string,
   [Def.KEY_COLOR_SET]: string,
@@ -278,7 +279,8 @@ export class ArchMod extends Element {
             [Def.KEY_PIN_X]: this.pinX,
             [Def.KEY_PIN_Y]: this.pinY,
             [Def.KEY_LABEL_ROT_DEG]: this.labelRotDeg,
-            [Def.KEY_LABEL_ALIGN]: this.labelAlign,
+            [Def.KEY_LABEL_HORIZONTAL_ALIGN]: this.labelHorizontalAlign,
+            [Def.KEY_LABEL_VERTICAL_ALIGN]: this.labelVerticalAlign,
         },
         [Def.KEY_CLIP_AREA]: this.clipArea,
         [Def.KEY_COLOR_SET]: this.colorSet,
@@ -303,6 +305,19 @@ export class ArchMod extends Element {
         svg,
         json[Def.KEY_LABEL]);
     archMod.parentUid = json[Def.KEY_PARENT_UID];
+
+    const oldLabelAlign = (json[Def.KEY_DIMENS] as any)[Def.KEY_LABEL_ALIGN];
+    let labelHorizontalAlign: string;
+    let labelVerticalAlign: string;
+    if (oldLabelAlign !== undefined) {
+      // This is old version JSON format. (ver < 12)
+      labelHorizontalAlign = Def.DEFAULT_LABEL_HORIZONTAL_ALIGN;
+      labelVerticalAlign = oldLabelAlign;
+    } else {
+      labelHorizontalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN];
+      labelVerticalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN];
+    }
+
     archMod.setDimens(
         json[Def.KEY_DIMENS][Def.KEY_X],
         json[Def.KEY_DIMENS][Def.KEY_Y],
@@ -311,7 +326,8 @@ export class ArchMod extends Element {
         json[Def.KEY_DIMENS][Def.KEY_PIN_X],
         json[Def.KEY_DIMENS][Def.KEY_PIN_Y],
         json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
-        json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN]);
+        labelHorizontalAlign,
+        labelVerticalAlign);
     archMod.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
 
     const edgeColorSet = json[Def.KEY_EDGE_COLOR_SET];
@@ -337,7 +353,8 @@ export class ArchMod extends Element {
   private width: number = 0;
   private height: number = 0;
   private labelRotDeg: number = 0;
-  private labelAlign: string = "middle";
+  private labelHorizontalAlign: string = "center";
+  private labelVerticalAlign: string = "middle";
   private pinX: number = 0;
   private pinY: number = 0;
 
@@ -400,7 +417,7 @@ export class ArchMod extends Element {
     if (this.pinX === 0) pinX = x + width / 2;
     if (this.pinY === 0) pinY = y + height / 2;
 
-    this.setDimens(x, y, width, height, pinX, pinY, null, null);
+    this.setDimens(x, y, width, height, pinX, pinY, null, null, null);
   }
 
   /**
@@ -436,7 +453,8 @@ export class ArchMod extends Element {
    * @param pinX
    * @param pinY
    * @param labelRotDeg
-   * @param labelAlign
+   * @param labelHorizontalAlign
+   * @param labelVerticalAlign
    */
   public setDimens(
       x: number|null,
@@ -446,7 +464,8 @@ export class ArchMod extends Element {
       pinX: number|null,
       pinY: number|null,
       labelRotDeg: number|null,
-      labelAlign: string|null) {
+      labelHorizontalAlign: string|null,
+      labelVerticalAlign: string|null) {
     if (x != null) this.x = x;
     if (y != null) this.y = y;
     if (width != null) this.width = width;
@@ -454,7 +473,8 @@ export class ArchMod extends Element {
     if (pinX != null) this.pinX = pinX;
     if (pinY != null) this.pinY = pinY;
     if (labelRotDeg != null) this.labelRotDeg = labelRotDeg;
-    if (labelAlign != null) this.labelAlign = labelAlign;
+    if (labelHorizontalAlign != null) this.labelHorizontalAlign = labelHorizontalAlign;
+    if (labelVerticalAlign != null) this.labelVerticalAlign = labelVerticalAlign;
   }
 
   /**
@@ -1061,39 +1081,59 @@ export class ArchMod extends Element {
       case ClipArea.NONE:
         switch (this.labelRotDeg) {
           case Def.DEG_HORIZONTAL:
-            switch (this.labelAlign) {
-              case "top":
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelX = left;
+                break;
+              case "center":
+                // Fall-through.
+              default:
                 labelX = centerX;
+                break;
+              case "right":
+                labelX = right;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
                 labelY = top + this.LABEL_ALIGN_MARGIN;
                 break;
               case "bottom":
-                labelX = centerX;
                 labelY = bottom - this.LABEL_ALIGN_MARGIN;
                 break;
               case "middle":
                 // Fall-through.
               default:
-                labelX = centerX;
                 labelY = centerY;
                 break;
             }
             break;
 
           case Def.DEG_VERTICAL:
-            switch (this.labelAlign) {
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelY = bottom;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelY = centerY;
+                break;
+              case "right":
+                labelY = top;
+                break
+            }
+            switch (this.labelVerticalAlign) {
               case "top":
                 labelX = left + this.LABEL_ALIGN_MARGIN;
-                labelY = centerY;
                 break;
               case "bottom":
                 labelX = right - this.LABEL_ALIGN_MARGIN;
-                labelY = centerY;
                 break;
               case "middle":
                 // Fall-through.
               default:
                 labelX = centerX;
-                labelY = centerY;
                 break;
             }
             break;
@@ -1218,8 +1258,27 @@ export class ArchMod extends Element {
 
     const lines: string[] = this.label.split("\n");
 
+    let textAnchor: string;
+    let dx: string;
+    switch (this.labelHorizontalAlign) {
+      case "left":
+        textAnchor = "start";
+        dx = "0.8em";
+        break;
+      case "center":
+        // Fall-through.
+      default:
+        textAnchor = "middle";
+        dx = "0";
+        break;
+      case "right":
+        textAnchor = "end";
+        dx = "-0.8em";
+        break;
+    }
+
     let startDY: number;
-    switch (this.labelAlign) {
+    switch (this.labelVerticalAlign) {
       case "top":
         startDY = 0;
         break;
@@ -1241,8 +1300,9 @@ export class ArchMod extends Element {
       this.text.append("tspan")
           .attr("x", labelX)
           .attr("y", labelY)
+          .attr("text-anchor", textAnchor)
+          .attr("dx", dx)
           .attr("dy", `${dy}em`)
-          .attr("text-anchor", "middle")
           .text(line);
     } );
 
@@ -1265,8 +1325,12 @@ export class ArchMod extends Element {
       this.target.rotateLabel(rotDeg);
     }
 
-    changeLabelAlign(align: string) {
-      this.target.alignLabel(align);
+    changeLabelHorizontalAlign(align: string) {
+      this.target.alignLabel(align, null);
+    }
+
+    changeLabelVerticalAlign(align: string) {
+      this.target.alignLabel(null, align);
     }
 
     changeClipArea(clipArea: ClipArea) {
@@ -1344,9 +1408,14 @@ export class ArchMod extends Element {
     this.relayout();
   }
 
-  private alignLabel(align: string) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `alignLabel() : align=${align}`);
-    this.labelAlign = align;
+  private alignLabel(horizontalAlign: string|null, verticalAlign: string|null) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `alignLabel() : horizontalAlign=${horizontalAlign}, verticalAlign=${verticalAlign}`);
+    if (horizontalAlign != null) {
+      this.labelHorizontalAlign = horizontalAlign;
+    }
+    if (verticalAlign != null) {
+      this.labelVerticalAlign = verticalAlign;
+    }
     this.relayout();
   }
 
