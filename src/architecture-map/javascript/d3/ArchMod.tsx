@@ -306,18 +306,6 @@ export class ArchMod extends Element {
         json[Def.KEY_LABEL]);
     archMod.parentUid = json[Def.KEY_PARENT_UID];
 
-    const oldLabelAlign = (json[Def.KEY_DIMENS] as any)[Def.KEY_LABEL_ALIGN];
-    let labelHorizontalAlign: string;
-    let labelVerticalAlign: string;
-    if (oldLabelAlign !== undefined) {
-      // This is old version JSON format. (ver < 12)
-      labelHorizontalAlign = Def.DEFAULT_LABEL_HORIZONTAL_ALIGN;
-      labelVerticalAlign = oldLabelAlign;
-    } else {
-      labelHorizontalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN];
-      labelVerticalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN];
-    }
-
     archMod.setDimens(
         json[Def.KEY_DIMENS][Def.KEY_X],
         json[Def.KEY_DIMENS][Def.KEY_Y],
@@ -326,18 +314,14 @@ export class ArchMod extends Element {
         json[Def.KEY_DIMENS][Def.KEY_PIN_X],
         json[Def.KEY_DIMENS][Def.KEY_PIN_Y],
         json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
-        labelHorizontalAlign,
-        labelVerticalAlign);
-    archMod.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN]);
 
-    const edgeColorSet = json[Def.KEY_EDGE_COLOR_SET];
-    if (edgeColorSet === undefined) {
-      archMod.edgeColorSet = archMod.colorSet;
-    } else {
-      archMod.edgeColorSet = ColorSet.valueOf(edgeColorSet);
-    }
+    archMod.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+    archMod.edgeColorSet = ColorSet.valueOf(json[Def.KEY_EDGE_COLOR_SET]);
 
     archMod.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
+
     return archMod;
   }
 

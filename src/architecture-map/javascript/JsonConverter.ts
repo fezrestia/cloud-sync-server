@@ -69,6 +69,49 @@ export function convertJsonToLatest(serialized: any): any {
     } );
   }
 
+  // Add line_Style to Line.
+  if (ver < 8) {
+    elements.forEach( (element: ElementJson) => {
+      if (element[Def.KEY_CLASS] == "Line") {
+        let lineJson = element as any;
+        lineJson[Def.KEY_LINE_STYLE] = "normal";
+      }
+    } );
+  }
+
+  // Add parent_uid to ArchMod.
+  if (ver < 10) {
+    elements.forEach( (element: ElementJson) => {
+      if (element[Def.KEY_CLASS] == "ArchMod") {
+        let archModJson = element as any;
+        archModJson[Def.KEY_PARENT_UID] = null;
+      }
+    } );
+  }
+
+  // Add edge_color_set to ArchMod.
+  if (ver < 11) {
+    elements.forEach( (element: ElementJson) => {
+      if (element[Def.KEY_CLASS] == "ArchMod") {
+        let archModJson = element as any;
+        archModJson[Def.KEY_EDGE_COLOR_SET] = archModJson[Def.KEY_COLOR_SET];
+      }
+    } );
+  }
+
+  // Convert label_align to label_horizontal_align/label_vertical_align in ArchMod and TextLabel.
+  if (ver < 12) {
+    elements.forEach( (element: ElementJson) => {
+      const clazz = element[Def.KEY_CLASS];
+      if (clazz == "ArchMod" || clazz == "TextLabel") {
+        let json = element as any;
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN] = "center";
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN] = json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN];
+        delete json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN];
+      }
+    } );
+  }
+
   return serialized;
 }
 

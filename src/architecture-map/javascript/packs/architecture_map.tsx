@@ -231,7 +231,7 @@ export class Context {
   }
 
   public tryToOpenContextMenuOfSingleSelectedElement() {
-    if (this.selectedElements.length == 1) {
+    if (this.selectedElements.length === 1) {
       const element: Element = this.selectedElements[0];
 
       switch(element.TAG) {

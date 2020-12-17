@@ -22,7 +22,8 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
             "height": 120,
             "pin_x": 160,
             "pin_y": 160,
-            "label_rot_deg": 0
+            "label_rot_deg": 0,
+            "label_align": "middle"
           },
           "clip_area": "left_top",
           "color_set": "orange"
@@ -37,7 +38,8 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
             "height": 120,
             "pin_x": 260,
             "pin_y": 360,
-            "label_rot_deg": 270
+            "label_rot_deg": 270,
+            "label_align": "middle"
           },
           "clip_area": "none",
           "color_set": "gray"
@@ -58,6 +60,7 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
       "architecture_map": [
         {
           "uid": 1,
+          "parent_uid": null,
           "class": "ArchMod",
           "label": "Test Label",
           "dimens": {
@@ -67,13 +70,17 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
             "height": 120,
             "pin_x": 160,
             "pin_y": 160,
-            "label_rot_deg": 0
+            "label_rot_deg": 0,
+            "label_horizontal_align": "center",
+            "label_vertical_align": "middle"
           },
           "clip_area": "left_top",
-          "color_set": "orange"
+          "color_set": "orange",
+          "edge_color_set": "orange"
         },
         {
           "uid": 2,
+          "parent_uid": null,
           "class": "ArchMod",
           "label": "ArchMod",
           "dimens": {
@@ -83,10 +90,13 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
             "height": 120,
             "pin_x": 260,
             "pin_y": 360,
-            "label_rot_deg": 270
+            "label_rot_deg": 270,
+            "label_horizontal_align": "center",
+            "label_vertical_align": "middle"
           },
           "clip_area": "none",
-          "color_set": "gray"
+          "color_set": "gray",
+          "edge_color_set": "gray"
         }
       ]
     }
@@ -173,6 +183,7 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
         "architecture_map": [
           {
             "uid": 1,
+            "parent_uid": null,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -183,13 +194,16 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
               "pin_x": 160,
               "pin_y": 160,
               "label_rot_deg": 0,
-              "label_align": "middle"
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
             },
             "clip_area": "none",
-            "color_set": "gray"
+            "color_set": "gray",
+            "edge_color_set": "gray"
           },
           {
             "uid": 2,
+            "parent_uid": null,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -200,10 +214,12 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
               "pin_x": 460,
               "pin_y": 460,
               "label_rot_deg": 0,
-              "label_align": "middle"
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
             },
             "clip_area": "left_top",
-            "color_set": "gray"
+            "color_set": "gray",
+            "edge_color_set": "gray"
           },
           {
             "uid": 3,
@@ -278,6 +294,7 @@ test("Context.convertJsonToLatest() To ver.6 <=", () => {
               "to_y": 200,
               "width": 4
             },
+            "line_style": "normal",
             "from_marker_type": "none",
             "to_marker_type": "none",
             "color_set": "gray"
@@ -381,6 +398,7 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
         "architecture_map": [
           {
             "uid": 1,
+            "parent_uid": null,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -391,13 +409,16 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
               "pin_x": 160,
               "pin_y": 160,
               "label_rot_deg": 0,
-              "label_align": "middle"
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
             },
             "clip_area": "none",
-            "color_set": "gray"
+            "color_set": "gray",
+            "edge_color_set": "gray"
           },
           {
             "uid": 2,
+            "parent_uid": null,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -408,10 +429,12 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
               "pin_x": 460,
               "pin_y": 460,
               "label_rot_deg": 0,
-              "label_align": "middle"
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
             },
             "clip_area": "left_top",
-            "color_set": "gray"
+            "color_set": "gray",
+            "edge_color_set": "gray"
           },
           {
             "uid": 3,
@@ -439,6 +462,7 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
               "to_y": 200,
               "width": 4
             },
+            "line_style": "normal",
             "from_marker_type": "none",
             "to_marker_type": "none",
             "color_set": "gray"
@@ -452,3 +476,320 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
   expect(converted).toStrictEqual(latestJson);
 
 } );
+
+// Add line_style setting to Line.
+test("Context.convertJsonToLatest() To ver.8 <=", () => {
+  let ver7Json = JSON.parse(`
+      {
+        "version": "7",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "class": "Line",
+            "dimens": {
+              "from_x": 100,
+              "from_y": 100,
+              "to_x": 200,
+              "to_y": 200,
+              "width": 4
+            },
+            "from_marker_type": "none",
+            "to_marker_type": "none",
+            "color_set": "gray"
+          }
+        ]
+      }
+  `);
+
+  let latestJson = JSON.parse(`
+      {
+        "version": "${Def.VAL_VERSION}",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "class": "Line",
+            "dimens": {
+              "from_x": 100,
+              "from_y": 100,
+              "to_x": 200,
+              "to_y": 200,
+              "width": 4
+            },
+            "line_style": "normal",
+            "from_marker_type": "none",
+            "to_marker_type": "none",
+            "color_set": "gray"
+          }
+        ]
+      }
+  `);
+
+  var converted = convertJsonToLatest(ver7Json);
+
+  expect(converted).toStrictEqual(latestJson);
+
+} );
+
+// Add line_style setting to Line.
+test("Context.convertJsonToLatest() To ver.10 <=", () => {
+  let ver8Json = JSON.parse(`
+      {
+        "version": "8",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_align": "middle"
+            },
+            "clip_area": "none",
+            "color_set": "gray"
+          }
+        ]
+      }
+  `);
+
+  let latestJson = JSON.parse(`
+      {
+        "version": "${Def.VAL_VERSION}",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          }
+        ]
+      }
+  `);
+
+  var converted = convertJsonToLatest(ver8Json);
+
+  expect(converted).toStrictEqual(latestJson);
+
+} );
+
+// Add edge_color_set setting to ArchMod.
+test("Context.convertJsonToLatest() To ver.11 <=", () => {
+  let ver10Json = JSON.parse(`
+      {
+        "version": "10",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_align": "middle"
+            },
+            "clip_area": "none",
+            "color_set": "red"
+          }
+        ]
+      }
+  `);
+
+  let latestJson = JSON.parse(`
+      {
+        "version": "${Def.VAL_VERSION}",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
+            },
+            "clip_area": "none",
+            "color_set": "red",
+            "edge_color_set": "red"
+          }
+        ]
+      }
+  `);
+
+  var converted = convertJsonToLatest(ver10Json);
+
+  expect(converted).toStrictEqual(latestJson);
+
+} );
+
+// Convert label_align to label_horizontal_align/label_vertical_align in ArchMOd and TextLabel.
+test("Context.convertJsonToLatest() To ver.12 <=", () => {
+  let ver10Json = JSON.parse(`
+      {
+        "version": "11",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_align": "middle"
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 2,
+            "class": "TextLabel",
+            "label": "TextLabel",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "label_rot_deg": 0,
+              "label_align": "middle"
+            },
+            "color_set": "white"
+          }
+        ]
+      }
+  `);
+
+  let latestJson = JSON.parse(`
+      {
+        "version": "${Def.VAL_VERSION}",
+        "out_frame": {
+          "x": 0,
+          "y": 0,
+          "width": 640,
+          "height": 640
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 2,
+            "class": "TextLabel",
+            "label": "TextLabel",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle"
+            },
+            "color_set": "white"
+          }
+        ]
+      }
+  `);
+
+  var converted = convertJsonToLatest(ver10Json);
+
+  expect(converted).toStrictEqual(latestJson);
+
+} );
+

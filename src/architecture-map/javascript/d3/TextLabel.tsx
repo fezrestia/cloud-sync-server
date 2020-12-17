@@ -275,28 +275,17 @@ export class TextLabel extends Element {
         svg,
         json[Def.KEY_LABEL]);
 
-    const oldLabelAlign = (json[Def.KEY_DIMENS] as any)[Def.KEY_LABEL_ALIGN];
-    let labelHorizontalAlign: string;
-    let labelVerticalAlign: string;
-    if (oldLabelAlign !== undefined) {
-      // This is old version JSON format. (ver < 12)
-      labelHorizontalAlign = Def.DEFAULT_LABEL_HORIZONTAL_ALIGN;
-      labelVerticalAlign = oldLabelAlign;
-    } else {
-      labelHorizontalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN];
-      labelVerticalAlign = json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN];
-    }
-
     textLabel.setDimens(
         json[Def.KEY_DIMENS][Def.KEY_X],
         json[Def.KEY_DIMENS][Def.KEY_Y],
         json[Def.KEY_DIMENS][Def.KEY_WIDTH],
         json[Def.KEY_DIMENS][Def.KEY_HEIGHT],
         json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
-        labelHorizontalAlign,
-        labelVerticalAlign);
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN]);
 
     textLabel.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
     return textLabel;
   }
 
