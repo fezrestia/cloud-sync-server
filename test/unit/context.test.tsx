@@ -52,10 +52,15 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
     {
       "version": "${Def.VAL_VERSION}",
       "out_frame": {
-        "x": 0,
-        "y": 0,
-        "width": 640,
-        "height": 320
+        "class": "OutFrame",
+        "dimens": {
+          "height": 320,
+          "width": 640,
+          "x": 0,
+          "y": 0,
+          "z_order": 0
+        },
+        "uid": 0
       },
       "architecture_map": [
         {
@@ -72,7 +77,8 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
             "pin_y": 160,
             "label_rot_deg": 0,
             "label_horizontal_align": "center",
-            "label_vertical_align": "middle"
+            "label_vertical_align": "middle",
+            "z_order": 1
           },
           "clip_area": "left_top",
           "color_set": "orange",
@@ -92,7 +98,8 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
             "pin_y": 360,
             "label_rot_deg": 270,
             "label_horizontal_align": "center",
-            "label_vertical_align": "middle"
+            "label_vertical_align": "middle",
+            "z_order": 2
           },
           "clip_area": "none",
           "color_set": "gray",
@@ -175,10 +182,15 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
       {
         "version": "${Def.VAL_VERSION}",
         "out_frame": {
-          "x": 0,
-          "y": 0,
-          "width": 640,
-          "height": 640
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
         },
         "architecture_map": [
           {
@@ -195,7 +207,8 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
               "pin_y": 160,
               "label_rot_deg": 0,
               "label_horizontal_align": "center",
-              "label_vertical_align": "middle"
+              "label_vertical_align": "middle",
+              "z_order": 1
             },
             "clip_area": "none",
             "color_set": "gray",
@@ -215,7 +228,8 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
               "pin_y": 460,
               "label_rot_deg": 0,
               "label_horizontal_align": "center",
-              "label_vertical_align": "middle"
+              "label_vertical_align": "middle",
+              "z_order": 2
             },
             "clip_area": "left_top",
             "color_set": "gray",
@@ -231,7 +245,8 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
               "from_y": 200,
               "to_x": 460,
               "to_y": 400,
-              "width": 4
+              "width": 4,
+              "z_order": 3
             },
             "from_marker_type": "none",
             "to_marker_type": "none",
@@ -278,10 +293,15 @@ test("Context.convertJsonToLatest() To ver.6 <=", () => {
       {
         "version": "${Def.VAL_VERSION}",
         "out_frame": {
-          "x": 0,
-          "y": 0,
-          "width": 640,
-          "height": 640
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
         },
         "architecture_map": [
           {
@@ -292,7 +312,8 @@ test("Context.convertJsonToLatest() To ver.6 <=", () => {
               "from_y": 100,
               "to_x": 200,
               "to_y": 200,
-              "width": 4
+              "width": 4,
+              "z_order": 1
             },
             "line_style": "normal",
             "from_marker_type": "none",
@@ -390,10 +411,15 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
       {
         "version": "${Def.VAL_VERSION}",
         "out_frame": {
-          "x": 0,
-          "y": 0,
-          "width": 640,
-          "height": 640
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
         },
         "architecture_map": [
           {
@@ -410,7 +436,8 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
               "pin_y": 160,
               "label_rot_deg": 0,
               "label_horizontal_align": "center",
-              "label_vertical_align": "middle"
+              "label_vertical_align": "middle",
+              "z_order": 1
             },
             "clip_area": "none",
             "color_set": "gray",
@@ -430,7 +457,8 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
               "pin_y": 460,
               "label_rot_deg": 0,
               "label_horizontal_align": "center",
-              "label_vertical_align": "middle"
+              "label_vertical_align": "middle",
+              "z_order": 2
             },
             "clip_area": "left_top",
             "color_set": "gray",
@@ -446,7 +474,8 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
               "from_y": 200,
               "to_x": 460,
               "to_y": 400,
-              "width": 4
+              "width": 4,
+              "z_order": 3
             },
             "from_marker_type": "rect",
             "to_marker_type": "arrow",
@@ -460,7 +489,8 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
               "from_y": 100,
               "to_x": 200,
               "to_y": 200,
-              "width": 4
+              "width": 4,
+              "z_order": 4
             },
             "line_style": "normal",
             "from_marker_type": "none",
@@ -511,10 +541,15 @@ test("Context.convertJsonToLatest() To ver.8 <=", () => {
       {
         "version": "${Def.VAL_VERSION}",
         "out_frame": {
-          "x": 0,
-          "y": 0,
-          "width": 640,
-          "height": 640
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
         },
         "architecture_map": [
           {
@@ -525,7 +560,8 @@ test("Context.convertJsonToLatest() To ver.8 <=", () => {
               "from_y": 100,
               "to_x": 200,
               "to_y": 200,
-              "width": 4
+              "width": 4,
+              "z_order": 1
             },
             "line_style": "normal",
             "from_marker_type": "none",
@@ -579,10 +615,15 @@ test("Context.convertJsonToLatest() To ver.10 <=", () => {
       {
         "version": "${Def.VAL_VERSION}",
         "out_frame": {
-          "x": 0,
-          "y": 0,
-          "width": 640,
-          "height": 640
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
         },
         "architecture_map": [
           {
@@ -599,7 +640,8 @@ test("Context.convertJsonToLatest() To ver.10 <=", () => {
               "pin_y": 160,
               "label_rot_deg": 0,
               "label_horizontal_align": "center",
-              "label_vertical_align": "middle"
+              "label_vertical_align": "middle",
+              "z_order": 1
             },
             "clip_area": "none",
             "color_set": "gray",
@@ -653,10 +695,15 @@ test("Context.convertJsonToLatest() To ver.11 <=", () => {
       {
         "version": "${Def.VAL_VERSION}",
         "out_frame": {
-          "x": 0,
-          "y": 0,
-          "width": 640,
-          "height": 640
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
         },
         "architecture_map": [
           {
@@ -673,7 +720,8 @@ test("Context.convertJsonToLatest() To ver.11 <=", () => {
               "pin_y": 160,
               "label_rot_deg": 0,
               "label_horizontal_align": "center",
-              "label_vertical_align": "middle"
+              "label_vertical_align": "middle",
+              "z_order": 1
             },
             "clip_area": "none",
             "color_set": "red",
@@ -691,7 +739,7 @@ test("Context.convertJsonToLatest() To ver.11 <=", () => {
 
 // Convert label_align to label_horizontal_align/label_vertical_align in ArchMOd and TextLabel.
 test("Context.convertJsonToLatest() To ver.12 <=", () => {
-  let ver10Json = JSON.parse(`
+  let ver11Json = JSON.parse(`
       {
         "version": "11",
         "out_frame": {
@@ -742,6 +790,70 @@ test("Context.convertJsonToLatest() To ver.12 <=", () => {
       {
         "version": "${Def.VAL_VERSION}",
         "out_frame": {
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle",
+              "z_order": 1
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 2,
+            "class": "TextLabel",
+            "label": "TextLabel",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle",
+              "z_order": 2
+            },
+            "color_set": "white"
+          }
+        ]
+      }
+  `);
+
+  var converted = convertJsonToLatest(ver11Json);
+
+  expect(converted).toStrictEqual(latestJson);
+
+} );
+
+// Add z_order of ArchMod/Connector/Line/TextLabel and update OutFrame.
+test("Context.convertJsonToLatest() To ver.12 <=", () => {
+  let ver12Json = JSON.parse(`
+      {
+        "version": "12",
+        "out_frame": {
           "x": 0,
           "y": 0,
           "width": 640,
@@ -787,7 +899,63 @@ test("Context.convertJsonToLatest() To ver.12 <=", () => {
       }
   `);
 
-  var converted = convertJsonToLatest(ver10Json);
+  let latestJson = JSON.parse(`
+      {
+        "version": "${Def.VAL_VERSION}",
+        "out_frame": {
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "ArchMod",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "pin_x": 160,
+              "pin_y": 160,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle",
+              "z_order": 1
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 2,
+            "class": "TextLabel",
+            "label": "TextLabel",
+            "dimens": {
+              "x": 100,
+              "y": 100,
+              "width": 120,
+              "height": 120,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "middle",
+              "z_order": 2
+            },
+            "color_set": "white"
+          }
+        ]
+      }
+  `);
+
+  var converted = convertJsonToLatest(ver12Json);
 
   expect(converted).toStrictEqual(latestJson);
 

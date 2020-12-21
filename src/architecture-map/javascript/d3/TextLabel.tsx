@@ -54,6 +54,7 @@ export interface TextLabelJson {
       [Def.KEY_LABEL_ROT_DEG]: number,
       [Def.KEY_LABEL_HORIZONTAL_ALIGN]: string,
       [Def.KEY_LABEL_VERTICAL_ALIGN]: string,
+      [Def.KEY_Z_ORDER]: number,
   },
   [Def.KEY_COLOR_SET]: string,
 }
@@ -253,6 +254,7 @@ export class TextLabel extends Element {
             [Def.KEY_LABEL_ROT_DEG]: this.labelRotDeg,
             [Def.KEY_LABEL_HORIZONTAL_ALIGN]: this.labelHorizontalAlign,
             [Def.KEY_LABEL_VERTICAL_ALIGN]: this.labelVerticalAlign,
+            [Def.KEY_Z_ORDER]: this.zOrder,
         },
         [Def.KEY_COLOR_SET]: this.colorSet,
     };
@@ -282,7 +284,8 @@ export class TextLabel extends Element {
         json[Def.KEY_DIMENS][Def.KEY_HEIGHT],
         json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
         json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN],
-        json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN]);
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN],
+        json[Def.KEY_DIMENS][Def.KEY_Z_ORDER]);
 
     textLabel.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
 
@@ -337,7 +340,7 @@ export class TextLabel extends Element {
    * @param height Pixels
    */
   public setXYWH(x: number, y: number, width: number, height: number) {
-    this.setDimens(x, y, width, height, null, null, null);
+    this.setDimens(x, y, width, height, null, null, null, null);
   }
 
   /**
@@ -357,6 +360,7 @@ export class TextLabel extends Element {
    * @param labelRotDeg
    * @param labelHorizontalAlign
    * @param labelVerticalAlign
+   * @param zOrder
    */
   public setDimens(
       x: number|null,
@@ -365,7 +369,8 @@ export class TextLabel extends Element {
       height: number|null,
       labelRotDeg: number|null,
       labelHorizontalAlign: string|null,
-      labelVerticalAlign: string|null) {
+      labelVerticalAlign: string|null,
+      zOrder: number|null) {
     if (x != null) this.x = x;
     if (y != null) this.y = y;
     if (width != null) this.width = width;
@@ -373,6 +378,7 @@ export class TextLabel extends Element {
     if (labelRotDeg != null) this.labelRotDeg = labelRotDeg;
     if (labelHorizontalAlign != null) this.labelHorizontalAlign = labelHorizontalAlign;
     if (labelVerticalAlign != null) this.labelVerticalAlign = labelVerticalAlign;
+    if (zOrder != null) this.zOrder = zOrder;
   }
 
   /**

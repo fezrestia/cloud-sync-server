@@ -48,6 +48,7 @@ export interface LineJson {
       [Def.KEY_TO_X]: number,
       [Def.KEY_TO_Y]: number,
       [Def.KEY_WIDTH]: number,
+      [Def.KEY_Z_ORDER]: number,
   },
   [Def.KEY_LINE_STYLE]: string,
   [Def.KEY_FROM_MARKER_TYPE]: string,
@@ -288,6 +289,7 @@ export class Line extends Element {
             [Def.KEY_TO_X]: this.toPoint.x,
             [Def.KEY_TO_Y]: this.toPoint.y,
             [Def.KEY_WIDTH]: this.width,
+            [Def.KEY_Z_ORDER]: this.zOrder,
         },
         [Def.KEY_LINE_STYLE]: this.lineStyle,
         [Def.KEY_FROM_MARKER_TYPE]: this.fromMarkerType,
@@ -313,7 +315,8 @@ export class Line extends Element {
     line.setDimens(
         new Point(json[Def.KEY_DIMENS][Def.KEY_FROM_X], json[Def.KEY_DIMENS][Def.KEY_FROM_Y]),
         new Point(json[Def.KEY_DIMENS][Def.KEY_TO_X], json[Def.KEY_DIMENS][Def.KEY_TO_Y]),
-        json[Def.KEY_DIMENS][Def.KEY_WIDTH]);
+        json[Def.KEY_DIMENS][Def.KEY_WIDTH],
+        json[Def.KEY_DIMENS][Def.KEY_Z_ORDER]);
     line.lineStyle = LineStyle.valueOf(json[Def.KEY_LINE_STYLE]);
     line.fromMarkerType = MarkerType.valueOf(json[Def.KEY_FROM_MARKER_TYPE]);
     line.toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
@@ -387,14 +390,17 @@ export class Line extends Element {
    * @param fromPoint FROM anchor point.
    * @param toPoint TO anchor point.
    * @param width
+   * @param zOrder
    */
   public setDimens(
       fromPoint: Point|null,
       toPoint: Point|null,
-      width: number|null) {
+      width: number|null,
+      zOrder: number|null) {
     if (fromPoint != null) this.fromPoint = fromPoint;
     if (toPoint != null) this.toPoint = toPoint;
     if (width != null) this.width = width;
+    if (zOrder != null) this.zOrder = zOrder;
   }
 
   /**

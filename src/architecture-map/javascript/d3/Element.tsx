@@ -8,6 +8,9 @@ import { JQueryNode } from "../TypeDef.ts";
 export interface ElementJson {
   [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
+  [Def.KEY_DIMENS]: {
+      [Def.KEY_Z_ORDER]: number,
+  },
 }
 
 /**
@@ -29,6 +32,14 @@ export abstract class Element {
   abstract get itxMode(): ElementItxMode;
 
   abstract get label(): string;
+
+  private _zOrder: number = Def.INVALID_Z_ORDER;
+      public get zOrder(): number {
+        return this._zOrder;
+      }
+      public set zOrder(zOrder: number) {
+        this._zOrder = zOrder;
+      }
 
   /**
    * CONSTRUCTOR.

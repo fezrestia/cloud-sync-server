@@ -5,6 +5,7 @@ import { ConnectorJson } from "./d3/Connector";
 import { Line } from "./d3/Line";
 import { LineJson } from "./d3/Line";
 import { ElementJson } from "./d3/Element";
+import { OutFrame } from "./d3/OutFrame";
 
 // Convert old version JSON to latest.
 export function convertJsonToLatest(serialized: any): any {
@@ -17,6 +18,7 @@ export function convertJsonToLatest(serialized: any): any {
   // Update version.
   serialized[Def.KEY_VERSION] = Def.VAL_VERSION;
 
+  let outFrame = serialized[Def.KEY_OUT_FRAME];
   let elements = serialized[Def.KEY_ARCHITECTURE_MAP];
 
   // Add UID.
@@ -109,6 +111,33 @@ export function convertJsonToLatest(serialized: any): any {
         json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN] = json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN];
         delete json[Def.KEY_DIMENS][Def.KEY_LABEL_ALIGN];
       }
+    } );
+  }
+
+  // Add z_order to Element based instances.
+  if (ver < 13) {
+    outFrame[Def.KEY_UID] = Def.UID_OUT_FRAME;
+    outFrame[Def.KEY_CLASS] = OutFrame.TAG;
+    const outFrameX = outFrame[Def.KEY_X];
+    const outFrameY = outFrame[Def.KEY_Y];
+    const outFrameWidth = outFrame[Def.KEY_WIDTH];
+    const outFrameHeight = outFrame[Def.KEY_HEIGHT];
+    outFrame[Def.KEY_DIMENS] = {
+        [Def.KEY_X]: outFrameX,
+        [Def.KEY_Y]: outFrameY,
+        [Def.KEY_WIDTH]: outFrameWidth,
+        [Def.KEY_HEIGHT]: outFrameHeight,
+        [Def.KEY_Z_ORDER]: Def.Z_ORDER_OUT_FRAME,
+    };
+    delete outFrame[Def.KEY_X];
+    delete outFrame[Def.KEY_Y];
+    delete outFrame[Def.KEY_WIDTH];
+    delete outFrame[Def.KEY_HEIGHT];
+
+    let zOrder = Def.START_OF_Z_ORDER;
+    elements.forEach( (json: ElementJson) => {
+      json[Def.KEY_DIMENS][Def.KEY_Z_ORDER] = zOrder;
+      zOrder++;
     } );
   }
 

@@ -23,17 +23,23 @@ export interface OutFrameCallback {
 }
 
 export interface OutFrameJson {
-  [Def.KEY_X]: number,
-  [Def.KEY_Y]: number,
-  [Def.KEY_WIDTH]: number,
-  [Def.KEY_HEIGHT]: number,
+  [Def.KEY_UID]: number,
+  [Def.KEY_CLASS]: string,
+  [Def.KEY_DIMENS]: {
+    [Def.KEY_X]: number,
+    [Def.KEY_Y]: number,
+    [Def.KEY_WIDTH]: number,
+    [Def.KEY_HEIGHT]: number,
+    [Def.KEY_Z_ORDER]: number,
+  },
 }
 
 /**
  * Background out side frame class.
  */
 export class OutFrame extends Element {
-  public readonly TAG = "OutFrame";
+  public static readonly TAG = "OutFrame";
+  public readonly TAG = OutFrame.TAG;
 
   private readonly STROKE_WIDTH = 4;
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
@@ -49,20 +55,55 @@ export class OutFrame extends Element {
   /**
    * CONSTRUCTOR.
    *
+   * @param uid
    * @param html HTML root object.
    * @param svg SVG root object.
    */
-  constructor(html: JQueryNode, svg: D3Node.SVG) {
-    super(0, html, svg); // Dummy UID.
+  constructor(uid: number, html: JQueryNode, svg: D3Node.SVG) {
+    super(uid, html, svg);
     this.colorResolver = ColorSet.resolve(this.colorSet);
+    this.zOrder = Def.Z_ORDER_OUT_FRAME;
   }
 
-  public serialize(): ElementJson {
-    // NOP.
+  /**
+   * Serialize OutFrame object to OutFrameJson Object.
+   *
+   * @return string OutFrameJson Object.
+   */
+  public serialize(): OutFrameJson {
     return {
       [Def.KEY_UID]: this.uid,
       [Def.KEY_CLASS]: this.TAG,
+      [Def.KEY_DIMENS]: {
+        [Def.KEY_X]: this.x,
+        [Def.KEY_Y]: this.y,
+        [Def.KEY_WIDTH]: this.width,
+        [Def.KEY_HEIGHT]: this.height,
+        [Def.KEY_Z_ORDER]: this.zOrder,
+      },
     };
+  }
+
+  /**
+   * Deserlialize OutFrame object from JSON object.
+   *
+   * @param html HTML root node.
+   * @param svg SVG root node.
+   * @param json JSON object.
+   * @return OutFrame.
+   */
+  public static deserialize(html: JQueryNode, svg: D3Node.SVG, json: OutFrameJson): OutFrame {
+    const outFrame = new OutFrame(json[Def.KEY_UID], html, svg);
+
+    outFrame.setXYWH(
+        json[Def.KEY_DIMENS][Def.KEY_X],
+        json[Def.KEY_DIMENS][Def.KEY_Y],
+        json[Def.KEY_DIMENS][Def.KEY_WIDTH],
+        json[Def.KEY_DIMENS][Def.KEY_HEIGHT]);
+
+    outFrame.zOrder = json[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+
+    return outFrame;
   }
 
   // @Override

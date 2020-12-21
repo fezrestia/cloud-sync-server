@@ -289,13 +289,7 @@ export class Context {
       serializedElements.push(serialized);
     } );
 
-    const outSize = this.outFrame.getXYWH();
-    const outFrameJson = {
-      [Def.KEY_X]: outSize.x,
-      [Def.KEY_Y]: outSize.y,
-      [Def.KEY_WIDTH]: outSize.width,
-      [Def.KEY_HEIGHT]: outSize.height,
-    };
+    const outFrameJson = this.outFrame.serialize();
 
     const totalJson: ArchitectureMapJson = {
       [Def.KEY_VERSION]: Def.VAL_VERSION,
@@ -316,7 +310,8 @@ export class Context {
     // Convert to Latest version.
     serialized = convertJsonToLatest(serialized);
 
-    const outSize = serialized[Def.KEY_OUT_FRAME];
+    const outFrame = OutFrame.deserialize(this.html, this.svg, serialized[Def.KEY_OUT_FRAME]);
+    const outSize = outFrame.getXYWH();
     this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
     this.changeOutFrameSize(outSize.width, outSize.height);
     this.outFrame.relayout();
@@ -863,6 +858,13 @@ export class Context {
       } );
     }
 
+    // Update Z-Order.
+    let zOrder = Def.START_OF_Z_ORDER;
+    this.allElements.forEach( (element: Element) => {
+      element.zOrder = zOrder;
+      zOrder++;
+    } );
+
     updateHierarchy(this.allElements);
   }
 
@@ -1248,7 +1250,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
   html.css("display", "none");
   CONTEXT.html = html;
 
-  const outFrame = new OutFrame(html, svg);
+  const outFrame = new OutFrame(Def.UID_OUT_FRAME, html, svg);
   outFrame.setCallback(new OutFrameCallbackImpl());
   outFrame.setXYWH(0, 0, DEFAULT_TOTAL_WIDTH, DEFAULT_TOTAL_HEIGHT);
   outFrame.render();

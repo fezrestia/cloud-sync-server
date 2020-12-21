@@ -53,6 +53,7 @@ export interface ConnectorJson {
       [Def.KEY_TO_X]: number,
       [Def.KEY_TO_Y]: number,
       [Def.KEY_WIDTH]: number,
+      [Def.KEY_Z_ORDER]: number,
   },
   [Def.KEY_FROM_MARKER_TYPE]: string,
   [Def.KEY_TO_MARKER_TYPE]: string,
@@ -289,6 +290,7 @@ export class Connector extends Element {
             [Def.KEY_TO_X]: this.toPoint.x,
             [Def.KEY_TO_Y]: this.toPoint.y,
             [Def.KEY_WIDTH]: this.width,
+            [Def.KEY_Z_ORDER]: this.zOrder,
         },
         [Def.KEY_FROM_MARKER_TYPE]: this.fromMarkerType,
         [Def.KEY_TO_MARKER_TYPE]: this.toMarkerType,
@@ -322,6 +324,8 @@ export class Connector extends Element {
     (connector as any).fromPoint =  new Point(fromX, fromY);
     (connector as any).toPoint =  new Point(toX, toY);
     (connector as any).width = json[Def.KEY_DIMENS][Def.KEY_WIDTH];
+
+    (connector as any).zOrder = json[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
 
     (connector as any)._fromMarkerType = MarkerType.valueOf(json[Def.KEY_FROM_MARKER_TYPE]);
     (connector as any)._toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
