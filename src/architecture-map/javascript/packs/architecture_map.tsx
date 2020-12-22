@@ -143,6 +143,26 @@ function updateHierarchy(elements: Element[]) {
       }
     }
   }
+
+  // Update depth info.
+  function queryUid(elements: Element[], uid: number): ArchMod {
+    return elements.find( (element: Element) => element.uid === uid ) as ArchMod;
+  }
+  elements.forEach( (element: Element) => {
+    if (element.TAG === ArchMod.TAG) {
+      const archMod = element as ArchMod;
+      let depth = Def.TOP_LAYER_DEPTH;
+      let parentUid = archMod.parentUid;
+
+      while (parentUid != null) {
+        const parentArchMod = queryUid(elements, parentUid);
+        parentUid = parentArchMod.parentUid;
+        depth++;
+      }
+
+      archMod.hierarchyDepth = depth;
+    }
+  } );
 }
 
 export interface ContextCallback {

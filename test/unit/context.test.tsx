@@ -66,6 +66,7 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
         {
           "uid": 1,
           "parent_uid": null,
+          "hierarchy_depth": 1,
           "class": "ArchMod",
           "label": "Test Label",
           "dimens": {
@@ -87,6 +88,7 @@ test("Context.convertJsonToLatest() To ver.3 <=", () => {
         {
           "uid": 2,
           "parent_uid": null,
+          "hierarchy_depth": 1,
           "class": "ArchMod",
           "label": "ArchMod",
           "dimens": {
@@ -196,6 +198,7 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
           {
             "uid": 1,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -217,6 +220,7 @@ test("Context.convertJsonToLatest() To ver.5 <=", () => {
           {
             "uid": 2,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -425,6 +429,7 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
           {
             "uid": 1,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -446,6 +451,7 @@ test("Context.convertJsonToLatest() To ver.7 <=", () => {
           {
             "uid": 2,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -629,6 +635,7 @@ test("Context.convertJsonToLatest() To ver.10 <=", () => {
           {
             "uid": 1,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -709,6 +716,7 @@ test("Context.convertJsonToLatest() To ver.11 <=", () => {
           {
             "uid": 1,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -804,6 +812,7 @@ test("Context.convertJsonToLatest() To ver.12 <=", () => {
           {
             "uid": 1,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -849,7 +858,7 @@ test("Context.convertJsonToLatest() To ver.12 <=", () => {
 } );
 
 // Add z_order of ArchMod/Connector/Line/TextLabel and update OutFrame.
-test("Context.convertJsonToLatest() To ver.12 <=", () => {
+test("Context.convertJsonToLatest() To ver.13 <=", () => {
   let ver12Json = JSON.parse(`
       {
         "version": "12",
@@ -917,6 +926,7 @@ test("Context.convertJsonToLatest() To ver.12 <=", () => {
           {
             "uid": 1,
             "parent_uid": null,
+            "hierarchy_depth": 1,
             "class": "ArchMod",
             "label": "ArchMod",
             "dimens": {
@@ -956,6 +966,181 @@ test("Context.convertJsonToLatest() To ver.12 <=", () => {
   `);
 
   var converted = convertJsonToLatest(ver12Json);
+
+  expect(converted).toStrictEqual(latestJson);
+
+} );
+
+// Add hierarchy_depth to ArchMod.
+test("Context.convertJsonToLatest() To ver.14 <=", () => {
+  let ver13Json = JSON.parse(`
+      {
+        "version": 13,
+        "out_frame": {
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "class": "ArchMod",
+            "label": "LAYER 1",
+            "dimens": {
+              "x": 54,
+              "y": 54,
+              "width": 236,
+              "height": 232,
+              "pin_x": 114,
+              "pin_y": 114,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "top",
+              "z_order": 1
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 2,
+            "parent_uid": 1,
+            "class": "ArchMod",
+            "label": "LAYER 2",
+            "dimens": {
+              "x": 81,
+              "y": 84,
+              "width": 180,
+              "height": 176,
+              "pin_x": 141,
+              "pin_y": 144,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "top",
+              "z_order": 2
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 3,
+            "parent_uid": 2,
+            "class": "ArchMod",
+            "label": "LAYER 3",
+            "dimens": {
+              "x": 110,
+              "y": 114,
+              "width": 120,
+              "height": 120,
+              "pin_x": 170,
+              "pin_y": 174,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "top",
+              "z_order": 3
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          }
+        ]
+      }
+  `);
+
+  let latestJson = JSON.parse(`
+      {
+        "version": "${Def.VAL_VERSION}",
+        "out_frame": {
+          "class": "OutFrame",
+          "dimens": {
+            "height": 640,
+            "width": 640,
+            "x": 0,
+            "y": 0,
+            "z_order": 0
+          },
+          "uid": 0
+        },
+        "architecture_map": [
+          {
+            "uid": 1,
+            "parent_uid": null,
+            "hierarchy_depth": 1,
+            "class": "ArchMod",
+            "label": "LAYER 1",
+            "dimens": {
+              "x": 54,
+              "y": 54,
+              "width": 236,
+              "height": 232,
+              "pin_x": 114,
+              "pin_y": 114,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "top",
+              "z_order": 1
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 2,
+            "parent_uid": 1,
+            "hierarchy_depth": 2,
+            "class": "ArchMod",
+            "label": "LAYER 2",
+            "dimens": {
+              "x": 81,
+              "y": 84,
+              "width": 180,
+              "height": 176,
+              "pin_x": 141,
+              "pin_y": 144,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "top",
+              "z_order": 2
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          },
+          {
+            "uid": 3,
+            "parent_uid": 2,
+            "hierarchy_depth": 3,
+            "class": "ArchMod",
+            "label": "LAYER 3",
+            "dimens": {
+              "x": 110,
+              "y": 114,
+              "width": 120,
+              "height": 120,
+              "pin_x": 170,
+              "pin_y": 174,
+              "label_rot_deg": 0,
+              "label_horizontal_align": "center",
+              "label_vertical_align": "top",
+              "z_order": 3
+            },
+            "clip_area": "none",
+            "color_set": "gray",
+            "edge_color_set": "gray"
+          }
+        ]
+      }
+  `);
+
+  var converted = convertJsonToLatest(ver13Json);
 
   expect(converted).toStrictEqual(latestJson);
 

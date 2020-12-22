@@ -55,6 +55,7 @@ export interface ArchModCallback {
 export interface ArchModJson {
   [Def.KEY_UID]: number,
   [Def.KEY_PARENT_UID]: number|null,
+  [Def.KEY_HIERARCHY_DEPTH]: number,
   [Def.KEY_CLASS]: string,
   [Def.KEY_LABEL]: string,
   [Def.KEY_DIMENS]: {
@@ -261,6 +262,14 @@ export class ArchMod extends Element {
         this._parentUid = parentUid;
       }
 
+  private _hierarchyDepth: number = Def.TOP_LAYER_DEPTH;
+      public get hierarchyDepth(): number {
+        return this._hierarchyDepth;
+      }
+      public set hierarchyDepth(hierarchyDepth: number) {
+        this._hierarchyDepth = hierarchyDepth;
+      }
+
   /**
    * Serialize ArchMod object to ArchModJson Object.
    *
@@ -270,6 +279,7 @@ export class ArchMod extends Element {
     const jsonObj = {
         [Def.KEY_UID]: this.uid,
         [Def.KEY_PARENT_UID]: this.parentUid,
+        [Def.KEY_HIERARCHY_DEPTH]: this.hierarchyDepth,
         [Def.KEY_CLASS]: ArchMod.TAG,
         [Def.KEY_LABEL]: this.label,
         [Def.KEY_DIMENS]: {
@@ -307,6 +317,7 @@ export class ArchMod extends Element {
         svg,
         json[Def.KEY_LABEL]);
     archMod.parentUid = json[Def.KEY_PARENT_UID];
+    archMod.hierarchyDepth = json[Def.KEY_HIERARCHY_DEPTH];
 
     archMod.setDimens(
         json[Def.KEY_DIMENS][Def.KEY_X],

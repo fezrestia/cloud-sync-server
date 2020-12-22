@@ -6,6 +6,8 @@ import { Line } from "./d3/Line";
 import { LineJson } from "./d3/Line";
 import { ElementJson } from "./d3/Element";
 import { OutFrame } from "./d3/OutFrame";
+import { ArchMod } from "./d3/ArchMod";
+import { ArchModJson } from "./d3/ArchMod";
 
 // Convert old version JSON to latest.
 export function convertJsonToLatest(serialized: any): any {
@@ -141,6 +143,29 @@ export function convertJsonToLatest(serialized: any): any {
     } );
   }
 
+  // Add hierarchy_depth to ArchMod.
+  if (ver < 14) {
+    elements.forEach( (json: ElementJson) => {
+      if (json[Def.KEY_CLASS] === ArchMod.TAG) {
+        const archModJson = json as ArchModJson;
+        let depth = Def.TOP_LAYER_DEPTH;
+        let parentUid: number|null = archModJson[Def.KEY_PARENT_UID];
+
+        while (parentUid != null) {
+          const parentJson = queryUid(elements, parentUid) as ArchModJson;
+          parentUid = parentJson[Def.KEY_PARENT_UID];
+          depth++;
+        }
+
+        archModJson[Def.KEY_HIERARCHY_DEPTH] = depth;
+      }
+    } );
+  }
+
   return serialized;
+}
+
+function queryUid(elementJsons: ElementJson[], uid: number): ElementJson {
+  return elementJsons.find( (json: ElementJson) => json[Def.KEY_UID] === uid ) as ElementJson;
 }
 

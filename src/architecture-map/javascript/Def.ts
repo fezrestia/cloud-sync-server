@@ -8,13 +8,14 @@ export class Def {
   public static readonly RADIAL_SNAP_STEP_RAD = Math.PI * 2 / 24; // 15 deg
 
   public static readonly KEY_VERSION = "version";
-  public static readonly VAL_VERSION = "13";
+  public static readonly VAL_VERSION = "14";
 
   public static readonly KEY_ARCHITECTURE_MAP = "architecture_map";
   public static readonly KEY_OUT_FRAME = "out_frame";
 
   public static readonly KEY_UID = "uid";
   public static readonly KEY_PARENT_UID = "parent_uid";
+  public static readonly KEY_HIERARCHY_DEPTH = "hierarchy_depth"; // Top layer == 1
   public static readonly KEY_CLASS = "class";
   public static readonly KEY_LABEL = "label";
   public static readonly KEY_DIMENS = "dimens";
@@ -53,6 +54,8 @@ export class Def {
 
   public static readonly UID_OUT_FRAME = 0;
   public static readonly Z_ORDER_OUT_FRAME = 0;
+
+  public static readonly TOP_LAYER_DEPTH = 1;
 
 }
 
