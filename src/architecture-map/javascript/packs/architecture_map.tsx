@@ -201,6 +201,10 @@ export class Context {
     this.allElements.forEach(callback);
   }
 
+  // Max depth to be rendered, valid for viewer only.
+  private currentHierarchyDepth = Number.MAX_SAFE_INTEGER;
+  private maxHierarchyDepth = 0;
+
   // UNDO history.
   private readonly history: ArchitectureMapJson[] = [];
   private historyUndoCount: number = 0;
@@ -345,6 +349,15 @@ export class Context {
         case ArchMod.TAG:
           json = element as ArchModJson;
           deserialized = this.deserializeArchMod(json);
+
+          // Update hierarchy depth here,
+          // because detail level change feature is valid only for viewer.
+          const archMod = deserialized as ArchMod;
+          const depth = archMod.hierarchyDepth;
+          if (this.maxHierarchyDepth < depth) {
+            this.maxHierarchyDepth = depth;
+            this.currentHierarchyDepth = depth;
+          }
           break;
 
         case TextLabel.TAG:
@@ -935,6 +948,46 @@ export class Context {
     }
   }
 
+  public moreDetailHierarchy() {
+    const oldDepth = this.currentHierarchyDepth;
+    if (this.currentHierarchyDepth < this.maxHierarchyDepth) {
+      this.currentHierarchyDepth++;
+    }
+
+    if (oldDepth != this.currentHierarchyDepth) {
+      this.updateDetailHierarchy();
+    }
+  }
+
+  public lessDetailHierarchy() {
+    const oldDepth = this.currentHierarchyDepth;
+    if (this.currentHierarchyDepth > Def.TOP_LAYER_DEPTH) {
+      this.currentHierarchyDepth--;
+    }
+
+    if (oldDepth != this.currentHierarchyDepth) {
+      this.updateDetailHierarchy();
+    }
+  }
+
+  private updateDetailHierarchy() {
+    this.allElements.forEach ( (element: Element) => {
+      element.delete();
+    } );
+
+    this.allElements.forEach ( (element: Element) => {
+      // Check hierarchy depth.
+      if (element.TAG == ArchMod.TAG) {
+        const archMod = element as ArchMod;
+        if (this.currentHierarchyDepth < archMod.hierarchyDepth) {
+          // Skip rendering.
+          return;
+        }
+      }
+
+      element.render();
+    } );
+  }
 }
 const CONTEXT = new Context();
 (window as any).getContext = () => { return CONTEXT };
@@ -1804,4 +1857,12 @@ function changeGlobalModeTo(mode: string) {
 (window as any).onItxModeClicked = (event: Event) => {
   changeGlobalModeTo(GLOBAL_MODE_ITX);
 };
+
+(window as any).onMoreDetailHierarchyClicked = () => {
+  CONTEXT.moreDetailHierarchy();
+}
+
+(window as any).onLessDetailHierarchyClicked = () => {
+  CONTEXT.lessDetailHierarchy();
+}
 

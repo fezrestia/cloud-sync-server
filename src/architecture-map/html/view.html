@@ -12,6 +12,17 @@
 
     <table><tbody>
       <tr>
+        <!-- PLACE_HOLDER_LOAD_JSON_START -->
+        <td nowrap class="no-border" >
+          <strong>Load JSON</strong>
+          <br>
+          <form id="upload_json_form" class="layer-parent" >
+            <span id="upload_json_label_visible" class="layer-child" >Load JSON</span>
+            <label id="upload_json_label_hidden" class="layer-child" for="upload_json_input" ></label>
+            <input id="upload_json_input" type="file" accept=".json" onChange="onLoadJsonClicked(event)" />
+          </form>
+        </td>
+        <!-- PLACE_HOLDER_LOAD_JSON_END -->
         <td nowrap class="no-border" >
           <strong>Save as Image</strong>
           <br>
@@ -27,6 +38,12 @@
           <strong>Module Hierarchy</strong>
           <br>
           <button id="module_hierarchy_view" class="fixed-button" onClick="onModuleHierarchyViewClicked(event, this);" >Open Viewer</button>
+        </td>
+        <td nowrap class="no-border" >
+          <strong>Hierarchy Detail Level</strong>
+          <br>
+          <button id="more_detail_hierarchy" class="fixed-button" onClick="onMoreDetailHierarchyClicked();" >More</button>
+          <button id="less_detail_hierarchy" class="fixed-button" onClick="onLessDetailHierarchyClicked();" >Less</button>
         </td>
       </tr>
     </tbody></table>
