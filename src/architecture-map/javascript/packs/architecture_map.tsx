@@ -202,8 +202,8 @@ export class Context {
   }
 
   // Max depth to be rendered, valid for viewer only.
-  private currentHierarchyDepth = Number.MAX_SAFE_INTEGER;
-  private maxHierarchyDepth = 0;
+  private currentHierarchyDepth = Def.TOP_LAYER_DEPTH;
+  private maxHierarchyDepth = Def.TOP_LAYER_DEPTH;
 
   // UNDO history.
   private readonly history: ArchitectureMapJson[] = [];
@@ -384,6 +384,9 @@ export class Context {
       // Load as selected state.
       deserialized.select();
       this.onMultiSelected(deserialized);
+
+      // Update UI.
+      this.updateDetailHierarchyUi();
 
     } );
   }
@@ -957,6 +960,8 @@ export class Context {
     if (oldDepth != this.currentHierarchyDepth) {
       this.updateDetailHierarchy();
     }
+
+    this.updateDetailHierarchyUi();
   }
 
   public lessDetailHierarchy() {
@@ -968,6 +973,8 @@ export class Context {
     if (oldDepth != this.currentHierarchyDepth) {
       this.updateDetailHierarchy();
     }
+
+    this.updateDetailHierarchyUi();
   }
 
   private updateDetailHierarchy() {
@@ -987,6 +994,32 @@ export class Context {
 
       element.render();
     } );
+  }
+
+  private updateDetailHierarchyUi() {
+    const MORE_ID = "#more_detail_hierarchy_button";
+    const LESS_ID = "#less_detail_hierarchy_button";
+
+    if (this.maxHierarchyDepth == Def.TOP_LAYER_DEPTH) {
+      // Only 1 layer arch map.
+      $(MORE_ID).prop("disabled", true);
+      $(LESS_ID).prop("disabled", true);
+      return;
+    }
+
+    if (this.currentHierarchyDepth >= this.maxHierarchyDepth) {
+      // Most detail.
+      $(MORE_ID).prop("disabled", true);
+      $(LESS_ID).prop("disabled", false);
+    }
+
+    if (this.currentHierarchyDepth <= Def.TOP_LAYER_DEPTH) {
+      // Least detail.
+      $(MORE_ID).prop("disabled", false);
+      $(LESS_ID).prop("disabled", true);
+    }
+
+    $("#detail_level_indicator").text(`${this.currentHierarchyDepth}/${this.maxHierarchyDepth}`);
   }
 }
 const CONTEXT = new Context();

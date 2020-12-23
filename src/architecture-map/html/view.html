@@ -40,10 +40,10 @@
           <button id="module_hierarchy_view" class="fixed-button" onClick="onModuleHierarchyViewClicked(event, this);" >Open Viewer</button>
         </td>
         <td nowrap class="no-border" >
-          <strong>Hierarchy Detail Level</strong>
+          <strong>Hierarchy Detail Level : <span id="detail_level_indicator" ></span></strong>
           <br>
-          <button id="more_detail_hierarchy" class="fixed-button" onClick="onMoreDetailHierarchyClicked();" >More</button>
-          <button id="less_detail_hierarchy" class="fixed-button" onClick="onLessDetailHierarchyClicked();" >Less</button>
+          <button id="more_detail_hierarchy_button" class="fixed-button" onClick="onMoreDetailHierarchyClicked();" disabled >More</button>
+          <button id="less_detail_hierarchy_button" class="fixed-button" onClick="onLessDetailHierarchyClicked();" disabled >Less</button>
         </td>
       </tr>
     </tbody></table>
