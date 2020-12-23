@@ -30,3 +30,7 @@ export namespace CSS {
 
 export type JQueryNode = JQuery<HTMLElement>;
 
+export interface StringKeyObject {
+  [key: string]: any,
+}
+

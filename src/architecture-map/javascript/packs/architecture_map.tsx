@@ -145,8 +145,8 @@ function updateHierarchy(elements: Element[]) {
   }
 
   // Update depth info.
-  function queryUid(elements: Element[], uid: number): ArchMod {
-    return elements.find( (element: Element) => element.uid === uid ) as ArchMod;
+  function queryUid(elms: Element[], uid: number): ArchMod {
+    return elms.find( (elm: Element) => elm.uid === uid ) as ArchMod;
   }
   elements.forEach( (element: Element) => {
     if (element.TAG === ArchMod.TAG) {
@@ -957,7 +957,7 @@ export class Context {
       this.currentHierarchyDepth++;
     }
 
-    if (oldDepth != this.currentHierarchyDepth) {
+    if (oldDepth !== this.currentHierarchyDepth) {
       this.updateDetailHierarchy();
     }
 
@@ -970,7 +970,7 @@ export class Context {
       this.currentHierarchyDepth--;
     }
 
-    if (oldDepth != this.currentHierarchyDepth) {
+    if (oldDepth !== this.currentHierarchyDepth) {
       this.updateDetailHierarchy();
     }
 
@@ -984,7 +984,7 @@ export class Context {
 
     this.allElements.forEach ( (element: Element) => {
       // Check hierarchy depth.
-      if (element.TAG == ArchMod.TAG) {
+      if (element.TAG === ArchMod.TAG) {
         const archMod = element as ArchMod;
         if (this.currentHierarchyDepth < archMod.hierarchyDepth) {
           // Skip rendering.
@@ -1000,7 +1000,7 @@ export class Context {
     const MORE_ID = "#more_detail_hierarchy_button";
     const LESS_ID = "#less_detail_hierarchy_button";
 
-    if (this.maxHierarchyDepth == Def.TOP_LAYER_DEPTH) {
+    if (this.maxHierarchyDepth === Def.TOP_LAYER_DEPTH) {
       // Only 1 layer arch map.
       $(MORE_ID).prop("disabled", true);
       $(LESS_ID).prop("disabled", true);

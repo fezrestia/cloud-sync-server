@@ -1,11 +1,11 @@
-import { Def } from "../Def.ts";
-import { D3Node } from "../TypeDef.ts";
-import { JQueryNode } from "../TypeDef.ts";
+import { Def } from "../Def";
+import { D3Node } from "../TypeDef";
+import { JQueryNode, StringKeyObject } from "../TypeDef";
 
 /**
  * Serialized JSON object interface.
  */
-export interface ElementJson {
+export interface ElementJson extends StringKeyObject {
   [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
   [Def.KEY_DIMENS]: {

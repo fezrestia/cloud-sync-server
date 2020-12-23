@@ -24,8 +24,8 @@ export class Downloader {
    */
   public static downloadCsv(csv: string, defaultFileName: string): void {
     // Gen BLOB.
-    let BOM = new Uint8Array([0xEF, 0XBB, 0xBF]);
-    let blob = new Blob([BOM, csv], { type: "text/csv" });
+    const BOM = new Uint8Array([0xEF, 0XBB, 0xBF]);
+    const blob = new Blob([BOM, csv], { type: "text/csv" });
 
     Downloader.doDownloadBlob(blob, defaultFileName);
   }
@@ -38,13 +38,13 @@ export class Downloader {
    */
   public static downloadJson(json: string, fileNameBase: string): void {
     // Gen BLOB.
-    let blob = new Blob([json], { type: "application/json" });
+    const blob = new Blob([json], { type: "application/json" });
 
     Downloader.doDownloadBlob(blob, `${fileNameBase}.json`);
   }
 
   private static doDownloadBlob(blob: Blob, filename: string) {
-    let url = window.URL.createObjectURL(blob);
+    const url = window.URL.createObjectURL(blob);
     Downloader.doDownloadUrl(url, filename);
   }
 
@@ -64,21 +64,21 @@ export class Downloader {
    * @param fileNameBase File name without extension.
    */
   public static downloadSvgAsSvg(svg: D3Node.SVG, fileNameBase: string) {
-    let serializedSvg: string = Downloader.serializeSvg(svg);
+    const serializedSvg: string = Downloader.serializeSvg(svg);
 
-    let xml: string = [
+    const xml: string = [
       '<?xml version="1.0" standalone="no"?>',
       '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">',
       serializedSvg,
     ].join("");
 
-    let blob = new Blob([xml], { "type" : "text/xml" });
+    const blob = new Blob([xml], { "type" : "text/xml" });
 
     Downloader.doDownloadBlob(blob, `${fileNameBase}.svg`);
   }
 
   private static serializeSvg(svg: D3Node.SVG): string {
-    let svgNode: SVGSVGElement|null = svg
+    const svgNode: SVGSVGElement|null = svg
         .attr("xmlns", "http://www.w3.org/2000/svg")
         .attr("version", "1.1")
         .node();
@@ -87,8 +87,8 @@ export class Downloader {
       return "";
     }
 
-    let xmlSerializer = new XMLSerializer();
-    let serialized: string = xmlSerializer.serializeToString(svgNode);
+    const xmlSerializer = new XMLSerializer();
+    const serialized: string = xmlSerializer.serializeToString(svgNode);
 
     return serialized;
   }
@@ -101,22 +101,22 @@ export class Downloader {
    * @param fileNameBase File name without extension.
    */
   public static downloadSvgAsPng(svg: D3Node.SVG, width: number, height: number, fileNameBase: string) {
-    let serializedSvg: string = Downloader.serializeSvg(svg);
-    let dataUri: string = 'data:image/svg+xml;utf8,' + encodeURIComponent(serializedSvg);
+    const serializedSvg: string = Downloader.serializeSvg(svg);
+    const dataUri: string = 'data:image/svg+xml;utf8,' + encodeURIComponent(serializedSvg);
 
-    let img = new Image();
+    const img = new Image();
     img.src = dataUri;
 
-    let canvas = document.createElement("canvas") as HTMLCanvasElement;
+    const canvas = document.createElement("canvas") as HTMLCanvasElement;
     canvas.setAttribute("width", String(width));
     canvas.setAttribute("height", String(height));
     canvas.setAttribute("display", "none");
     document.body.appendChild(canvas);
-    let context = canvas.getContext("2d") as CanvasRenderingContext2D;
+    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
     function onLoadCallback() {
       context.drawImage(img, 0, 0);
-      let url = canvas.toDataURL("image/png");
+      const url = canvas.toDataURL("image/png");
       Downloader.doDownloadUrl(url, `${fileNameBase}.png`);
 
       document.body.removeChild(canvas);

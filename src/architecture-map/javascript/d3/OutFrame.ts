@@ -142,7 +142,7 @@ export class OutFrame extends Element {
   private _itxMode: ElementItxMode = ElementItxMode.RIGID;
       public set itxMode(mode: ElementItxMode) {
         this._itxMode = mode;
-        if (mode != ElementItxMode.EDITABLE) {
+        if (mode !== ElementItxMode.EDITABLE) {
           this.isEditing = false;
         }
       }
@@ -156,7 +156,7 @@ export class OutFrame extends Element {
         return this._isEditing;
       }
       public set isEditing(editing: boolean) {
-        if (this.itxMode == ElementItxMode.EDITABLE) {
+        if (this.itxMode === ElementItxMode.EDITABLE) {
           if (editing) {
             this.enableEditMode();
           } else {
@@ -273,14 +273,14 @@ export class OutFrame extends Element {
   private registerCallbacks() {
     this.path.on("mouseover", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseover");
-        if (this.itxMode == ElementItxMode.EDITABLE && !this.isEditing) {
+        if (this.itxMode === ElementItxMode.EDITABLE && !this.isEditing) {
           this.isHighlight = true;
           this.recolor();
         }
     });
     this.path.on("mouseout", () => {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:mouseout");
-        if (this.itxMode == ElementItxMode.EDITABLE && !this.isEditing) {
+        if (this.itxMode === ElementItxMode.EDITABLE && !this.isEditing) {
           this.isHighlight = false;
           this.recolor();
         }
@@ -289,7 +289,7 @@ export class OutFrame extends Element {
     this.path.on("click", (event: MouseEvent) => {
         if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "on:click");
 
-        if (this.itxMode == ElementItxMode.EDITABLE) {
+        if (this.itxMode === ElementItxMode.EDITABLE) {
           this.isEditing = !this.isEditing;
         }
 
@@ -311,9 +311,9 @@ export class OutFrame extends Element {
   }
 
   private addEditGrip(id: string): D3Node.Circle {
-    let TAG = "EditGrip";
+    const TAG = "EditGrip";
 
-    let circle = this.root.append("circle")
+    const circle = this.root.append("circle")
         .attr("id", id)
         .attr("r", this.EDIT_GRIP_RADIUS_PIX);
 
@@ -340,11 +340,11 @@ export class OutFrame extends Element {
           .on("drag", (event: D3Event.Drag) => {
               if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "on:drag:drag");
 
-              let isSnapDragEnabled = event.sourceEvent.altKey;
+              const isSnapDragEnabled = event.sourceEvent.altKey;
               const target = event.target as any;
 
-              let origWidth = target.origWidth;
-              let origHeight = target.origHeight;
+              const origWidth = target.origWidth;
+              const origHeight = target.origHeight;
 
               let dx = event.x - target.startX;
               let dy = event.y - target.startY;

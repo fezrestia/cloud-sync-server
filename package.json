@@ -59,7 +59,7 @@
     "build:development": "webpack --mode=development",
     "build:production": "webpack --mode=production",
     "watch": "webpack --mode=development --watch",
-    "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.tsx'",
+    "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.ts*'",
     "test:unit": "./node_modules/.bin/jest",
     "test:unit-coverage": "./node_modules/.bin/jest --coverage",
     "test:system": "./node_modules/.bin/mocha --require ts-node/register test/system/*.ts --timeout 60000",
