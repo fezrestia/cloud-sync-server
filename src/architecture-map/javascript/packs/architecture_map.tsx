@@ -742,6 +742,14 @@ export class Context {
 
     this.resetAllState();
 
+    this.clipboard.sort( (elmA: ElementJson, elmB: ElementJson): number => {
+      const zA = elmA[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+      const zB = elmB[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+      if (zA < zB) return -1;
+      if (zA > zB) return 1;
+      return 0;
+    } );
+
     this.clipboard.forEach( (serialized: ElementJson) => {
       serialized[Def.KEY_UID] = this.genNewElementUid();
 
