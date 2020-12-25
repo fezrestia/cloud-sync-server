@@ -76,6 +76,25 @@ module.exports = (env, argv) => {
           ],
         },
 
+        // Images.
+        {
+          test: /\.(jpg|jpeg|png|gif)$/i,
+          use: [
+            {
+              loader: "file-loader",
+              options: {
+                name: "[name].[ext]",
+                outputPath: (url, resourcePath, context) => {
+                  if (/architecture-map/.test(resourcePath)) {
+                    return `architecture_map/${url}`
+                  }
+                  return "images";
+                },
+              },
+            },
+          ],
+        },
+
         // HTML.
         {
           test: /\.html$/, // ext = .html

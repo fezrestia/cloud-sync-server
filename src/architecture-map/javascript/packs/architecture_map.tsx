@@ -30,6 +30,8 @@ import { convertJsonToLatest } from "../JsonConverter";
 import { openModuleHierarchyViewWindow } from "../itx/open_module_hierarchy_view";
 import { downloadStaticHtml } from "../itx/download_static_html";
 
+import loading_spinner_icon from "../../image/loading_spinner_icon.png";
+
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
 const ROOT_ID = "root";
@@ -1347,7 +1349,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
 }
 
 // Entry point from HTML.
-(window as any).onArchitectureMapLoaded = (
+(window as any).onArchitectureMapLoaded = async (
     defaultGlobalMode: string = GLOBAL_MODE_GOD,
     defaultLoadJson: string|null = null) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onArchitectureMapTopLoaded()");
@@ -1793,7 +1795,9 @@ function getExportFileNameBase(): string {
   const target = event.target as HTMLInputElement;
   const file: File = (target.files as FileList)[0];
   const reader = new FileReader();
-  reader.onload = (e: Event) => {
+  reader.onload = async (e: Event) => {
+    await showLoading();
+
     const r = e.target as FileReader;
     const jsonStr: string = r.result as string;
 
@@ -1807,6 +1811,8 @@ function getExportFileNameBase(): string {
     CONTEXT.deserializeFromJson(serialized);
 
     CONTEXT.recordHistory();
+
+    hideLoading();
   };
 
   reader.readAsText(file);
@@ -1869,6 +1875,30 @@ function getExportFileNameBase(): string {
       outSize.height,
       getExportFileNameBase());
 };
+
+async function showLoading(): Promise<void> {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "showLoading()");
+
+  return new Promise( (resolve: () => void, reject: () => void) => {
+    $("body").append(`<div id="loading_indicator" />`);
+    $("#loading_indicator").append(`<img id="loading_spinner_icon" />`);
+
+    const icon: JQuery<HTMLImageElement> = $("#loading_spinner_icon");
+
+    icon.bind("load", () => {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "showLoading() : DONE");
+      resolve();
+    } );
+
+    icon.attr("src", loading_spinner_icon);
+  } );
+}
+
+function hideLoading() {
+  if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "hideLoading()");
+
+  $("#loading_indicator").remove();
+}
 
 function changeGlobalModeTo(mode: string) {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `changeGlobalModeTo() : mode=$mode`);

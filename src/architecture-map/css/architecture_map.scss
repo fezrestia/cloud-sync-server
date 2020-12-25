@@ -244,3 +244,29 @@ div.line-style-selector {
   color: lightgray !important;
 }
 
+#loading_indicator {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: #AAAAAAAA;
+}
+
+#loading_spinner_icon {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  margin-left: -32px;
+  margin-top: -32px;
+  animation: loading 1s linear infinite;
+  transform-origin: center center;
+}
+
+@keyframes loading {
+  0%    { transform: rotate(0deg); }
+  100%  { transform: rotate(360deg); }
+}
+
