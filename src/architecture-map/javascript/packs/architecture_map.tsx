@@ -1,5 +1,7 @@
 import * as d3 from "d3";
 import * as $ from "jquery";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 import { Element } from "../d3/Element";
 import { ElementItxMode } from "../d3/Element";
@@ -29,14 +31,14 @@ import { Downloader } from "../util/Downloader";
 import { convertJsonToLatest } from "../JsonConverter";
 import { openModuleHierarchyViewWindow } from "../itx/open_module_hierarchy_view";
 import { downloadStaticHtml } from "../itx/download_static_html";
-
-import loading_spinner_icon from "../../image/loading_spinner_icon.png";
+import { LoadingIndicator } from "../components/LoadingIndicator";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
 const ROOT_ID = "root";
 const SVG_ROOT_ID = "svg_root";
 const HTML_ROOT_ID = "html_root";
+const OVERLAY_ROOT_ID = "overlay_root";
 const DEFAULT_SIZE = 120;
 const DEFAULT_TOTAL_WIDTH = 640;
 const DEFAULT_TOTAL_HEIGHT = 640;
@@ -1879,25 +1881,22 @@ function getExportFileNameBase(): string {
 async function showLoading(): Promise<void> {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "showLoading()");
 
-  return new Promise( (resolve: () => void, reject: () => void) => {
-    $("body").append(`<div id="loading_indicator" />`);
-    $("#loading_indicator").append(`<img id="loading_spinner_icon" />`);
-
-    const icon: JQuery<HTMLImageElement> = $("#loading_spinner_icon");
-
-    icon.bind("load", () => {
-      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "showLoading() : DONE");
-      resolve();
-    } );
-
-    icon.attr("src", loading_spinner_icon);
-  } );
+  let ref: LoadingIndicator|null = null;
+  ReactDOM.render(
+      <LoadingIndicator
+          ref={ (loadingIndicator) => { ref = loadingIndicator } }
+      />,
+      document.getElementById(OVERLAY_ROOT_ID));
+  await ref!.shown();
 }
 
 function hideLoading() {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "hideLoading()");
 
-  $("#loading_indicator").remove();
+  const container = document.getElementById(OVERLAY_ROOT_ID);
+  if (container != null) {
+    ReactDOM.unmountComponentAtNode(container);
+  }
 }
 
 function changeGlobalModeTo(mode: string) {
