@@ -332,67 +332,83 @@ export class Context {
    * Deserialize static context from JSON object.
    * @param serialized ArchitectureMapJson object.
    */
-  public deserializeFromJson(serialized: ArchitectureMapJson) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `deserializeFromjson()`);
+  public async deserializeFromJson(serialized: ArchitectureMapJson) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `deserializeFromjson() : E`);
+
+    await showLoading();
 
     // Convert to Latest version.
     serialized = convertJsonToLatest(serialized);
 
-    const outFrame = OutFrame.deserialize(this.html, this.svg, serialized[Def.KEY_OUT_FRAME]);
-    const outSize = outFrame.getXYWH();
-    this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
-    this.changeOutFrameSize(outSize.width, outSize.height);
-    this.outFrame.relayout();
-
-    const elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
-    elements.forEach( (element: ElementJson) => {
-      let deserialized: Element;
-      let json;
-
-      switch (element[Def.KEY_CLASS]) {
-        case ArchMod.TAG:
-          json = element as ArchModJson;
-          deserialized = this.deserializeArchMod(json);
-
-          // Update hierarchy depth here,
-          // because detail level change feature is valid only for viewer.
-          const archMod = deserialized as ArchMod;
-          const depth = archMod.hierarchyDepth;
-          if (this.maxHierarchyDepth < depth) {
-            this.maxHierarchyDepth = depth;
-            this.currentHierarchyDepth = depth;
-          }
-          break;
-
-        case TextLabel.TAG:
-          json = element as TextLabelJson;
-          deserialized = this.deserializeTextLabel(json);
-          break;
-
-        case Line.TAG:
-          json = element as LineJson;
-          deserialized = this.deserializeLine(json);
-          break;
-
-        case Connector.TAG:
-          json = element as ConnectorJson;
-          deserialized = this.deserializeConnector(json);
-          break;
-
-        default:
-          TraceLog.e(TAG, `Unexpected Element:`);
-          console.log(element);
-          return;
-      }
-
-      // Load as selected state.
-      deserialized.select();
-      this.onMultiSelected(deserialized);
-
-      // Update UI.
-      this.updateDetailHierarchyUi();
-
+    // Render OutFrame.
+    await Util.timeslice( () => {
+      const outFrame = OutFrame.deserialize(this.html, this.svg, serialized[Def.KEY_OUT_FRAME]);
+      const outSize = outFrame.getXYWH();
+      this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
+      this.changeOutFrameSize(outSize.width, outSize.height);
+      this.outFrame.relayout();
     } );
+
+    // Rendner each Element.
+    const elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
+    elements.forEach( async (element: ElementJson) => {
+      await Util.timeslice( () => {
+        let deserialized: Element;
+        let json;
+
+        switch (element[Def.KEY_CLASS]) {
+          case ArchMod.TAG:
+            json = element as ArchModJson;
+            deserialized = this.deserializeArchMod(json);
+
+            // Update hierarchy depth here,
+            // because detail level change feature is valid only for viewer.
+            const archMod = deserialized as ArchMod;
+            const depth = archMod.hierarchyDepth;
+            if (this.maxHierarchyDepth < depth) {
+              this.maxHierarchyDepth = depth;
+              this.currentHierarchyDepth = depth;
+            }
+            break;
+
+          case TextLabel.TAG:
+            json = element as TextLabelJson;
+            deserialized = this.deserializeTextLabel(json);
+            break;
+
+          case Line.TAG:
+            json = element as LineJson;
+            deserialized = this.deserializeLine(json);
+            break;
+
+          case Connector.TAG:
+            json = element as ConnectorJson;
+            deserialized = this.deserializeConnector(json);
+            break;
+
+          default:
+            TraceLog.e(TAG, `Unexpected Element:`);
+            console.log(element);
+            return;
+        }
+
+        // Load as selected state.
+        deserialized.select();
+        this.onMultiSelected(deserialized);
+
+      } );
+    } );
+
+    // Update UI.
+    await Util.timeslice( () => {
+      this.updateDetailHierarchyUi();
+    } );
+
+    await Util.timeslice( () => {
+      hideLoading();
+    } );
+
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `deserializeFromjson() : X`);
   }
 
   private validateElementUid(element: Element) {
@@ -849,9 +865,9 @@ export class Context {
     }
   }
 
-  private recoverJson(json: ArchitectureMapJson) {
+  private async recoverJson(json: ArchitectureMapJson) {
     this.deleteAll();
-    this.deserializeFromJson(json);
+    await this.deserializeFromJson(json);
     this.resetAllState();
   }
 
@@ -1382,7 +1398,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
   // Load JSON.
   if (defaultLoadJson != null) {
     const serialized: ArchitectureMapJson = JSON.parse(defaultLoadJson);
-    CONTEXT.deserializeFromJson(serialized);
+    await CONTEXT.deserializeFromJson(serialized);
     CONTEXT.resetAllState();
     CONTEXT.recordHistory();
   }
@@ -1791,15 +1807,13 @@ function getExportFileNameBase(): string {
   Downloader.downloadJson(jsonStr, filename);
 };
 
-(window as any).onLoadJsonClicked = (event: Event) => {
+(window as any).onLoadJsonClicked = async (event: Event) => {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "onLoadJsonClicked()");
 
   const target = event.target as HTMLInputElement;
   const file: File = (target.files as FileList)[0];
   const reader = new FileReader();
   reader.onload = async (e: Event) => {
-    await showLoading();
-
     const r = e.target as FileReader;
     const jsonStr: string = r.result as string;
 
@@ -1810,11 +1824,9 @@ function getExportFileNameBase(): string {
       console.log(serialized);
     }
 
-    CONTEXT.deserializeFromJson(serialized);
+    await CONTEXT.deserializeFromJson(serialized);
 
     CONTEXT.recordHistory();
-
-    hideLoading();
   };
 
   reader.readAsText(file);

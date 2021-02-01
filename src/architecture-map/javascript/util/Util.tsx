@@ -57,4 +57,12 @@ export class Util {
     return html;
   }
 
+  public static async timeslice(proc: () => void): Promise<void> {
+    return new Promise( (resolve, reject) => {
+      setTimeout( () => {
+        proc();
+        resolve();
+      } );
+    } );
+  }
 }
