@@ -1901,6 +1901,7 @@ async function showLoading(): Promise<void> {
       document.getElementById(OVERLAY_ROOT_ID));
   await ref!.shown();
 }
+(window as any).showLoading = showLoading;
 
 function hideLoading() {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "hideLoading()");
@@ -1910,6 +1911,7 @@ function hideLoading() {
     ReactDOM.unmountComponentAtNode(container);
   }
 }
+(window as any).hideLoading = hideLoading;
 
 function changeGlobalModeTo(mode: string) {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `changeGlobalModeTo() : mode=$mode`);
