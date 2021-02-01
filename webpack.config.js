@@ -105,6 +105,12 @@ module.exports = (env, argv) => {
 
     resolve: {
       extensions: [".js", ".ts", ".tsx", ".json"],
+
+      // Import path root.
+      modules: [
+          path.resolve("./node_modules"),
+          path.resolve("./src"),
+      ],
     },
 
     plugins: [

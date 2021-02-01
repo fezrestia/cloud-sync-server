@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { TraceLog } from "../util/TraceLog.ts";
 
-import loading_spinner_icon from "../../image/loading_spinner_icon.png";
+import loading_spinner_icon from "architecture-map/image/loading_spinner_icon.png";
 
 interface Props {
 }
