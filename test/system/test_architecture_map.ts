@@ -1445,6 +1445,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         .keyUp("z")
         .keyUp(Key.CONTROL)
         .perform();
+    await driver.sleep(100);
   }
 
   async function redo() {
@@ -1454,6 +1455,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
         .keyUp("y")
         .keyUp(Key.CONTROL)
         .perform();
+    await driver.sleep(100);
   }
 
 

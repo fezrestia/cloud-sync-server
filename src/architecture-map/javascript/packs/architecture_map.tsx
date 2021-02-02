@@ -57,118 +57,6 @@ interface ArchitectureMapJson {
   [Def.KEY_ARCHITECTURE_MAP]: ElementJson[],
 }
 
-// @return Modified or not.
-function resolveOverlappingArchMod(elements: Element[]): boolean {
-
-  const overlapComparator = (a: Element, b: Element): number => {
-    if (a.TAG === ArchMod.TAG && b.TAG === ArchMod.TAG) {
-      const rectA: {x: number, y: number, width: number, height: number } = (a as ArchMod).getXYWH();
-      const aL = rectA.x;
-      const aT = rectA.y;
-      const aR = rectA.x + rectA.width;
-      const aB = rectA.y + rectA.height;
-
-      const rectB: {x: number, y: number, width: number, height: number } = (b as ArchMod).getXYWH();
-      const bL = rectB.x;
-      const bT = rectB.y;
-      const bR = rectB.x + rectB.width;
-      const bB = rectB.y + rectB.height;
-
-      if (aL < bL && bR < aR && aT < bT && bB < aB) {
-        // a > b, sort A to B.
-        return -1;
-      } else if (bL < aL && aR < bR && bT < aT && aB < bB) {
-        // b > a, sort B to A.
-        return 1;
-      } else {
-        // Same size, not sort.
-        return 0;
-      }
-
-    } else {
-      // Target is only ArchMod, not sort.
-      return 0;
-    }
-  };
-
-  let original: Element[] = [];
-  original = original.concat(elements);
-
-  elements.sort(overlapComparator);
-
-  let isChanged = false;
-  for (let i = 0; i < elements.length; i++) {
-    if (elements[i].uid !== original[i].uid) {
-      isChanged = true;
-      break;
-    }
-  }
-
-  if (isChanged) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "resolveOverlappingArchMod()");
-    return true;
-  } else {
-    return false;
-  }
-}
-
-function updateHierarchy(elements: Element[]) {
-  let original: Element[] = [];
-  original = original.concat(elements);
-
-  const reversed = original.reverse();
-
-  while (reversed.length !== 0) {
-    const topElm = reversed.shift();
-    if (topElm === undefined) {
-      TraceLog.e(TAG, "updateHierarchy(): Unexpected State. topElm is undefined.");
-    } else {
-      if (topElm.TAG === ArchMod.TAG) {
-        const topArchMod = topElm as ArchMod;
-
-        const parentElm = reversed.find( (element: Element) => {
-          if (element.TAG === ArchMod.TAG) {
-            const archMod = element as ArchMod;
-
-            return archMod.isChild(topArchMod);
-          } else {
-            return false;
-          }
-        } );
-
-        if (parentElm !== undefined) {
-          // Parent is existing.
-          const parentArchMod = parentElm as ArchMod;
-          topArchMod.parentUid = parentArchMod.uid;
-        } else {
-          // No parent.
-          topArchMod.parentUid = null;
-        }
-      }
-    }
-  }
-
-  // Update depth info.
-  function queryUid(elms: Element[], uid: number): ArchMod {
-    return elms.find( (elm: Element) => elm.uid === uid ) as ArchMod;
-  }
-  elements.forEach( (element: Element) => {
-    if (element.TAG === ArchMod.TAG) {
-      const archMod = element as ArchMod;
-      let depth = Def.TOP_LAYER_DEPTH;
-      let parentUid = archMod.parentUid;
-
-      while (parentUid != null) {
-        const parentArchMod = queryUid(elements, parentUid);
-        parentUid = parentArchMod.parentUid;
-        depth++;
-      }
-
-      archMod.hierarchyDepth = depth;
-    }
-  } );
-}
-
 export interface ContextCallback {
   onArchModSelected(archMod: ArchMod): void;
 }
@@ -871,7 +759,7 @@ export class Context {
     this.resetAllState();
   }
 
-  public undo() {
+  public async undo() {
     if (this.history.length < 2) return;
     this.resetAllState();
 
@@ -886,10 +774,10 @@ export class Context {
       return;
     }
 
-    this.recoverJson(historyJson);
+    await this.recoverJson(historyJson);
   }
 
-  public redo() {
+  public async redo() {
     if (this.history.length < 2) return;
     this.resetAllState();
 
@@ -904,11 +792,122 @@ export class Context {
       return;
     }
 
-    this.recoverJson(futureJson);
+    await this.recoverJson(futureJson);
+  }
+
+  // @return Modified or not.
+  private static resolveOverlappingArchMod(elements: Element[]): boolean {
+    const overlapComparator = (a: Element, b: Element): number => {
+      if (a.TAG === ArchMod.TAG && b.TAG === ArchMod.TAG) {
+        const rectA: {x: number, y: number, width: number, height: number } = (a as ArchMod).getXYWH();
+        const aL = rectA.x;
+        const aT = rectA.y;
+        const aR = rectA.x + rectA.width;
+        const aB = rectA.y + rectA.height;
+
+        const rectB: {x: number, y: number, width: number, height: number } = (b as ArchMod).getXYWH();
+        const bL = rectB.x;
+        const bT = rectB.y;
+        const bR = rectB.x + rectB.width;
+        const bB = rectB.y + rectB.height;
+
+        if (aL < bL && bR < aR && aT < bT && bB < aB) {
+          // a > b, sort A to B.
+          return -1;
+        } else if (bL < aL && aR < bR && bT < aT && aB < bB) {
+          // b > a, sort B to A.
+          return 1;
+        } else {
+          // Same size, not sort.
+          return 0;
+        }
+
+      } else {
+        // Target is only ArchMod, not sort.
+        return 0;
+      }
+    };
+
+    let original: Element[] = [];
+    original = original.concat(elements);
+
+    elements.sort(overlapComparator);
+
+    let isChanged = false;
+    for (let i = 0; i < elements.length; i++) {
+      if (elements[i].uid !== original[i].uid) {
+        isChanged = true;
+        break;
+      }
+    }
+
+    if (isChanged) {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "resolveOverlappingArchMod()");
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private static updateHierarchy(elements: Element[]) {
+    let original: Element[] = [];
+    original = original.concat(elements);
+
+    const reversed = original.reverse();
+
+    while (reversed.length !== 0) {
+      const topElm = reversed.shift();
+      if (topElm === undefined) {
+        TraceLog.e(TAG, "updateHierarchy(): Unexpected State. topElm is undefined.");
+      } else {
+        if (topElm.TAG === ArchMod.TAG) {
+          const topArchMod = topElm as ArchMod;
+
+          const parentElm = reversed.find( (element: Element) => {
+            if (element.TAG === ArchMod.TAG) {
+              const archMod = element as ArchMod;
+
+              return archMod.isChild(topArchMod);
+            } else {
+              return false;
+            }
+          } );
+
+          if (parentElm !== undefined) {
+            // Parent is existing.
+            const parentArchMod = parentElm as ArchMod;
+            topArchMod.parentUid = parentArchMod.uid;
+          } else {
+            // No parent.
+            topArchMod.parentUid = null;
+          }
+        }
+      }
+    }
+
+    // Update depth info.
+    function queryUid(elms: Element[], uid: number): ArchMod {
+      return elms.find( (elm: Element) => elm.uid === uid ) as ArchMod;
+    }
+    elements.forEach( (element: Element) => {
+      if (element.TAG === ArchMod.TAG) {
+        const archMod = element as ArchMod;
+        let depth = Def.TOP_LAYER_DEPTH;
+        let parentUid = archMod.parentUid;
+
+        while (parentUid != null) {
+          const parentArchMod = queryUid(elements, parentUid);
+          parentUid = parentArchMod.parentUid;
+          depth++;
+        }
+
+        archMod.hierarchyDepth = depth;
+      }
+    } );
   }
 
   public relayout() {
-    if (resolveOverlappingArchMod(this.allElements)) {
+    if (Context.resolveOverlappingArchMod(this.allElements)) {
       this.allElements.forEach ( (element: Element) => {
         element.delete();
       } );
@@ -929,7 +928,7 @@ export class Context {
       zOrder++;
     } );
 
-    updateHierarchy(this.allElements);
+    Context.updateHierarchy(this.allElements);
   }
 
   public changeToGodMode() {
@@ -1470,6 +1469,8 @@ function releaseBrushLayer() {
 }
 
 function registerGlobalCallbacks() {
+  let canUndoRedo = true;
+
   window.onkeydown = (event: KeyboardEvent) => {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `window.onkeydown() : key=${event.key}`);
     event.stopPropagation();
@@ -1501,13 +1502,25 @@ function registerGlobalCallbacks() {
 
         case "z":
           if (event.ctrlKey) {
-            CONTEXT.undo();
+            if (canUndoRedo) {
+              canUndoRedo = false;
+              Util.timeslice( async () => {
+                await CONTEXT.undo();
+                canUndoRedo = true;
+              } );
+            }
           }
           break;
 
         case "y":
           if (event.ctrlKey) {
-            CONTEXT.redo();
+            if (canUndoRedo) {
+              canUndoRedo = false;
+              Util.timeslice( async () => {
+                await CONTEXT.redo();
+                canUndoRedo = true;
+              } );
+            }
           }
           break;
 
