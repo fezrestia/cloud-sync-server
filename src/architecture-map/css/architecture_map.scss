@@ -242,6 +242,7 @@ div.line-style-selector {
 
 .disabled {
   color: lightgray !important;
+  pointer-events: none !important;
 }
 
 #loading_indicator {
