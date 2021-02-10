@@ -79,11 +79,11 @@ export async function downloadStaticHtml(clicked: HTMLInputElement) {
   }
 
   // Parse css link tag.
-  const cssPattern: RegExp = /<link\s.*?href="(.+?\.css)(|\?.+?)".*?(>|><\/link>|\/>)/i;
-  const cssResults: string[]|null = contents.match(cssPattern);
-  if (cssResults !== null) {
-    const cssLine: string = cssResults[0];
-    const cssPath: string = cssResults[1];
+  const cssPattern: RegExp = /<link\s.*?href="(.+?\.css)(|\?.+?)".*?(>|><\/link>|\/>)/ig;
+  const cssResults: IterableIterator<RegExpMatchArray> = contents.matchAll(cssPattern);
+  for (const cssResult of cssResults) {
+    const cssLine: string = cssResult[0];
+    const cssPath: string = cssResult[1];
 
     // Check.
     if (!cssLine.includes(`rel="stylesheet"`)) {
@@ -140,9 +140,6 @@ export async function downloadStaticHtml(clicked: HTMLInputElement) {
       alert(`ERROR:\nFailed to load ${cssUrl}`);
       return;
     }
-  } else {
-    alert(`ERROR:\nFailed to match. cssResults == null.`);
-    return;
   }
 
   Downloader.downloadText(contents, `InteractiveArchitectureMap_${Util.genTimestamp()}.html`);
