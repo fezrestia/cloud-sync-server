@@ -427,19 +427,129 @@ export class ArchMod extends Element {
   }
 
   /**
+   * Get out line points X-Y array.
+   * @return {x, y}[]
+   */
+  public getOutLinePoints(): {x: number, y: number}[] {
+    switch (this.clipArea) {
+      case ClipArea.NONE:
+        return [
+            {x: this.x,               y: this.y},
+            {x: this.x + this.width,  y: this.y},
+            {x: this.x + this.width,  y: this.y + this.height},
+            {x: this.x,               y: this.y + this.height},
+        ];
+
+      case ClipArea.LEFT_TOP:
+        return [
+            {x: this.pinX,            y: this.y},
+            {x: this.x + this.width,  y: this.y},
+            {x: this.x + this.width,  y: this.y + this.height},
+            {x: this.x,               y: this.y + this.height},
+            {x: this.x,               y: this.pinY},
+            {x: this.pinX,            y: this.pinY},
+        ];
+
+      case ClipArea.RIGHT_TOP:
+        return [
+            {x: this.x,               y: this.y},
+            {x: this.pinX,            y: this.y},
+            {x: this.pinX,            y: this.pinY},
+            {x: this.x + this.width,  y: this.pinY},
+            {x: this.x + this.width,  y: this.y + this.height},
+            {x: this.x,               y: this.y + this.height},
+        ];
+
+      case ClipArea.LEFT_BOTTOM:
+        return [
+            {x: this.x,               y: this.y},
+            {x: this.x + this.width,  y: this.y},
+            {x: this.x + this.width,  y: this.y + this.height},
+            {x: this.pinX,            y: this.y + this.height},
+            {x: this.pinX,            y: this.pinY},
+            {x: this.x,               y: this.pinY},
+        ];
+
+      case ClipArea.RIGHT_BOTTOM:
+        return [
+            {x: this.x,               y: this.y},
+            {x: this.x + this.width,  y: this.y},
+            {x: this.x + this.width,  y: this.pinY},
+            {x: this.pinX,            y: this.pinY},
+            {x: this.pinX,            y: this.y + this.height},
+            {x: this.x,               y: this.y + this.height},
+        ];
+    }
+  }
+
+  public isPointIncluded(point: {x: number, y: number}): boolean {
+    const isInOutHorizontal = (this.x <= point.x) && (point.x <= this.x + this.width);
+    const isInOutVertical = (this.y <= point.y) && (point.y <= this.y + this.height);
+    const isInOutArea = isInOutHorizontal && isInOutVertical;
+
+    if (this.clipArea == ClipArea.NONE) {
+      return isInOutArea;
+    } else {
+      let clipL = 0;
+      let clipT = 0;
+      let clipR = 0;
+      let clipB = 0;
+      switch (this.clipArea) {
+        case ClipArea.LEFT_TOP:
+          clipL = this.x;
+          clipT = this.y;
+          clipR = this.pinX;
+          clipB = this.pinY;
+          break;
+
+        case ClipArea.RIGHT_TOP:
+          clipL = this.pinX;
+          clipT = this.y;
+          clipR = this.x + this.width;
+          clipB = this.pinY;
+          break;
+
+        case ClipArea.LEFT_BOTTOM:
+          clipL = this.x;
+          clipT = this.pinY;
+          clipR = this.pinX;
+          clipB = this.y + this.height;
+          break;
+
+        case ClipArea.RIGHT_BOTTOM:
+          clipL = this.pinX;
+          clipT = this.pinY;
+          clipR = this.x + this.width;
+          clipB = this.y + this.height;
+          break;
+
+        default:
+          alert("ERROR: isPointIncluded(): Unexpected Clip Area");
+          break;
+      }
+
+      const isInClipHorizontal = (clipL < point.x) && (point.x < clipR);
+      const isInClipVertical = (clipT < point.y) && (point.y < clipB);
+      const isInClipArea = isInClipHorizontal && isInClipVertical;
+
+      return isInOutArea && !isInClipArea;
+    }
+  }
+
+  /**
    * Check @child is included in this ArchMod or not.
    *
    * @param Check child or not target.
    * @return Is child or not.
    */
   public isChild(child: ArchMod): boolean {
-    const childRect = child.getXYWH();
-    const childL = childRect.x;
-    const childT = childRect.y;
-    const childR = childRect.x + childRect.width;
-    const childB = childRect.y + childRect.height;
+    const childPoints: {x: number, y: number}[] = child.getOutLinePoints();
 
-    return this.x < childL && childR < this.x + this.width && this.y < childT && childB < this.y + this.height;
+    const isNotIncluded = childPoints.some( (point: {x: number, y: number}) => {
+      return !this.isPointIncluded(point);
+    } );
+
+    return !isNotIncluded;
   }
 
   /**
