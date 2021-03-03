@@ -494,12 +494,16 @@ export class ArchMod extends Element {
       let clipT = 0;
       let clipR = 0;
       let clipB = 0;
+      let isInClipHorizontal = true;
+      let isInClipVertical = true;
       switch (this.clipArea) {
         case ClipArea.LEFT_TOP:
           clipL = this.x;
           clipT = this.y;
           clipR = this.pinX;
           clipB = this.pinY;
+          isInClipHorizontal = (clipL <= point.x) && (point.x < clipR);
+          isInClipVertical = (clipT <= point.y) && (point.y < clipB);
           break;
 
         case ClipArea.RIGHT_TOP:
@@ -507,6 +511,8 @@ export class ArchMod extends Element {
           clipT = this.y;
           clipR = this.x + this.width;
           clipB = this.pinY;
+          isInClipHorizontal = (clipL < point.x) && (point.x <= clipR);
+          isInClipVertical = (clipT <= point.y) && (point.y < clipB);
           break;
 
         case ClipArea.LEFT_BOTTOM:
@@ -514,6 +520,8 @@ export class ArchMod extends Element {
           clipT = this.pinY;
           clipR = this.pinX;
           clipB = this.y + this.height;
+          isInClipHorizontal = (clipL <= point.x) && (point.x < clipR);
+          isInClipVertical = (clipT < point.y) && (point.y <= clipB);
           break;
 
         case ClipArea.RIGHT_BOTTOM:
@@ -521,15 +529,14 @@ export class ArchMod extends Element {
           clipT = this.pinY;
           clipR = this.x + this.width;
           clipB = this.y + this.height;
+          isInClipHorizontal = (clipL < point.x) && (point.x <= clipR);
+          isInClipVertical = (clipT < point.y) && (point.y <= clipB);
           break;
 
         default:
           alert("ERROR: isPointIncluded(): Unexpected Clip Area");
           break;
       }
-
-      const isInClipHorizontal = (clipL < point.x) && (point.x < clipR);
-      const isInClipVertical = (clipT < point.y) && (point.y < clipB);
       const isInClipArea = isInClipHorizontal && isInClipVertical;
 
       return isInOutArea && !isInClipArea;

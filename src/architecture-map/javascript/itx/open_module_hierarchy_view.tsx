@@ -76,34 +76,7 @@ const HTML = `
 export function openModuleHierarchyViewWindow(context: Context, screenX: number, screenY: number) {
   if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "openModuleHierarchyViewWindow()");
 
-  type Nd = { [key: string]: {} };
-
-  const root: Nd = {};
-
-  context.forEachAllElements( (element: Element) => {
-    if (element.TAG === ArchMod.TAG) {
-      const archMod: ArchMod = element as ArchMod;
-
-      // Create single hierarchy.
-      const hierarchy: ArchMod[] = [archMod];
-      let parentUid: number|null = archMod.parentUid;
-      while(parentUid !== null) {
-        const parentArchMod = context.queryElementUid(parentUid) as ArchMod;
-        hierarchy.unshift(parentArchMod);
-        parentUid = parentArchMod.parentUid;
-      }
-
-      // Register to root node.
-      let curNd: Nd = root;
-      hierarchy.forEach( (mod: ArchMod) => {
-        const curChildren: Nd = curNd[mod.label];
-        if (curChildren === undefined) {
-          curNd[mod.label] = {};
-        }
-        curNd = curNd[mod.label];
-      } );
-    }
-  } );
+  const root: { [key: string]: {} } = context.getHierarchy();
 
   if (TraceLog.IS_DEBUG) {
     TraceLog.d(TAG, "root =");
@@ -111,7 +84,7 @@ export function openModuleHierarchyViewWindow(context: Context, screenX: number,
   }
 
   // Render root node to HTML.
-  function getNestedUlLi(nd: Nd): string {
+  function getNestedUlLi(nd: { [key: string]: {} }): string {
     const content: string[] = [];
 
     Object.keys(nd).forEach( (key: string) => {
@@ -133,7 +106,7 @@ export function openModuleHierarchyViewWindow(context: Context, screenX: number,
     return content.join("\n");
   }
 
-  const contentNode: Nd = { "<strong>Module Hierarchy</strong>": root };
+  const contentNode: { [key: string]: {} } = { "<strong>Module Hierarchy</strong>": root };
 
   const contentInjection = getNestedUlLi(contentNode);
 

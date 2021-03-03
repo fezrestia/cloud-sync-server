@@ -906,6 +906,44 @@ export class Context {
     } );
   }
 
+  /**
+   * Get module hierarchy.
+   *
+   * @return { [key: string]: {} }
+   */
+  public getHierarchy(): { [key: string]: {} } {
+    type Nd = { [key: string]: {} };
+
+    const root: Nd = {};
+
+    this.forEachAllElements( (element: Element) => {
+      if (element.TAG === ArchMod.TAG) {
+        const archMod: ArchMod = element as ArchMod;
+
+        // Create single hierarchy.
+        const hierarchy: ArchMod[] = [archMod];
+        let parentUid: number|null = archMod.parentUid;
+        while(parentUid !== null) {
+          const parentArchMod = this.queryElementUid(parentUid) as ArchMod;
+          hierarchy.unshift(parentArchMod);
+          parentUid = parentArchMod.parentUid;
+        }
+
+        // Register to root node.
+        let curNd: Nd = root;
+        hierarchy.forEach( (mod: ArchMod) => {
+          const curChildren: Nd = curNd[mod.label];
+          if (curChildren === undefined) {
+            curNd[mod.label] = {};
+          }
+          curNd = curNd[mod.label];
+        } );
+      }
+    } );
+
+    return root;
+  }
+
   public relayout() {
     if (Context.resolveOverlappingArchMod(this.allElements)) {
       this.allElements.forEach ( (element: Element) => {

@@ -5,6 +5,7 @@ import { WebDriver, ThenableWebDriver, By, WebElement, Condition, Key, Button } 
 import { describe, before, after, it } from "mocha";
 import { assert } from "chai";
 import * as fs from "fs";
+import * as path from "path";
 
 import { TestDef } from "../TestDef";
 
@@ -1194,6 +1195,103 @@ describe("Test Architecture Map Web SPA Interaction", () => {
       return false;
     }
   }
+
+  it("Check hierarchy view", async () => {
+    const jsonFile = path.resolve(TestDef.ARCH_MAP_HIERARCHY_JSON_PATH);
+
+    // Load test json.
+    await driver.findElement(By.id("upload_json_input")).sendKeys(jsonFile);
+    await driver.findElement(By.id("upload_json_form")).click();
+
+    // Get hierarchy from runtime context.
+    const inject = (): { [key: string]: {} } => {
+      return (window as any).getContext().getHierarchy();
+    };
+    const actual = await driver.executeScript(inject);
+
+    const expected = {
+      "1": {
+        "1-1": {},
+        "1-2": {},
+        "1-3": {},
+      },
+      "2": {
+        "2-1": {},
+        "2-2": {},
+        "2-3": {},
+      },
+      "3": {
+        "3-1": {},
+        "3-2": {},
+        "3-3": {},
+      },
+      "4": {
+        "4-1": {},
+        "4-2": {},
+        "4-3": {},
+      },
+      "5": {
+        "5-1": {
+          "5-1-1": {},
+          "5-1-2": {},
+          "5-1-3": {},
+        },
+        "5-2": {
+          "5-2-1": {},
+          "5-2-2": {},
+          "5-2-3": {},
+        },
+        "5-3": {
+          "5-3-1": {},
+          "5-3-2": {},
+          "5-3-3": {},
+        },
+        "5-4": {
+          "5-4-1": {},
+          "5-4-2": {},
+          "5-4-3": {},
+        },
+      },
+      "x1-1": {},
+      "x1-2": {},
+      "x1-3": {},
+      "x1-4": {},
+      "x1-5": {},
+      "x1-6": {},
+      "x1-7": {},
+      "x1-8": {},
+      "x2-1": {},
+      "x2-2": {},
+      "x2-3": {},
+      "x2-4": {},
+      "x2-5": {},
+      "x2-6": {},
+      "x2-7": {},
+      "x2-8": {},
+      "x3-1": {},
+      "x3-2": {},
+      "x3-3": {},
+      "x3-4": {},
+      "x3-5": {},
+      "x3-6": {},
+      "x3-7": {},
+      "x3-8": {},
+      "x4-1": {},
+      "x4-2": {},
+      "x4-3": {},
+      "x4-4": {},
+      "x4-5": {},
+      "x4-6": {},
+      "x4-7": {},
+      "x4-8": {},
+      "x5-1": {},
+      "x5-2": {},
+      "x5-3": {},
+      "x5-4": {},
+    };
+
+    assert.deepStrictEqual(actual, expected);
+  } );
 
   ///////////////////////////////////////////////////////////////////////////////// TEST CASE ////
 
