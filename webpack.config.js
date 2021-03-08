@@ -31,7 +31,7 @@ module.exports = (env, argv) => {
         if (chunkData.chunk.name == "entry") {
           return "[name].js";
         } else {
-          return "[name]/[hash].js";
+          return "[name]/[fullhash].js";
         }
       },
     },
@@ -122,7 +122,7 @@ module.exports = (env, argv) => {
           if (name == "entry") {
             return "[name].css";
           } else {
-            return "[name]/[hash].css";
+            return "[name]/[fullhash].css";
           }
         },
       } ),
