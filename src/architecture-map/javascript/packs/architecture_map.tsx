@@ -287,6 +287,10 @@ export class Context {
       } );
     } );
 
+    await Util.timeslice( () => {
+      this.relayout();
+    } );
+
     // Update UI.
     await Util.timeslice( () => {
       this.updateDetailHierarchyUi();
@@ -331,6 +335,7 @@ export class Context {
     const archMod = new ArchMod(uid, this.html, this.svg, label);
     archMod.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
     this.renderArchMod(archMod);
+    this.relayout();
     return archMod;
   }
 
@@ -362,6 +367,7 @@ export class Context {
     const textLabel = new TextLabel(uid, this.html, this.svg, label);
     textLabel.setXYWH(x, y, DEFAULT_SIZE, DEFAULT_SIZE);
     this.renderTextLabel(textLabel);
+    this.relayout();
     return textLabel;
   }
 
@@ -393,6 +399,7 @@ export class Context {
     const line = new Line(uid, this.html, this.svg);
     line.setFromToXY(fromX, fromY, fromX + DEFAULT_SIZE, fromY + DEFAULT_SIZE);
     this.renderLine(line);
+    this.relayout();
     return line;
   }
 
@@ -424,6 +431,7 @@ export class Context {
     const connector = new Connector(uid, this.html, this.svg);
     connector.setFromToArchMod(fromArchMod, toArchMod);
     this.renderConnector(connector);
+    this.relayout();
     return connector;
   }
 
@@ -446,15 +454,11 @@ export class Context {
   public addElementToTop(element: Element) {
     this.allElements.push(element);
     this.elementUids.push(element.uid);
-
-    this.relayout();
   }
 
   public addElementToBottom(element: Element) {
     this.allElements.unshift(element);
     this.elementUids.unshift(element.uid);
-
-    this.relayout();
   }
 
   public removeElement(element: Element) {
@@ -592,11 +596,13 @@ export class Context {
   public raise(raised: Element) {
     this.removeElement(raised);
     this.addElementToTop(raised);
+    this.relayout();
   }
 
   public lower(lowered: Element) {
     this.removeElement(lowered);
     this.addElementToBottom(lowered);
+    this.relayout();
   }
 
   public deleteSelected() {
@@ -711,6 +717,8 @@ export class Context {
       this.onMultiSelected(element);
 
     } );
+
+    this.relayout();
 
     this.clipboard.length = 0; // Clear all.
   }
@@ -850,6 +858,8 @@ export class Context {
   }
 
   private static updateHierarchy(elements: Element[]) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `updateHierarchy() : E`);
+
     let original: Element[] = [];
     original = original.concat(elements);
 
@@ -904,6 +914,8 @@ export class Context {
         archMod.hierarchyDepth = depth;
       }
     } );
+
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `updateHierarchy() : X`);
   }
 
   /**
@@ -945,6 +957,8 @@ export class Context {
   }
 
   public relayout() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `relayout() : E`);
+
     if (Context.resolveOverlappingArchMod(this.allElements)) {
       this.allElements.forEach ( (element: Element) => {
         element.delete();
@@ -967,6 +981,8 @@ export class Context {
     } );
 
     Context.updateHierarchy(this.allElements);
+
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `relayout() : X`);
   }
 
   public changeToGodMode() {
