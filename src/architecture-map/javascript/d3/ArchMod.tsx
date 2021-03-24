@@ -487,7 +487,7 @@ export class ArchMod extends Element {
     const isInOutVertical = (this.y <= point.y) && (point.y <= this.y + this.height);
     const isInOutArea = isInOutHorizontal && isInOutVertical;
 
-    if (this.clipArea == ClipArea.NONE) {
+    if (this.clipArea === ClipArea.NONE) {
       return isInOutArea;
     } else {
       let clipL = 0;

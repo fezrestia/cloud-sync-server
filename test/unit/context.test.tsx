@@ -1,3 +1,5 @@
+import "jest-extended";
+
 import { Def } from "../../src/architecture-map/javascript/Def";
 import { convertJsonToLatest } from "../../src/architecture-map/javascript/JsonConverter";
 
