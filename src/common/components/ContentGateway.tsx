@@ -42,9 +42,9 @@ export class ContentGateway extends React.Component<Props, State> {
             <strong>{"SVG Diagram : "}</strong>
           </td>
           <td>
-            <a href="/architecture_map/edit.html" >{"EDIT"}</a>
+            <a href="/svg_diagram/edit.html" >{"EDIT"}</a>
             <br></br>
-            <a href="/architecture_map/view.html" >{"VIEW"}</a>
+            <a href="/svg_diagram/view.html" >{"VIEW"}</a>
           </td>
         </tr>
         <tr>

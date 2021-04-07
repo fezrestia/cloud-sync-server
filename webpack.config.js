@@ -133,12 +133,12 @@ module.exports = (env, argv) => {
       } ),
       new HtmlWebpackPlugin( {
         template: "src/architecture-map/html/view.html",
-        filename: "architecture_map/view.html",
+        filename: "svg_diagram/view.html",
         chunks: ["architecture_map"],
       } ),
       new HtmlWebpackPlugin( {
         template: "src/architecture-map/html/edit.html",
-        filename: "architecture_map/edit.html",
+        filename: "svg_diagram/edit.html",
         chunks: ["architecture_map"],
       } ),
       new HtmlWebpackPlugin( {
