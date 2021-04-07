@@ -16,7 +16,7 @@ module.exports = (env, argv) => {
   return {
     // chunk name vs file path.
     entry: {
-      entry: path.resolve(__dirname, "src/entry.js"),
+      entry: path.resolve(__dirname, "src/entry.tsx"),
       architecture_map: [
           path.resolve(__dirname, "src/architecture-map/javascript/packs/architecture_map.tsx"),
           path.resolve(__dirname, "src/architecture-map/css/architecture_map.scss"),

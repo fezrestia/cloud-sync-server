@@ -1,0 +1,11 @@
+.content-gateway {
+  padding: 16px 32px 16px;
+  font-size: 16px;
+}
+
+td.no-border, table.no-border td {
+  border-style: none;
+  padding-right: 10px;
+  vertical-align: top;
+}
+

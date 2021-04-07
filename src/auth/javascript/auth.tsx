@@ -7,7 +7,7 @@ import "firebase/functions";
 
 import { Context } from "../../context.ts";
 
-const IS_DEBUG = true;
+const IS_DEBUG = false;
 
 const ID_NEW_MAIL = "new_mail";
 const ID_NEW_PASS = "new_pass";
@@ -110,6 +110,7 @@ const ID_CURRENT_USER = "current_user";
 
   if (mail != null && pass != null) {
     // Login user to Firebase.
+    await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     const cred: firebase.auth.UserCredential|void = await firebase.auth()
         .signInWithEmailAndPassword(mail, pass)
         .catch( (error: firebase.auth.Error) => {

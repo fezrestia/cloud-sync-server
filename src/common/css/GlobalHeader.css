@@ -1,0 +1,23 @@
+header.global-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 16px 32px 16px;
+  background-color: #EEEEEE;
+  font-size: 24px;
+}
+
+nav.header-nav {
+  margin: 0;
+  margin-left: auto;
+}
+
+.header-link {
+  text-decoration: none;
+  color: #444444;
+}
+
+.header-login {
+  font-size: 16px;
+}
+

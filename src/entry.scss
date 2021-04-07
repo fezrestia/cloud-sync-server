@@ -1,11 +1,11 @@
-.main-title {
-  font-family: "Verdana";
-  font-size: 24px;
-  color: green;
+* {
+  box-sizing: border-box;
 }
 
-td.no-border, table.no-border td {
-  border-style: none;
-  padding-right: 10px;
-  vertical-align: top;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Verdana";
+  background-color: "white";
 }
+

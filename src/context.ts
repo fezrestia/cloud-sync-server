@@ -34,22 +34,37 @@ const FIREBASE_CONFIG = {
  * Global context object.
  */
 export class Context {
-  private static INSTANCE: Context|null = null;
-
   /**
    * Get current global CONTEXT object.
    */
   public static getInstance(): Context {
-    if (Context.INSTANCE == null) {
-      Context.INSTANCE = new Context();
+    if ((window as any).ENTRY_CONTEXT == null) {
+      (window as any).ENTRY_CONTEXT = new Context();
     }
-    return Context.INSTANCE;
+    return (window as any).ENTRY_CONTEXT;
+  }
+
+  public static async getInstanceAsync(): Promise<Context> {
+    if ((window as any).ENTRY_CONTEXT == null) {
+      let ctx = new Context();
+      await ctx.waitForLoginStateOnInit();
+      (window as any).ENTRY_CONTEXT = ctx;
+    }
+    return (window as any).ENTRY_CONTEXT;
   }
 
   private constructor() {
     console.log("## Context.constructor()");
 
     firebase.initializeApp(FIREBASE_CONFIG);
+  }
+
+  private async waitForLoginStateOnInit(): Promise<void> {
+    return new Promise( (resolve, reject) => {
+      firebase.auth().onAuthStateChanged( (user: firebase.User|null) => {
+        resolve();
+      } );
+    } );
   }
 
   /**
@@ -84,7 +99,18 @@ export class Context {
     return FIREBASE_CONFIG;
   }
 
-
-
+  /**
+   * Get current log-in user e-mail.
+   *
+   * @return string|null Login user e-mail.
+   */
+  public getCurrentUserEmail(): string|null {
+    let user = firebase.auth().currentUser;
+    if (user == null) {
+      return null;
+    } else {
+      return user.email;
+    }
+  }
 
 }

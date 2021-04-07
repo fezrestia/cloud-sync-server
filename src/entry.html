@@ -4,46 +4,16 @@
     <title>Cloud Sync Server</title>
   </head>
   <body>
-    <h3 class="main-title" >Root Gateway :</h3>
 
-    <hr>
+    <div id="global_header" ></div>
 
-    <table class="no-border" ><tbody>
-      <tr>
-        <td>
-          <strong>Auth : </strong>
-        </td>
-        <td>
-          <a href="/auth/login.html" >Login/Logout</a>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <strong>ITX : </strong>
-        </td>
-        <td>
-          <a href="https://itx.fezrestia.link" >Cloud Sync Service</a>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <strong>Interactive Architecture Map : </strong>
-        </td>
-        <td>
-          <a href="/architecture_map/edit.html" >EDIT</a>
-          <br>
-          <a href="/architecture_map/view.html" >VIEW</a>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <strong>SIM Stats : </strong>
-        </td>
-        <td>
-          <a href="/sim_stats/total.html" >Total Stats</a>
-        </td>
-      </tr>
-    </tbody></table>
+    <div id="content_gateway" ></div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        onEntryDomLoaded();
+      } );
+    </script>
 
   </body>
 </html>
