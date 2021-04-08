@@ -13,7 +13,7 @@ const CONTENT_GATEWAY_ID = "content_gateway";
 
 (window as any).onEntryDomLoaded = async () => {
   const context: Context = await Context.getInstanceAsync();
-  let user: string|null = context.getCurrentUserEmail();
+  const user: string|null = context.getCurrentUserEmail();
 
   ReactDOM.render(
       <GlobalHeader

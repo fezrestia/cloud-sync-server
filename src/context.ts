@@ -46,7 +46,7 @@ export class Context {
 
   public static async getInstanceAsync(): Promise<Context> {
     if ((window as any).ENTRY_CONTEXT == null) {
-      let ctx = new Context();
+      const ctx = new Context();
       await ctx.waitForLoginStateOnInit();
       (window as any).ENTRY_CONTEXT = ctx;
     }
@@ -105,7 +105,7 @@ export class Context {
    * @return string|null Login user e-mail.
    */
   public getCurrentUserEmail(): string|null {
-    let user = firebase.auth().currentUser;
+    const user = firebase.auth().currentUser;
     if (user == null) {
       return null;
     } else {
