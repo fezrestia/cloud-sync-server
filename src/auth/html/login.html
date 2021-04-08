@@ -4,116 +4,23 @@
     <title>Login/Logout</title>
   </head>
   <body>
-    <h3>Login/Logout</h3>
 
-    <hr>
+    <div id="global_header" ></div>
 
-    <div id="div_create_new_user" class="visibility-gone" >
-      <h4>Create New User</h4>
-      <table class="no-border" ><tbody>
-        <tr>
-          <td>
-            MAIL
-          </td>
-          <td>
-            <input id="new_mail" type="email" />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            PASS
-          </td>
-          <td>
-            <input id="new_pass" type="password" />
-            <br>
-            <input id="new_pass_confirm" type="password" /> (confirm)
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <!-- NOP -->
-          </td>
-          <td>
-            <button id="create_new_user" type="button" onclick="onCreateNewUserClicked();" >Create</button>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <!-- NOP -->
-          </td>
-          <td>
-            <span id="new_user_message" />
-          </td>
-        </tr>
-      </tbody></table>
-
+    <div class="content" >
+      <div id="login_form" ></div>
       <br>
+      <div id="logout_form" ></div>
+      <br>
+      <div id="new_user_form" ></div>
     </div>
 
-    <h4>Login</h4>
-    <table class="no-border" ><tbody>
-      <tr>
-        <td>
-          MAIL
-        </td>
-        <td>
-          <input id="login_mail" type="email" />
-        </td>
-      </tr>
-      <tr>
-        <td>
-          PASS
-        </td>
-        <td>
-          <input id="login_pass" type="password" />
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <!-- NOP -->
-        </td>
-        <td>
-          <button id="login_user" type="button" onclick="onLoginUserClicked();" >Login</button>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <!-- NOP -->
-        </td>
-        <td>
-          <span id="login_message" />
-        </td>
-      </tr>
-    </tbody></table>
-
-    <br>
-
-    <h4>Logout</h4>
-    <table class="no-border" ><tbody>
-      <tr>
-        <td>
-          CURRENT
-        </td>
-        <td>
-          <span id="current_user" />
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <!-- NOP -->
-        </td>
-        <td>
-          <button id="logout" type="button" onclick="onLogoutClicked();" >Logout</button>
-        </td>
-      </tr>
-    </tbody></table>
-
-
-
     <script>
-      onload = function() {
-        onAuthLoaded();
-      };
+      document.addEventListener("DOMContentLoaded", () => {
+        onAuthDomLoaded();
+      } );
     </script>
+
   </body>
 </html>
+

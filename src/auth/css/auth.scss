@@ -1,3 +1,5 @@
+@import url("../../entry.scss");
+
 hr {
   border: none;
   border-top: solid;
@@ -29,11 +31,8 @@ td.no-border, table.no-border td {
   white-space: nowrap;
 }
 
-div.visibility-gone {
-  display: none;
-}
-
-div.visibility-visible {
-  display: block;
+.content {
+  padding: 16px 32px 16px;
+  font-size: 16px;
 }
 
