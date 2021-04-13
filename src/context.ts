@@ -1,6 +1,8 @@
 import firebase from "firebase/app";
 import "firebase/auth";
 
+import { IS_DEBUG } from "./common/js/log";
+
 /**
  * Firebase config interface.
  */
@@ -54,7 +56,7 @@ export class Context {
   }
 
   private constructor() {
-    console.log("## Context.constructor()");
+    if (IS_DEBUG) console.log("## Context.constructor()");
 
     firebase.initializeApp(FIREBASE_CONFIG);
   }
@@ -77,9 +79,9 @@ export class Context {
     firebase.auth().onAuthStateChanged(
         (user: firebase.User|null) => {
           if (user != null) {
-            console.log(`Login : ${user.email}`);
+            if (IS_DEBUG) console.log(`Login : ${user.email}`);
           } else {
-            console.log("Logout");
+            if (IS_DEBUG) console.log("Logout");
           }
 
           authCallback(user);
