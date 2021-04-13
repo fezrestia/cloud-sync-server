@@ -32,6 +32,7 @@ import { convertJsonToLatest } from "../JsonConverter";
 import { openModuleHierarchyViewWindow } from "../itx/open_module_hierarchy_view";
 import { downloadStaticHtml } from "../itx/download_static_html";
 import { LoadingIndicator } from "../components/LoadingIndicator";
+import { History } from "../history/records";
 
 const TAG = "SVG_ROOT";
 const ARCHITECTURE_MAP_ID = "architecture_map";
@@ -51,7 +52,7 @@ const GLOBAL_MODE_ITX = "ITX";
 const GLOBAL_MODE_GOD = "GOD";
 const GOD_MODE_UI_ID = "god_mode_ui";
 
-interface ArchitectureMapJson {
+export interface ArchitectureMapJson {
   [Def.KEY_VERSION]: string,
   [Def.KEY_OUT_FRAME]: OutFrameJson,
   [Def.KEY_ARCHITECTURE_MAP]: ElementJson[],
@@ -98,7 +99,8 @@ export class Context {
   private maxHierarchyDepth = Def.TOP_LAYER_DEPTH;
 
   // UNDO history.
-  private readonly history: ArchitectureMapJson[] = [];
+  private historyBaseJson: ArchitectureMapJson|null = null;
+  private readonly historyRecords: History.Record[] = [];
   private historyUndoCount: number = 0;
 
   // State flags.
@@ -136,7 +138,7 @@ export class Context {
   }
 
   public onMultiSelected(selected: Element) {
-    this.selectedElements.push(selected);
+    this.onSelected(selected, true);
   }
 
   public onDeselected(deselected: Element) {
@@ -323,7 +325,7 @@ export class Context {
     // OK.
   }
 
-  private deserializeArchMod(json: ArchModJson): ArchMod {
+  public deserializeArchMod(json: ArchModJson): ArchMod {
     const archMod = ArchMod.deserialize(this.html, this.svg, json);
     this.validateElementUid(archMod);
     this.renderArchMod(archMod);
@@ -355,7 +357,7 @@ export class Context {
     this.addElementToTop(archMod);
   }
 
-  private deserializeTextLabel(json: TextLabelJson): TextLabel {
+  public deserializeTextLabel(json: TextLabelJson): TextLabel {
     const textLabel = TextLabel.deserialize(this.html, this.svg, json);
     this.validateElementUid(textLabel);
     this.renderTextLabel(textLabel);
@@ -387,7 +389,7 @@ export class Context {
     this.addElementToTop(textLabel);
   }
 
-  private deserializeLine(json: LineJson): Line {
+  public deserializeLine(json: LineJson): Line {
     const line = Line.deserialize(this.html, this.svg, json);
     this.validateElementUid(line);
     this.renderLine(line);
@@ -419,7 +421,7 @@ export class Context {
     this.addElementToTop(line);
   }
 
-  private deserializeConnector(json: ConnectorJson): Connector {
+  public deserializeConnector(json: ConnectorJson): Connector {
     const connector = Connector.deserialize(this.html, this.svg, json);
     this.validateElementUid(connector);
     this.renderConnector(connector);
@@ -734,73 +736,87 @@ export class Context {
     } );
   }
 
+  public updateHistoryBase() {
+    this.historyBaseJson = this.serializeToJson();
+  }
+
   public recordHistory() {
     // Remove old history branch.
     if (this.historyUndoCount !== 0) {
-      this.history.splice(-1 * this.historyUndoCount);
+      this.historyRecords.splice(-1 * this.historyUndoCount);
     }
 
-    const curJson: ArchitectureMapJson = this.serializeToJson();
+    const headJson: ArchitectureMapJson = this.serializeToJson();
 
-    const curSize = this.history.length;
-    if (curSize > 0) {
-      const last = this.history[curSize - 1];
-      const lastStr = JSON.stringify(last);
-      const curStr = JSON.stringify(curJson);
-      if (lastStr === curStr) {
-        // Same as last state.
-        return;
-      }
+    // Check diff.
+    const baseStr = JSON.stringify(this.historyBaseJson);
+    const headStr = JSON.stringify(headJson);
+    if (baseStr === headStr) {
+      // Same as last.
+      return;
     }
 
-    this.history.push(curJson);
+    const record: History.Record = new History.UpdateTotalJson(
+        this,
+        this.historyBaseJson as ArchitectureMapJson,
+        headJson);
+
+    this.historyRecords.push(record);
     this.historyUndoCount = 0;
 
-    if (this.history.length > MAX_UNDO_HISTORY_SIZE) {
-      this.history.shift();
+    if (this.historyRecords.length > MAX_UNDO_HISTORY_SIZE) {
+      this.historyRecords.shift();
     }
+
+    this.updateHistoryBase();
   }
 
-  private async recoverJson(json: ArchitectureMapJson) {
+  public async recoverJson(json: ArchitectureMapJson) {
     this.deleteAll();
     await this.deserializeFromJson(json);
     this.resetAllState();
   }
 
   public async undo() {
-    if (this.history.length < 2) return;
-    this.resetAllState();
-
-    this.historyUndoCount++;
-
-    const historyJson = this.history[this.history.length - 1 - this.historyUndoCount];
-
-    if (historyJson == null) {
-      // No history.
+    if (this.historyRecords.length < 2) {
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo() : NO History`);
-      this.historyUndoCount--;
       return;
     }
 
-    await this.recoverJson(historyJson);
+    if (this.historyRecords.length - 1 - this.historyUndoCount < 0) {
+      // There is no history for past, this is first state.
+      return;
+    }
+
+    this.resetAllState();
+
+    const historyRecord = this.historyRecords[this.historyRecords.length - 1 - this.historyUndoCount];
+    await historyRecord.undo();
+
+    this.historyUndoCount++;
+
+    this.updateHistoryBase();
   }
 
   public async redo() {
-    if (this.history.length < 2) return;
+    if (this.historyRecords.length < 2) {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo() : NO Future`);
+      return;
+    }
+
+    if (this.historyUndoCount <= 0) {
+      // There is no history for future, this is latest state.
+      return;
+    }
+
     this.resetAllState();
 
     this.historyUndoCount--;
 
-    const futureJson = this.history[this.history.length - 1 - this.historyUndoCount];
+    const historyRecord = this.historyRecords[this.historyRecords.length - 1 - this.historyUndoCount];
+    await historyRecord.redo();
 
-    if (futureJson == null) {
-      // No future.
-      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo() : NO Future`);
-      this.historyUndoCount++;
-      return;
-    }
-
-    await this.recoverJson(futureJson);
+    this.updateHistoryBase();
   }
 
   // @return Modified or not.
@@ -1455,6 +1471,9 @@ class ConnectorCallbackImpl implements ConnectorCallback {
     CONTEXT.resetAllState();
     CONTEXT.recordHistory();
   }
+
+  // Save the first history base.
+  CONTEXT.updateHistoryBase();
 }
 
 function prepareBrushLayer() {

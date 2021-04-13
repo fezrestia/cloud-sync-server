@@ -1033,6 +1033,8 @@ describe("Test Architecture Map Web SPA Interaction", () => {
   it("Check UNDO/REDO History", async () => {
     let history = [];
 
+    history.push(await getLatestJson());
+
     await resizeOutFrame(DRAG_DIFF, DRAG_DIFF);
     assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
@@ -1202,6 +1204,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     // Load test json.
     await driver.findElement(By.id("upload_json_input")).sendKeys(jsonFile);
     await driver.findElement(By.id("upload_json_form")).click();
+
+    // Wait for rendering done.
+    await driver.sleep(100);
 
     // Get hierarchy from runtime context.
     const inject = (): { [key: string]: {} } => {
