@@ -290,6 +290,7 @@ export class Context {
     } );
 
     await Util.timeslice( () => {
+      this.resolveOverlappingArchMod();
       this.relayout();
     } );
 
@@ -557,6 +558,7 @@ export class Context {
   }
 
   public onMoveResizeDone() {
+    this.resolveOverlappingArchMod();
     this.relayout();
   }
 
@@ -598,12 +600,16 @@ export class Context {
   public raise(raised: Element) {
     this.removeElement(raised);
     this.addElementToTop(raised);
+
+    this.resolveOverlappingArchMod();
     this.relayout();
   }
 
   public lower(lowered: Element) {
     this.removeElement(lowered);
     this.addElementToBottom(lowered);
+
+    this.resolveOverlappingArchMod();
     this.relayout();
   }
 
@@ -720,6 +726,8 @@ export class Context {
 
     } );
 
+    this.resolveOverlappingArchMod();
+
     this.relayout();
 
     this.clipboard.length = 0; // Clear all.
@@ -819,8 +827,9 @@ export class Context {
     this.updateHistoryBase();
   }
 
-  // @return Modified or not.
-  private static resolveOverlappingArchMod(elements: Element[]): boolean {
+  public resolveOverlappingArchMod() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "resolveOverlappingArchMod()");
+
     const overlapComparator = (a: Element, b: Element): number => {
       if (a.TAG === ArchMod.TAG && b.TAG === ArchMod.TAG) {
         const rectA: {x: number, y: number, width: number, height: number } = (a as ArchMod).getXYWH();
@@ -853,24 +862,31 @@ export class Context {
     };
 
     let original: Element[] = [];
-    original = original.concat(elements);
+    original = original.concat(this.allElements);
 
-    elements.sort(overlapComparator);
-
-    let isChanged = false;
-    for (let i = 0; i < elements.length; i++) {
-      if (elements[i].uid !== original[i].uid) {
-        isChanged = true;
-        break;
+    original.forEach( (element: Element, index: number, array: Element[]) => {
+      let lower: ArchMod;
+      if (element.TAG === ArchMod.TAG) {
+        lower = element as ArchMod;
+      } else {
+        return;
       }
-    }
 
-    if (isChanged) {
-      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, "resolveOverlappingArchMod()");
-      return true;
-    } else {
-      return false;
-    }
+      for (let i: number = index + 1; i < array.length; ++i) {
+        let upper: ArchMod
+        if (array[i].TAG === ArchMod.TAG) {
+          upper = array[i] as ArchMod;
+        } else {
+          continue;
+        }
+
+        if (overlapComparator(lower, upper) === 1) {
+          // Lower is smaller than upper.
+          lower.moveToFrontEnd();
+          break;
+        }
+      }
+    } );
   }
 
   private static updateHierarchy(elements: Element[]) {
@@ -974,20 +990,6 @@ export class Context {
 
   public relayout() {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `relayout() : E`);
-
-    if (Context.resolveOverlappingArchMod(this.allElements)) {
-      this.allElements.forEach ( (element: Element) => {
-        element.delete();
-      } );
-
-      this.allElements.forEach ( (element: Element) => {
-        element.render();
-      } );
-
-      this.selectedElements.forEach( (element: Element) => {
-        element.select();
-      } );
-    }
 
     // Update Z-Order.
     let zOrder = Def.START_OF_Z_ORDER;

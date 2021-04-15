@@ -1553,7 +1553,7 @@ export class ArchMod extends Element {
     }
   }
 
-  private moveToFrontEnd() {
+  public moveToFrontEnd() {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToFrontEnd()`);
     this.root.raise();
     if (this.callback != null) this.callback.onRaised(this);
