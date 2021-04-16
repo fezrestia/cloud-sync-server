@@ -744,15 +744,32 @@ export class Context {
     } );
   }
 
-  public updateHistoryBase() {
-    this.historyBaseJson = this.serializeToJson();
-  }
-
-  public recordHistory() {
+  private prepareRecordHistory() {
     // Remove old history branch.
     if (this.historyUndoCount !== 0) {
       this.historyRecords.splice(-1 * this.historyUndoCount);
     }
+  }
+
+  private finishRecordHistory() {
+    // Set this history as latest.
+    this.historyUndoCount = 0;
+
+    // Remove overflown old history.
+    if (this.historyRecords.length > MAX_UNDO_HISTORY_SIZE) {
+      this.historyRecords.shift();
+    }
+
+    this.updateHistoryBase();
+  }
+
+  public updateHistoryBase() {
+    this.historyBaseJson = this.serializeToJson();
+  }
+
+  // Total JSON history record.
+  public recordHistory() {
+    this.prepareRecordHistory();
 
     const headJson: ArchitectureMapJson = this.serializeToJson();
 
@@ -768,15 +785,18 @@ export class Context {
         this,
         this.historyBaseJson as ArchitectureMapJson,
         headJson);
-
     this.historyRecords.push(record);
-    this.historyUndoCount = 0;
 
-    if (this.historyRecords.length > MAX_UNDO_HISTORY_SIZE) {
-      this.historyRecords.shift();
-    }
+    this.finishRecordHistory();
+  }
 
-    this.updateHistoryBase();
+  public recordAddNewElement(element: Element) {
+    this.prepareRecordHistory();
+
+    const record: History.Record = new History.AddNewElement(this, element);
+    this.historyRecords.push(record);
+
+    this.finishRecordHistory();
   }
 
   public async recoverJson(json: ArchitectureMapJson) {
@@ -1763,14 +1783,14 @@ function prepareAddNewArchModMode() {
     const posX: number = e.offsetX || 0;
     const posY: number = e.offsetY || 0;
 
-    CONTEXT.addNewArchMod(
+    const newArchMod = CONTEXT.addNewArchMod(
         ArchMod.TAG,
         posX,
         posY,
         DEFAULT_SIZE,
         DEFAULT_SIZE);
 
-    CONTEXT.recordHistory();
+    CONTEXT.recordAddNewElement(newArchMod);
 
     finishAddNewArchModMode();
   } );
@@ -1795,14 +1815,14 @@ function prepareAddNewTextLabelMode() {
     const posX: number = e.offsetX || 0;
     const posY: number = e.offsetY || 0;
 
-    CONTEXT.addNewTextLabel(
+    const newTextLabel = CONTEXT.addNewTextLabel(
         TextLabel.TAG,
         posX,
         posY,
         DEFAULT_SIZE,
         DEFAULT_SIZE);
 
-    CONTEXT.recordHistory();
+    CONTEXT.recordAddNewElement(newTextLabel);
 
     finishAddNewTextLabelMode();
   } );
@@ -1827,9 +1847,9 @@ function prepareAddNewLineMode() {
     const posX: number = e.offsetX || 0;
     const posY: number = e.offsetY || 0;
 
-    CONTEXT.addNewLine(posX, posY);
+    const newLine = CONTEXT.addNewLine(posX, posY);
 
-    CONTEXT.recordHistory();
+    CONTEXT.recordAddNewElement(newLine);
 
     finishAddNewLineMode();
   } );

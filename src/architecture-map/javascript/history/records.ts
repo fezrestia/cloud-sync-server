@@ -48,25 +48,36 @@ export module History {
     }
   }
 
-  class AddNewElement extends Record {
-    private newElement: Element;
+  export class AddNewElement extends Record {
+    private readonly TAG = "AddNewElement";
+
+    private newElementUid: number;
     private newElementJson: ElementJson;
 
     constructor(context: Context, newElement: Element) {
       super(context);
-      this.newElement = newElement;
+
+      // Store primitive data (number and string) here because
+      // Object instance will be dead if total json history record is used.
+      this.newElementUid = newElement.uid;
       this.newElementJson = newElement.serialize();
     }
 
     // @Override
     async undo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
+
+      const target = this.context.queryElementUid(this.newElementUid);
+
       this.context.resetAllState();
-      this.context.onMultiSelected(this.newElement); // Use this only to select without callback.
+      this.context.onMultiSelected(target); // Use this only to select without callback.
       this.context.deleteSelected();
     }
 
     // @Override
     async redo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
+
       switch (this.newElementJson[Def.KEY_CLASS]) {
         case ArchMod.TAG:
           this.context.deserializeArchMod(this.newElementJson as ArchModJson);
@@ -86,7 +97,7 @@ export module History {
 
         default:
           TraceLog.e(TAG, `Unexpected Element:`);
-          console.log(this.newElement);
+          console.log(this.newElementJson);
           return;
       }
     }
