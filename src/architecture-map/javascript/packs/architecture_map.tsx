@@ -114,7 +114,7 @@ export class Context {
   public connectorBaseArchMod: ArchMod|null = null;
 
   // Selected list.
-  private readonly selectedElements: Element[] = [];
+  public readonly selectedElements: Element[] = [];
 
   private _callback: ContextCallback|null = null;
       get callback(): ContextCallback|null {
@@ -744,6 +744,16 @@ export class Context {
     } );
   }
 
+  private isHistoryChanged(): boolean {
+    const headJson: ArchitectureMapJson = this.serializeToJson();
+
+    // Check diff.
+    const baseStr = JSON.stringify(this.historyBaseJson);
+    const headStr = JSON.stringify(headJson);
+
+    return baseStr !== headStr;
+  }
+
   private prepareRecordHistory() {
     // Remove old history branch.
     if (this.historyUndoCount !== 0) {
@@ -769,6 +779,9 @@ export class Context {
 
   // Total JSON history record.
   public recordHistory() {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
     this.prepareRecordHistory();
 
     const headJson: ArchitectureMapJson = this.serializeToJson();
@@ -791,9 +804,24 @@ export class Context {
   }
 
   public recordAddNewElement(element: Element) {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
     this.prepareRecordHistory();
 
     const record: History.Record = new History.AddNewElement(this, element);
+    this.historyRecords.push(record);
+
+    this.finishRecordHistory();
+  }
+
+  public recordMoveElement(elements: Element[], totalPlusX: number, totalPlusY: number) {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
+    this.prepareRecordHistory();
+
+    const record: History.Record = new History.MoveElement(this, elements, totalPlusX, totalPlusY);
     this.historyRecords.push(record);
 
     this.finishRecordHistory();
@@ -1226,9 +1254,10 @@ class ArchModCallbackImpl implements ArchModCallback {
     CONTEXT.moveSelectedElements(plusX, plusY, moved);
   }
 
-  onDragEnd(moved: ArchMod) {
+  onDragEnd(moved: ArchMod, totalPlusX: number, totalPlusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragEnd()`);
     CONTEXT.onMoveResizeDone();
+    CONTEXT.recordMoveElement(CONTEXT.selectedElements, totalPlusX, totalPlusY);
   }
 
   onRaised(raised: ArchMod) {
@@ -1322,9 +1351,10 @@ class TextLabelCallbackImpl implements TextLabelCallback {
     CONTEXT.moveSelectedElements(plusX, plusY, moved);
   }
 
-  onDragEnd(moved: TextLabel) {
+  onDragEnd(moved: TextLabel, totalPlusX: number, totalPlusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onDragEnd()`);
     CONTEXT.onMoveResizeDone();
+    CONTEXT.recordMoveElement(CONTEXT.selectedElements, totalPlusX, totalPlusY);
   }
 
   onRaised(raised: TextLabel) {
@@ -1379,9 +1409,10 @@ class LineCallbackImpl implements LineCallback {
     CONTEXT.moveSelectedElements(plusX, plusY, moved);
   }
 
-  onDragEnd(moved: Line) {
+  onDragEnd(moved: Line, totalPlusX: number, totalPlusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onDragEnd()`);
     CONTEXT.onMoveResizeDone();
+    CONTEXT.recordMoveElement(CONTEXT.selectedElements, totalPlusX, totalPlusY);
   }
 
   onRaised(raised: Line) {
@@ -1429,12 +1460,12 @@ class ConnectorCallbackImpl implements ConnectorCallback {
 
   onDrag(moved: Connector, plusX: number, plusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onDrag() : plusX=${plusX}, plusY=${plusY}`);
-    CONTEXT.moveSelectedElements(plusX, plusY, moved);
+    // NOP.
   }
 
   onDragEnd(moved: Connector) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Connector.onDragEnd()`);
-    CONTEXT.onMoveResizeDone();
+    // NOP.
   }
 
   onRaised(raised: Connector) {

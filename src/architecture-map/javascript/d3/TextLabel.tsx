@@ -28,7 +28,7 @@ export interface TextLabelCallback {
 
   onDragStart(moved: TextLabel): void;
   onDrag(moved: TextLabel, pulsX: number, plusY: number): void;
-  onDragEnd(moved: TextLabel): void;
+  onDragEnd(moved: TextLabel, totalPlusX: number, totalPlusY: number): void;
 
   onRaised(raised: TextLabel): void;
   onLowered(lowered: TextLabel): void;
@@ -552,14 +552,15 @@ export class TextLabel extends Element {
               if (this.currentState.isMovable()) {
                 const target = event.target as any;
 
+                const totalDX: number = event.x - target.startX;
+                const totalDY: number = event.y - target.startY;
+
                 target.origX = 0;
                 target.origY = 0;
                 target.startX = 0;
                 target.startY = 0;
 
-                if (this.callback != null) this.callback.onDragEnd(this);
-
-                if (this.callback != null) this.callback.onHistoricalChanged(this);
+                if (this.callback != null) this.callback.onDragEnd(this, totalDX, totalDY);
               }
           } )
       );

@@ -103,6 +103,54 @@ export module History {
     }
   }
 
+  export class MoveElement extends Record {
+    private readonly TAG = "MoveElement";
+
+    private elementUids: number[] = [];
+    private totalPlusX: number;
+    private totalPlusY: number;
+
+    constructor(context: Context, elements: Element[], totalPlusX: number, totalPlusY: number) {
+      super(context);
+
+      // Store primitive data here because
+      // Object instance will be dead if total json history record is used.
+      elements.forEach( (elm: Element) => {
+        this.elementUids.push(elm.uid);
+      } );
+      this.totalPlusX = totalPlusX;
+      this.totalPlusY = totalPlusY;
+    }
+
+    // @Override
+    async undo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
+
+      this.elementUids.forEach( (uid: number) => {
+        const target = this.context.queryElementUid(uid);
+        target.move(-1 * this.totalPlusX, -1 * this.totalPlusY);
+
+        if (target.TAG === ArchMod.TAG) {
+          this.context.updateConnectorsRelatedTo(target as ArchMod);
+        }
+      } );
+    }
+
+    // @Override
+    async redo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
+
+      this.elementUids.forEach( (uid: number) => {
+        const target = this.context.queryElementUid(uid);
+        target.move(this.totalPlusX, this.totalPlusY);
+
+        if (target.TAG === ArchMod.TAG) {
+          this.context.updateConnectorsRelatedTo(target as ArchMod);
+        }
+      } );
+    }
+  }
+
 
 
 }

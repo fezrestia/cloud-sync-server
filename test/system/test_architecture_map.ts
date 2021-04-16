@@ -1030,7 +1030,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it("Check UNDO/REDO History", async () => {
+  it.only("Check UNDO/REDO History", async () => {
     let history = [];
 
     history.push(await getLatestJson());
@@ -1075,6 +1075,9 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     history.push(await getLatestJson());
 
     let two = await addNewArchMod();
+    assert.isTrue(await isElementUidsValid());
+    history.push(await getLatestJson());
+
     await changeLabel(two, "two");
     assert.isTrue(await isElementUidsValid());
     history.push(await getLatestJson());
@@ -1131,24 +1134,18 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     }
 
     // UNDO.
-    await undo();
-    let undo1 = await getLatestJson();
-    assert.deepEqual(undo1, history[history.length - 1 - 1]);
-    for (let i = 0; i < history.length; i++) {
+    for (let i = 1; i < history.length; i++) {
       await undo();
+      let undoJson = await getLatestJson();
+      assert.deepEqual(undoJson, history[history.length - 1 - i]);
     }
-    let undoLast = await getLatestJson();
-    assert.deepEqual(undoLast, history[0]);
 
     // REDO.
-    await redo();
-    let redo1 = await getLatestJson();
-    assert.deepEqual(redo1, history[1]);
-    for (let i = 0; i < history.length; i++) {
+    for (let i = 1; i < history.length; i++) {
       await redo();
+      let redoLast = await getLatestJson();
+      assert.deepEqual(redoLast, history[i]);
     }
-    let redoLast = await getLatestJson();
-    assert.deepEqual(redoLast, history[history.length - 1]);
 
   } );
 

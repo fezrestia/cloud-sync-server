@@ -30,7 +30,7 @@ export interface ArchModCallback {
 
   onDragStart(moved: ArchMod): void;
   onDrag(moved: ArchMod, pulsX: number, plusY: number): void;
-  onDragEnd(moved: ArchMod): void;
+  onDragEnd(moved: ArchMod, totalPlusX: number, totalPlusY: number): void;
 
   onRaised(raised: ArchMod): void;
   onLowered(lowered: ArchMod): void;
@@ -867,6 +867,9 @@ export class ArchMod extends Element {
               if (this.currentState.isMovable()) {
                 const target = event.target as any;
 
+                const totalDX = event.x - target.startX;
+                const totalDY = event.y - target.startY;
+
                 target.origX = 0;
                 target.origY = 0;
                 target.origPinX = 0;
@@ -874,9 +877,7 @@ export class ArchMod extends Element {
                 target.startX = 0;
                 target.startY = 0;
 
-                if (this.callback != null) this.callback.onDragEnd(this);
-
-                if (this.callback != null) this.callback.onHistoricalChanged(this);
+                if (this.callback != null) this.callback.onDragEnd(this, totalDX, totalDY);
               }
           } )
       );

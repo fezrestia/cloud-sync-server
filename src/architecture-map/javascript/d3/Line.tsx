@@ -27,7 +27,7 @@ export interface LineCallback {
 
   onDragStart(moved: Line): void;
   onDrag(moved: Line, plusX: number, plusY: number): void;
-  onDragEnd(moved: Line): void;
+  onDragEnd(moved: Line, totalPlusX: number, totalPlusY: number): void;
 
   onRaised(raised: Line): void;
   onLowered(lowered: Line): void;
@@ -559,14 +559,15 @@ export class Line extends Element {
               if (this.currentState.isMovable()) {
                 const target = event.target as any;
 
+                const totalDX: number = event.x - target.startX;
+                const totalDY: number = event.y - target.startY;
+
                 target.origFromPoint = new Point(0, 0);
                 target.origToPoint = new Point(0, 0);
                 target.startX = 0;
                 target.startY = 0;
 
-                if (this.callback != null) this.callback.onDragEnd(this);
-
-                if (this.callback != null) this.callback.onHistoricalChanged(this);
+                if (this.callback != null) this.callback.onDragEnd(this, totalDX, totalDY);
               }
           } )
       );
