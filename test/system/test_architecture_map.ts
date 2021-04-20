@@ -1030,7 +1030,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
   } );
 
-  it.only("Check UNDO/REDO History", async () => {
+  it("Check UNDO/REDO History", async () => {
     let history = [];
 
     history.push(await getLatestJson());

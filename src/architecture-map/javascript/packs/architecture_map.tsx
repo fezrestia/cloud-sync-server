@@ -1210,8 +1210,8 @@ class ArchModCallbackImpl implements ArchModCallback {
 
           if (nit == null) {
             // Add new connector.
-            CONTEXT.addNewConnector(fromArchMod, toArchMod);
-            CONTEXT.recordHistory();
+            const newConnector = CONTEXT.addNewConnector(fromArchMod, toArchMod);
+            CONTEXT.recordAddNewElement(newConnector);
           }
         }
 
