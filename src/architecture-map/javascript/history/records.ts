@@ -151,6 +151,47 @@ export module History {
     }
   }
 
+  export class ChangeOutFrameSize extends Record {
+    private readonly TAG = "ChangeOutFrameSize";
+
+    private beforeWidth: number;
+    private beforeHeight: number;
+    private afterWidth: number;
+    private afterHeight: number;
+
+    constructor(
+        context: Context,
+        beforeWidth: number,
+        beforeHeight: number,
+        afterWidth: number,
+        afterHeight: number) {
+      super(context);
+
+      this.beforeWidth = beforeWidth;
+      this.beforeHeight = beforeHeight;
+      this.afterWidth = afterWidth;
+      this.afterHeight = afterHeight;
+    }
+
+    // @Override
+    async undo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
+
+      this.context.outFrame.setWH(this.beforeWidth, this.beforeHeight);
+      this.context.outFrame.relayout();
+      this.context.changeOutFrameSize(this.beforeWidth, this.beforeHeight);
+    }
+
+    // @Override
+    async redo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
+
+      this.context.outFrame.setWH(this.afterWidth, this.afterHeight);
+      this.context.outFrame.relayout();
+      this.context.changeOutFrameSize(this.afterWidth, this.afterHeight);
+    }
+  }
+
 
 
 }

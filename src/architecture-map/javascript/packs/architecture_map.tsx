@@ -835,6 +835,27 @@ export class Context {
     this.finishRecordHistory();
   }
 
+  public recordChangeOutFrameSize(
+      beforeWidth: number,
+      beforeHeight: number,
+      afterWidth: number,
+      afterHeight: number) {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
+    this.prepareRecordHistory();
+
+    const record: History.Record = new History.ChangeOutFrameSize(
+        this,
+        beforeWidth,
+        beforeHeight,
+        afterWidth,
+        afterHeight);
+    this.historyRecords.push(record);
+
+    this.finishRecordHistory();
+  }
+
   public async recoverJson(json: ArchitectureMapJson) {
     this.deleteAll();
     await this.deserializeFromJson(json);
@@ -1192,10 +1213,10 @@ class OutFrameCallbackImpl implements OutFrameCallback {
     // NOP.
   }
 
-  onSizeChangeEnd(width: number, height: number) {
-    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChangeEnd() : width=${width}, height=${height}`);
-    CONTEXT.changeOutFrameSize(width, height);
-    CONTEXT.recordHistory();
+  onSizeChangeEnd(startWidth: number, startHeight: number, endWidth: number, endHeight: number) {
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `OutFrame.onSizeChangeEnd() : start=[${startWidth}x${startHeight}], end=[${endWidth}x${endHeight}]`);
+    CONTEXT.changeOutFrameSize(endWidth, endHeight);
+    CONTEXT.recordChangeOutFrameSize(startWidth, startHeight, endWidth, endHeight);
   }
 }
 

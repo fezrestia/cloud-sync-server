@@ -18,8 +18,7 @@ import { ElementJson } from "./Element";
 export interface OutFrameCallback {
   onSizeChangeStart(): void;
   onSizeChange(width: number, height: number): void;
-  onSizeChangeEnd(width: number, height: number): void;
-
+  onSizeChangeEnd(startWidth: number, startHeight: number, endWidth: number, endHeight: number): void;
 }
 
 export interface OutFrameJson {
@@ -184,6 +183,16 @@ export class OutFrame extends Element {
   public setXYWH(x: number, y: number, width: number, height: number) {
     this.x = x;
     this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  /**
+   * Set size.
+   * @param width Pixels
+   * @param height Pixels
+   */
+  public setWH(width: number, height: number) {
     this.width = width;
     this.height = height;
   }
@@ -376,13 +385,20 @@ export class OutFrame extends Element {
 
               const target = event.target as any;
 
+              const startWidth = target.origWidth;
+              const startHeight = target.origHeight;
+
               target.origWidth = 0;
               target.origHeight = 0;
 
               target.startX = 0;
               target.startY = 0;
 
-              if (this.callback != null) this.callback.onSizeChangeEnd(this.width, this.height);
+              if (this.callback != null) this.callback.onSizeChangeEnd(
+                  startWidth,
+                  startHeight,
+                  this.width,
+                  this.height);
           } )
     );
 
