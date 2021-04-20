@@ -1203,7 +1203,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
     await driver.findElement(By.id("upload_json_form")).click();
 
     // Wait for rendering done.
-    await driver.sleep(100);
+    await waitForLoadingIconIsGone();
 
     // Get hierarchy from runtime context.
     const inject = (): { [key: string]: {} } => {
@@ -1707,6 +1707,15 @@ describe("Test Architecture Map Web SPA Interaction", () => {
 
     let actJson = loadLatestDownloadedJson();
     return actJson;
+  }
+
+  async function waitForLoadingIconIsGone(): Promise<void> {
+    const loadingIconGone = new Condition("Loading icon still exists.", async (driver: WebDriver) => {
+      const elms = await driver.findElements(By.id("loading_indicator"));
+      return elms.length === 0;
+    } );
+
+    await driver.wait(loadingIconGone, TestDef.LOAD_TIMEOUT_MILLIS);
   }
 
   /////////////////////////////////////////////////////////// DRIVER-DEPENDENT UTIL FUNCTIONS ////

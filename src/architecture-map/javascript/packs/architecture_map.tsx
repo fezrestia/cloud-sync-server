@@ -241,8 +241,11 @@ export class Context {
 
     // Rendner each Element.
     const elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
-    elements.forEach( async (element: ElementJson) => {
-      await Util.timeslice( () => {
+    const elementPromises: Promise<void>[] = [];
+    for (let i = 0; i < elements.length; ++i) {
+      const element: ElementJson = elements[i];
+
+      const promise = Util.timeslice( () => {
         let deserialized: Element;
         let json;
 
@@ -287,6 +290,11 @@ export class Context {
         this.onMultiSelected(deserialized);
 
       } );
+
+      elementPromises.push(promise);
+    }
+    elementPromises.forEach( async (promise: Promise<void>) => {
+      await promise;
     } );
 
     await Util.timeslice( () => {
