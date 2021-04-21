@@ -416,5 +416,10 @@ export class OutFrame extends Element {
     this.svg.attr("overflow", "hidden");
     this.recolor();
   }
+
+  public moveToBackEnd() {
+    if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
+    this.root.lower();
+  }
 }
 

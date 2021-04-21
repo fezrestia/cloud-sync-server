@@ -192,6 +192,69 @@ export module History {
     }
   }
 
+  export class ChangeArchModJson extends Record {
+    private readonly TAG = "ChangeArchModJson";
+
+    private uid: number;
+    private beforeJson: ArchModJson;
+    private afterJson: ArchModJson;
+    private zDiff: number;
+
+    constructor(context: Context, afterArchMod: ArchMod) {
+      super(context);
+
+      this.uid = afterArchMod.uid;
+      this.afterJson = afterArchMod.serialize();
+      this.beforeJson = context.queryUidOnHistoryBaseJson(this.uid) as ArchModJson;
+
+      const afterZ = this.afterJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+      const beforeZ = this.beforeJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+      this.zDiff = afterZ - beforeZ;
+    }
+
+    // @Override
+    async undo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
+
+      const target = this.context.queryElementUid(this.uid) as ArchMod;
+      const steps = Math.abs(this.zDiff);
+
+      if (this.zDiff < 0) {
+        target.moveUp(steps);
+        this.context.moveUpElement(target, steps);
+      }
+      if (this.zDiff > 0) {
+        target.moveDown(steps);
+        this.context.moveDownElement(target, steps);
+      }
+
+      target.deserialize(this.beforeJson);
+
+      this.context.relayout();
+    }
+
+    // @Override
+    async redo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
+
+      const target = this.context.queryElementUid(this.uid) as ArchMod;
+      const steps = Math.abs(this.zDiff);
+
+      if (this.zDiff < 0) {
+        target.moveDown(steps);
+        this.context.moveDownElement(target, steps);
+      }
+      if (this.zDiff > 0) {
+        target.moveUp(steps);
+        this.context.moveUpElement(target, steps);
+      }
+
+      target.deserialize(this.afterJson);
+
+      this.context.relayout();
+    }
+  }
+
 
 
 }

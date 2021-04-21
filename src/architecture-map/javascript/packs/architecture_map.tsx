@@ -618,7 +618,23 @@ export class Context {
     this.addElementToBottom(lowered);
 
     this.resolveOverlappingArchMod();
+
+    // OutFrame is always most back end.
+    this.outFrame.moveToBackEnd();
+
     this.relayout();
+  }
+
+  public moveUpElement(element: Element, steps: number) {
+    const index = this.allElements.indexOf(element);
+    this.allElements.splice(index, 1);
+    this.allElements.splice(index + steps, 0, element);
+  }
+
+  public moveDownElement(element: Element, steps: number) {
+    const index = this.allElements.indexOf(element);
+    this.allElements.splice(index, 1);
+    this.allElements.splice(index - steps, 0, element);
   }
 
   public deleteSelected() {
@@ -752,6 +768,20 @@ export class Context {
     } );
   }
 
+  public queryUidOnHistoryBaseJson(uid: number): ElementJson {
+    const elementJsons = (this.historyBaseJson as ArchitectureMapJson)[Def.KEY_ARCHITECTURE_MAP] as ElementJson[];
+
+    for (let i = 0; i < elementJsons.length; ++i) {
+      const elm = elementJsons[i];
+      if (elm[Def.KEY_UID] == uid) {
+        return elm;
+      }
+    }
+
+    alert(`ERR: UID No hit on history base. uid=${uid}`);
+    return {} as ElementJson;
+  }
+
   private isHistoryChanged(): boolean {
     const headJson: ArchitectureMapJson = this.serializeToJson();
 
@@ -851,6 +881,18 @@ export class Context {
         beforeHeight,
         afterWidth,
         afterHeight);
+    this.historyRecords.push(record);
+
+    this.finishRecordHistory();
+  }
+
+  public recordChangeArchMod(archMod: ArchMod) {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
+    this.prepareRecordHistory();
+
+    const record: History.Record = new History.ChangeArchModJson(this, archMod);
     this.historyRecords.push(record);
 
     this.finishRecordHistory();
@@ -1286,7 +1328,6 @@ class ArchModCallbackImpl implements ArchModCallback {
   onDragEnd(moved: ArchMod, totalPlusX: number, totalPlusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragEnd()`);
     CONTEXT.onMoveResizeDone();
-    CONTEXT.recordMoveElement(CONTEXT.selectedElements, totalPlusX, totalPlusY);
   }
 
   onRaised(raised: ArchMod) {
@@ -1329,7 +1370,7 @@ class ArchModCallbackImpl implements ArchModCallback {
 
   onHistoricalChanged(archMod: ArchMod) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onHistoricalChanged() : label=${archMod.label}`);
-    CONTEXT.recordHistory();
+    CONTEXT.recordChangeArchMod(archMod);
   }
 
   onSizeChanged(archMod: ArchMod) {

@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+const svgz = require("svg-z-order");
 
 import { ColorResolver } from "./resolver/ColorResolver.ts";
 import { Point } from "./Util.ts";
@@ -337,6 +338,39 @@ export class ArchMod extends Element {
     archMod.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
 
     return archMod;
+  }
+
+  /**
+   * Apply parameters from JSON.
+   * @param json
+   */
+  public deserialize(json: ArchModJson) {
+    this.parentUid = json[Def.KEY_PARENT_UID];
+
+    this._label = json[Def.KEY_LABEL];
+
+    this.hierarchyDepth = json[Def.KEY_HIERARCHY_DEPTH];
+
+    this.setDimens(
+        json[Def.KEY_DIMENS][Def.KEY_X],
+        json[Def.KEY_DIMENS][Def.KEY_Y],
+        json[Def.KEY_DIMENS][Def.KEY_WIDTH],
+        json[Def.KEY_DIMENS][Def.KEY_HEIGHT],
+        json[Def.KEY_DIMENS][Def.KEY_PIN_X],
+        json[Def.KEY_DIMENS][Def.KEY_PIN_Y],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN],
+        json[Def.KEY_DIMENS][Def.KEY_Z_ORDER]);
+
+    this.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+    this.edgeColorSet = ColorSet.valueOf(json[Def.KEY_EDGE_COLOR_SET]);
+
+    this.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
+
+    this.relabel();
+    this.relayout();
+    this.recolor();
   }
 
   // Elements.
@@ -878,6 +912,7 @@ export class ArchMod extends Element {
                 target.startY = 0;
 
                 if (this.callback != null) this.callback.onDragEnd(this, totalDX, totalDY);
+                if (this.callback != null) this.callback.onHistoricalChanged(this);
               }
           } )
       );
@@ -1564,6 +1599,24 @@ export class ArchMod extends Element {
     if (TraceLog.IS_DEBUG) TraceLog.d(ArchMod.TAG, `moveToBackEnd()`);
     this.root.lower();
     if (this.callback != null) this.callback.onLowered(this);
+  }
+
+  /**
+   * Move z-order up by steps.
+   * @param steps
+   */
+  public moveUp(steps: number) {
+    const elm = svgz.element(this.root.node());
+    elm.moveUp(steps);
+  }
+
+  /**
+   * Move z-order down by steps.
+   * @param steps
+   */
+  public moveDown(steps: number) {
+    const elm = svgz.element(this.root.node());
+    elm.moveDown(steps);
   }
 
   /**
