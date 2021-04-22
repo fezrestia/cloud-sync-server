@@ -4,18 +4,13 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 const svgz = require("svg-z-order");
 
-import { ColorResolver } from "./resolver/ColorResolver.ts";
-import { Point } from "./Util.ts";
-import { TraceLog } from "../util/TraceLog.ts";
-import { Util } from "./Util.ts";
-import { TextLabelContextMenu } from "../components/TextLabelContextMenu.tsx";
-import { TextLabelContextMenuCallback } from "../components/TextLabelContextMenu.tsx";
-import { Def } from "../Def.ts";
-import { ColorSet } from "../Def.ts";
-import { D3Node, D3Event } from "../TypeDef.ts";
-import { JQueryNode } from "../TypeDef.ts";
-import { Element } from "./Element";
-import { ElementItxMode } from "./Element";
+import { ColorResolver } from "./resolver/ColorResolver";
+import { Point, Util } from "./Util";
+import { TraceLog } from "../util/TraceLog";
+import { TextLabelContextMenu, TextLabelContextMenuCallback } from "../components/TextLabelContextMenu";
+import { Def, ColorSet } from "../Def";
+import { D3Node, D3Event, JQueryNode, StringKeyObject } from "../TypeDef";
+import { Element, ElementItxMode } from "./Element";
 
 /**
  * Callback interface for TextLabel.
@@ -43,7 +38,7 @@ export interface TextLabelCallback {
 /**
  * TextLabel serialized JSON interface.
  */
-export interface TextLabelJson {
+export interface TextLabelJson extends StringKeyObject {
   [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
   [Def.KEY_LABEL]: string,

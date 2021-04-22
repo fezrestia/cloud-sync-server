@@ -1,8 +1,8 @@
 import * as React from "react";
 
-import { TraceLog } from "../util/TraceLog.ts";
-import { ReactMouseEvent } from "../TypeDef.ts";
-import { Def, ColorSet, MarkerType } from "../Def.ts";
+import { TraceLog } from "../util/TraceLog";
+import { ReactMouseEvent } from "../TypeDef";
+import { Def, ColorSet, MarkerType } from "../Def";
 import { genColorSetClickButtons,
          genZOrderClickButtons,
          genFromMarkerTypeClickButtons,

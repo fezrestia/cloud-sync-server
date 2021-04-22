@@ -8,7 +8,7 @@ import "firebase/functions";
 import "../css/sim_stats.scss";
 import { LatestSimStats } from "./components/LatestSimStats";
 import { asyncGetHttp } from "../../common/js/http";
-import { Context } from "../../context.ts";
+import { Context } from "../../context";
 
 const GET_LATEST_SIM_STATS_URL = "https://asia-northeast1-cloud-sync-service.cloudfunctions.net/httpsGetLatestSimStats";
 

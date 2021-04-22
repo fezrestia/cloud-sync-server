@@ -1,9 +1,8 @@
 import * as React from "react";
 
-import { TraceLog } from "../util/TraceLog.ts";
-import { ReactMouseEvent } from "../TypeDef.ts";
-import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
-import { Def } from "../Def.ts";
+import { TraceLog } from "../util/TraceLog";
+import { ReactMouseEvent, ReactKeyboardTextAreaEvent } from "../TypeDef";
+import { Def } from "../Def";
 
 interface Props {
   parentLabel: string,

@@ -1,5 +1,5 @@
-import { D3Node } from "../TypeDef.ts";
-import { TraceLog } from "./TraceLog.ts";
+import { D3Node } from "../TypeDef";
+import { TraceLog } from "./TraceLog";
 
 export class Downloader {
   public static readonly TAG = "Downloader";

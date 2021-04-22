@@ -4,16 +4,13 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 const svgz = require("svg-z-order");
 
-import { ColorResolver } from "./resolver/ColorResolver.ts";
-import { Point } from "./Util.ts";
-import { TraceLog } from "../util/TraceLog.ts";
-import { ConnectorContextMenu } from "../components/ConnectorContextMenu.tsx";
-import { ConnectorContextMenuCallback } from "../components/ConnectorContextMenu.tsx";
-import { Def, ColorSet, MarkerType, LineStyle } from "../Def.ts";
-import { D3Node, D3Event } from "../TypeDef.ts";
-import { JQueryNode } from "../TypeDef.ts";
-import { Element } from "./Element";
-import { ElementItxMode } from "./Element";
+import { ColorResolver } from "./resolver/ColorResolver";
+import { Point } from "./Util";
+import { TraceLog } from "../util/TraceLog";
+import { ConnectorContextMenu, ConnectorContextMenuCallback } from "../components/ConnectorContextMenu";
+import { Def, ColorSet, MarkerType, LineStyle } from "../Def";
+import { D3Node, D3Event, JQueryNode } from "../TypeDef";
+import { Element, ElementItxMode } from "./Element";
 import { ArchMod } from "./ArchMod";
 import { Marker } from "./Marker";
 

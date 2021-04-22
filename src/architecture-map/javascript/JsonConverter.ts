@@ -1,13 +1,10 @@
 import { TraceLog } from "./util/TraceLog";
 import { Def, MarkerType } from "./Def";
-import { Connector } from "./d3/Connector";
-import { ConnectorJson } from "./d3/Connector";
-import { Line } from "./d3/Line";
-import { LineJson } from "./d3/Line";
+import { Connector, ConnectorJson } from "./d3/Connector";
+import { Line, LineJson } from "./d3/Line";
 import { ElementJson } from "./d3/Element";
 import { OutFrame } from "./d3/OutFrame";
-import { ArchMod } from "./d3/ArchMod";
-import { ArchModJson } from "./d3/ArchMod";
+import { ArchMod, ArchModJson } from "./d3/ArchMod";
 
 // Convert old version JSON to latest.
 /* tslint:disable:no-string-literal */

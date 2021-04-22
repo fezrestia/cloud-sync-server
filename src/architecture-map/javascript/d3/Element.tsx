@@ -1,6 +1,5 @@
 import { Def } from "../Def";
-import { D3Node } from "../TypeDef";
-import { JQueryNode, StringKeyObject } from "../TypeDef";
+import { D3Node, JQueryNode, StringKeyObject } from "../TypeDef";
 
 /**
  * Serialized JSON object interface.

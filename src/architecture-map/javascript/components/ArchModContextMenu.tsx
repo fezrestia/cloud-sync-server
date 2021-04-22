@@ -1,12 +1,8 @@
 import * as React from "react";
 
-import { TraceLog } from "../util/TraceLog.ts";
-import { ReactMouseEvent } from "../TypeDef.ts";
-import { ReactTextAreaChangeEvent } from "../TypeDef.ts";
-import { ReactKeyboardTextAreaEvent } from "../TypeDef.ts";
-import { Def } from "../Def.ts";
-import { ClipArea } from "../Def.ts";
-import { ColorSet } from "../Def.ts";
+import { TraceLog } from "../util/TraceLog";
+import { ReactMouseEvent, ReactTextAreaChangeEvent, ReactKeyboardTextAreaEvent } from "../TypeDef";
+import { Def, ClipArea, ColorSet } from "../Def";
 import { genColorSetClickButtons,
          genClipAreaClickButtons,
          genLabelHorizontalAlignClickButtons,

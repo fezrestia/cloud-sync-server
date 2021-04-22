@@ -4,7 +4,7 @@ import firebase from "firebase/app";
 import "firebase/auth";
 
 import "./entry.scss";
-import { Context } from "./context.ts";
+import { Context } from "./context";
 import { GlobalHeader } from "./common/components/GlobalHeader";
 import { ContentGateway } from "./common/components/ContentGateway";
 

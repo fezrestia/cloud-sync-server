@@ -1,5 +1,5 @@
-import { D3Node } from "../TypeDef.ts";
-import { ColorSet, MarkerType, LineStyle } from "../Def.ts";
+import { D3Node } from "../TypeDef";
+import { ColorSet, MarkerType, LineStyle } from "../Def";
 
 export class Marker {
   public static readonly TAG = "Marker";

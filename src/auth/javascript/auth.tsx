@@ -2,7 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import { IS_DEBUG } from "../../common/js/log";
-import { Context } from "../../context.ts";
+import { Context } from "../../context";
 import { GlobalHeader } from "../../common/components/GlobalHeader";
 import { LoginForm } from "./components/LoginForm";
 import { LogoutForm } from "./components/LogoutForm";

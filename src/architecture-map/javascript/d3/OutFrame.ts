@@ -2,15 +2,11 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 import * as ReactDOM from "react-dom";
 
-import { ColorResolver } from "./resolver/ColorResolver.ts";
-import { TraceLog } from "../util/TraceLog.ts";
-import { Def } from "../Def.ts";
-import { JQueryNode } from "../TypeDef.ts";
-import { D3Node, D3Event } from "../TypeDef.ts";
-import { ColorSet } from "../Def.ts";
-import { Element } from "./Element";
-import { ElementItxMode } from "./Element";
-import { ElementJson } from "./Element";
+import { ColorResolver } from "./resolver/ColorResolver";
+import { TraceLog } from "../util/TraceLog";
+import { Def, ColorSet } from "../Def";
+import { D3Node, D3Event, JQueryNode, StringKeyObject } from "../TypeDef";
+import { Element, ElementItxMode, ElementJson } from "./Element";
 
 /**
  * Callback interface for OutFrame.
@@ -21,7 +17,7 @@ export interface OutFrameCallback {
   onSizeChangeEnd(startWidth: number, startHeight: number, endWidth: number, endHeight: number): void;
 }
 
-export interface OutFrameJson {
+export interface OutFrameJson extends StringKeyObject {
   [Def.KEY_UID]: number,
   [Def.KEY_CLASS]: string,
   [Def.KEY_DIMENS]: {

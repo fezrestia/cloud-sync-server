@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { ReactMouseEvent, CSS } from "../TypeDef.ts";
-import { Def, ColorSet, ClipArea, MarkerType, LineStyle } from "../Def.ts";
+import { ReactMouseEvent, CSS } from "../TypeDef";
+import { Def, ColorSet, ClipArea, MarkerType, LineStyle } from "../Def";
 import { ColorResolver } from "../d3/resolver/ColorResolver";
 
 const BUTTON_SIZE_PIX = 24;
