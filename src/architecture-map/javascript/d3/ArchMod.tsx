@@ -340,10 +340,7 @@ export class ArchMod extends Element {
     return archMod;
   }
 
-  /**
-   * Apply parameters from JSON.
-   * @param json
-   */
+  // @Override
   public deserialize(json: ArchModJson) {
     this.parentUid = json[Def.KEY_PARENT_UID];
 
@@ -1601,19 +1598,13 @@ export class ArchMod extends Element {
     if (this.callback != null) this.callback.onLowered(this);
   }
 
-  /**
-   * Move z-order up by steps.
-   * @param steps
-   */
+  // @Override
   public moveUp(steps: number) {
     const elm = svgz.element(this.root.node());
     elm.moveUp(steps);
   }
 
-  /**
-   * Move z-order down by steps.
-   * @param steps
-   */
+  // @Override
   public moveDown(steps: number) {
     const elm = svgz.element(this.root.node());
     elm.moveDown(steps);

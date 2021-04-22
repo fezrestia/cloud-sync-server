@@ -83,6 +83,11 @@ export class OutFrame extends Element {
     };
   }
 
+  // @Override
+  public deserialize(json: ElementJson) {
+    alert("ERR: Unsupported Exception");
+  }
+
   /**
    * Deserlialize OutFrame object from JSON object.
    *
@@ -421,5 +426,18 @@ export class OutFrame extends Element {
     if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `moveToBackEnd()`);
     this.root.lower();
   }
+
+  // @Override
+  public moveUp(steps: number) {
+    alert("ERR: Unsupported Exception");
+  }
+
+  // @Override
+  public moveDown(steps: number) {
+    alert("ERR: Unsupported Exception");
+  }
+
+
+
 }
 

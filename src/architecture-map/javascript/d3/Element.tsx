@@ -60,6 +60,13 @@ export abstract class Element {
   abstract serialize(): ElementJson;
 
   /**
+   * Apply parameters from JSON.
+   *
+   * @param json
+   */
+  abstract deserialize(json: ElementJson): void;
+
+  /**
    * Render.
    */
   abstract render(): void;
@@ -86,6 +93,20 @@ export abstract class Element {
    * @param plusY
    */
   abstract move(plusX: number, plusY: number): void;
+
+  /**
+   * Move z-order up by steps.
+   *
+   * @param steps
+   */
+  abstract moveUp(steps: number): void;
+
+  /**
+   * Move z-order down by steps.
+   *
+   * @param steps
+   */
+  abstract moveDown(steps: number): void;
 
   /**
    * Delete this instance.

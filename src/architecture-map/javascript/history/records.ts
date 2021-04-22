@@ -192,20 +192,20 @@ export module History {
     }
   }
 
-  export class ChangeArchModJson extends Record {
-    private readonly TAG = "ChangeArchModJson";
+  export class ChangeElementJson extends Record {
+    private readonly TAG = "ChangeElementJson";
 
     private uid: number;
-    private beforeJson: ArchModJson;
-    private afterJson: ArchModJson;
+    private beforeJson: ElementJson;
+    private afterJson: ElementJson;
     private zDiff: number;
 
-    constructor(context: Context, afterArchMod: ArchMod) {
+    constructor(context: Context, afterElement: Element) {
       super(context);
 
-      this.uid = afterArchMod.uid;
-      this.afterJson = afterArchMod.serialize();
-      this.beforeJson = context.queryUidOnHistoryBaseJson(this.uid) as ArchModJson;
+      this.uid = afterElement.uid;
+      this.afterJson = afterElement.serialize();
+      this.beforeJson = context.queryUidOnHistoryBaseJson(this.uid);
 
       const afterZ = this.afterJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
       const beforeZ = this.beforeJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
@@ -216,7 +216,7 @@ export module History {
     async undo() {
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
 
-      const target = this.context.queryElementUid(this.uid) as ArchMod;
+      const target: Element = this.context.queryElementUid(this.uid);
       const steps = Math.abs(this.zDiff);
 
       if (this.zDiff < 0) {
@@ -230,6 +230,10 @@ export module History {
 
       target.deserialize(this.beforeJson);
 
+      if (target.TAG === ArchMod.TAG) {
+        this.context.updateConnectorsRelatedTo(target as ArchMod);
+      }
+
       this.context.relayout();
     }
 
@@ -237,7 +241,7 @@ export module History {
     async redo() {
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
 
-      const target = this.context.queryElementUid(this.uid) as ArchMod;
+      const target: Element = this.context.queryElementUid(this.uid);
       const steps = Math.abs(this.zDiff);
 
       if (this.zDiff < 0) {
@@ -250,6 +254,10 @@ export module History {
       }
 
       target.deserialize(this.afterJson);
+
+      if (target.TAG === ArchMod.TAG) {
+        this.context.updateConnectorsRelatedTo(target as ArchMod);
+      }
 
       this.context.relayout();
     }

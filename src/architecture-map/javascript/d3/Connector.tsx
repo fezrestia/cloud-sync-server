@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+const svgz = require("svg-z-order");
 
 import { ColorResolver } from "./resolver/ColorResolver.ts";
 import { Point } from "./Util.ts";
@@ -297,6 +298,31 @@ export class Connector extends Element {
         [Def.KEY_COLOR_SET]: this.colorSet,
     };
     return jsonObj;
+  }
+
+  // @Override
+  public deserialize(json: ConnectorJson) {
+    this.fromUid = json[Def.KEY_FROM_UID];
+    this.toUid = json[Def.KEY_TO_UID];
+
+    const fromX = json[Def.KEY_DIMENS][Def.KEY_FROM_X];
+    const fromY = json[Def.KEY_DIMENS][Def.KEY_FROM_Y];
+    const toX = json[Def.KEY_DIMENS][Def.KEY_TO_X];
+    const toY = json[Def.KEY_DIMENS][Def.KEY_TO_Y];
+
+    this.fromPoint =  new Point(fromX, fromY);
+    this.toPoint =  new Point(toX, toY);
+    this.width = json[Def.KEY_DIMENS][Def.KEY_WIDTH];
+
+    this.zOrder = json[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+
+    this.fromMarkerType = MarkerType.valueOf(json[Def.KEY_FROM_MARKER_TYPE]);
+    this.toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
+
+    this.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    this.relayout();
+    this.recolor();
   }
 
   /**
@@ -901,6 +927,18 @@ export class Connector extends Element {
     if (TraceLog.IS_DEBUG) TraceLog.d(Connector.TAG, `moveToBackEnd()`);
     this.root.lower();
     if (this.callback != null) this.callback.onLowered(this);
+  }
+
+  // @Override
+  public moveUp(steps: number) {
+    const elm = svgz.element(this.root.node());
+    elm.moveUp(steps);
+  }
+
+  // @Override
+  public moveDown(steps: number) {
+    const elm = svgz.element(this.root.node());
+    elm.moveDown(steps);
   }
 
   /**

@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import * as $ from "jquery";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+const svgz = require("svg-z-order");
 
 import { ColorResolver } from "./resolver/ColorResolver.ts";
 import { Point } from "./Util.ts";
@@ -259,6 +260,27 @@ export class TextLabel extends Element {
         [Def.KEY_COLOR_SET]: this.colorSet,
     };
     return jsonObj;
+  }
+
+  // @Override
+  public deserialize(json: TextLabelJson) {
+    this._label = json[Def.KEY_LABEL];
+
+    this.setDimens(
+        json[Def.KEY_DIMENS][Def.KEY_X],
+        json[Def.KEY_DIMENS][Def.KEY_Y],
+        json[Def.KEY_DIMENS][Def.KEY_WIDTH],
+        json[Def.KEY_DIMENS][Def.KEY_HEIGHT],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_ROT_DEG],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_HORIZONTAL_ALIGN],
+        json[Def.KEY_DIMENS][Def.KEY_LABEL_VERTICAL_ALIGN],
+        json[Def.KEY_DIMENS][Def.KEY_Z_ORDER]);
+
+    this.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    this.relabel();
+    this.relayout();
+    this.recolor();
   }
 
   /**
@@ -561,6 +583,7 @@ export class TextLabel extends Element {
                 target.startY = 0;
 
                 if (this.callback != null) this.callback.onDragEnd(this, totalDX, totalDY);
+                if (this.callback != null) this.callback.onHistoricalChanged(this);
               }
           } )
       );
@@ -1027,6 +1050,18 @@ export class TextLabel extends Element {
     if (TraceLog.IS_DEBUG) TraceLog.d(TextLabel.TAG, `moveToBackEnd()`);
     this.root.lower();
     if (this.callback != null) this.callback.onLowered(this);
+  }
+
+  // @Override
+  public moveUp(steps: number) {
+    const elm = svgz.element(this.root.node());
+    elm.moveUp(steps);
+  }
+
+  // @Override
+  public moveDown(steps: number) {
+    const elm = svgz.element(this.root.node());
+    elm.moveDown(steps);
   }
 
   /**
