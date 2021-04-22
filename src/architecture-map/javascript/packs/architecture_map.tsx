@@ -683,8 +683,8 @@ export class Context {
     this.resetAllState();
   }
 
-  public pasteFromClipBoard() {
-    if (this.clipboard.length === 0) return;
+  public pasteFromClipBoard(): Element[] {
+    if (this.clipboard.length === 0) return [];
 
     this.resetAllState();
 
@@ -695,6 +695,8 @@ export class Context {
       if (zA > zB) return 1;
       return 0;
     } );
+
+    const pastedElements: Element[] = [];
 
     this.clipboard.forEach( (serialized: ElementJson) => {
       serialized[Def.KEY_UID] = this.genNewElementUid();
@@ -748,6 +750,8 @@ export class Context {
       element.select();
       this.onMultiSelected(element);
 
+      pastedElements.push(element);
+
     } );
 
     this.resolveOverlappingArchMod();
@@ -755,6 +759,8 @@ export class Context {
     this.relayout();
 
     this.clipboard.length = 0; // Clear all.
+
+    return pastedElements;
   }
 
   public isLabelPresent(newLabel: string): boolean {
@@ -881,6 +887,18 @@ export class Context {
     this.prepareRecordHistory();
 
     const record: History.Record = new History.ChangeElementJson(this, element);
+    this.historyRecords.push(record);
+
+    this.finishRecordHistory();
+  }
+
+  public recordPasteElements(elements: Element[]) {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
+    this.prepareRecordHistory();
+
+    const record: History.Record = new History.PasteElements(this, elements);
     this.historyRecords.push(record);
 
     this.finishRecordHistory();
@@ -1677,8 +1695,8 @@ function registerGlobalCallbacks() {
 
         case "v":
           if (event.ctrlKey) {
-            CONTEXT.pasteFromClipBoard();
-            CONTEXT.recordHistory();
+            const pastedElements: Element[] = CONTEXT.pasteFromClipBoard();
+            CONTEXT.recordPasteElements(pastedElements);
           }
           break;
 

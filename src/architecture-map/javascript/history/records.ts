@@ -263,6 +263,70 @@ export module History {
     }
   }
 
+  export class PasteElements extends Record {
+    private readonly TAG = "PasteElements";
+
+    private newElementUids: number[] = [];
+    private newElementUidVsJson: Map<number, ElementJson> = new Map();
+
+    constructor(context: Context, newElements: Element[]) {
+      super(context);
+
+      // Store primitive data (number and string) here because
+      // Object instance will be dead if total json history record is used.
+      newElements.forEach( (element: Element) => {
+        this.newElementUids.push(element.uid);
+        this.newElementUidVsJson.set(element.uid, element.serialize());
+      } );
+    }
+
+    // @Override
+    async undo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
+
+      this.context.resetAllState();
+
+      this.newElementUids.forEach( (uid: number) => {
+        const target = this.context.queryElementUid(uid);
+        this.context.onMultiSelected(target); // Use this only to select without callback.
+      } );
+
+      this.context.deleteSelected();
+    }
+
+    // @Override
+    async redo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
+
+      this.newElementUids.forEach( (uid: number) => {
+        const json: ElementJson = this.newElementUidVsJson.get(uid) as ElementJson;
+
+        switch (json[Def.KEY_CLASS]) {
+          case ArchMod.TAG:
+            this.context.deserializeArchMod(json as ArchModJson);
+            break;
+
+          case TextLabel.TAG:
+            this.context.deserializeTextLabel(json as TextLabelJson);
+            break;
+
+          case Line.TAG:
+            this.context.deserializeLine(json as LineJson);
+            break;
+
+          case Connector.TAG:
+            this.context.deserializeConnector(json as ConnectorJson);
+            break;
+
+          default:
+            TraceLog.e(TAG, `Unexpected Element:`);
+            console.log(json);
+            return;
+        }
+      } );
+    }
+  }
+
 
 
 }
