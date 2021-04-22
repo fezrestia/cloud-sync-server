@@ -909,7 +909,6 @@ export class ArchMod extends Element {
                 target.startY = 0;
 
                 if (this.callback != null) this.callback.onDragEnd(this, totalDX, totalDY);
-                if (this.callback != null) this.callback.onHistoricalChanged(this);
               }
           } )
       );

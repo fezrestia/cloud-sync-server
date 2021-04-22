@@ -103,8 +103,8 @@ export module History {
     }
   }
 
-  export class MoveElement extends Record {
-    private readonly TAG = "MoveElement";
+  export class MoveElements extends Record {
+    private readonly TAG = "MoveElements";
 
     private elementUids: number[] = [];
     private totalPlusX: number;

@@ -859,6 +859,18 @@ export class Context {
     this.finishRecordHistory();
   }
 
+  public recordMoveElements(elements: Element[], totalPlusX: number, totalPlusY: number) {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
+    this.prepareRecordHistory();
+
+    const record: History.MoveElements = new History.MoveElements(this, elements, totalPlusX, totalPlusY);
+    this.historyRecords.push(record);
+
+    this.finishRecordHistory();
+  }
+
   public recordChangeOutFrameSize(
       beforeWidth: number,
       beforeHeight: number,
@@ -1334,6 +1346,7 @@ class ArchModCallbackImpl implements ArchModCallback {
   onDragEnd(moved: ArchMod, totalPlusX: number, totalPlusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `ArchMod.onDragEnd()`);
     CONTEXT.onMoveResizeDone();
+    CONTEXT.recordMoveElements(CONTEXT.selectedElements, totalPlusX, totalPlusY);
   }
 
   onRaised(raised: ArchMod) {
@@ -1430,6 +1443,7 @@ class TextLabelCallbackImpl implements TextLabelCallback {
   onDragEnd(moved: TextLabel, totalPlusX: number, totalPlusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `TextLabel.onDragEnd()`);
     CONTEXT.onMoveResizeDone();
+    CONTEXT.recordMoveElements(CONTEXT.selectedElements, totalPlusX, totalPlusY);
   }
 
   onRaised(raised: TextLabel) {
@@ -1487,6 +1501,7 @@ class LineCallbackImpl implements LineCallback {
   onDragEnd(moved: Line, totalPlusX: number, totalPlusY: number) {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `Line.onDragEnd()`);
     CONTEXT.onMoveResizeDone();
+    CONTEXT.recordMoveElements(CONTEXT.selectedElements, totalPlusX, totalPlusY);
   }
 
   onRaised(raised: Line) {
