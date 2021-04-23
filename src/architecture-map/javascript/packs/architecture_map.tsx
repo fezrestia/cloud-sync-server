@@ -74,7 +74,7 @@ export class Context {
   private readonly clipboard: ElementJson[] = [];
 
   // Total elements. Head->Tail = Z-Low->Z-High = SVG/HTML Order Top->Bottom.
-  private readonly allElements: Element[] = [];
+  public readonly allElements: Element[] = [];
 
   public forEachAllElements(callback: (element: Element) => void) {
     this.allElements.forEach(callback);
@@ -204,34 +204,61 @@ export class Context {
     return totalJson;
   }
 
+  public async deserializeFromJsonAll(serialized: ArchitectureMapJson): Promise<Element[]> {
+    return this.deserializeFromJson(serialized, false); // Load ALL including OutFrame.
+  }
+
+  public async deserializeFromJsonPartial(serialized: ArchitectureMapJson): Promise<Element[]> {
+    return this.deserializeFromJson(serialized, true); // Load Elements only.
+  }
+
   /**
    * Deserialize static context from JSON object.
    * @param serialized ArchitectureMapJson object.
+   * @param isPartial Deserialize ArchitectureMapJson as a partial Elements or not.
+   * @return elements Deserialied Elements without OutFrame.
    */
-  public async deserializeFromJson(serialized: ArchitectureMapJson) {
+  private async deserializeFromJson(
+      serialized: ArchitectureMapJson,
+      isPartial: boolean): Promise<Element[]> {
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `deserializeFromjson() : E`);
+    if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `    isPartial = ${isPartial}`);
 
     await showLoading();
 
     // Convert to Latest version.
     serialized = convertJsonToLatest(serialized);
 
-    // Render OutFrame.
-    await Util.timeslice( () => {
-      const outFrame = OutFrame.deserialize(this.html, this.svg, serialized[Def.KEY_OUT_FRAME]);
-      const outSize = outFrame.getXYWH();
-      this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
-      this.changeOutFrameSize(outSize.width, outSize.height);
-      this.outFrame.relayout();
-    } );
+    if (!isPartial) {
+      // Render OutFrame.
+      await Util.timeslice( () => {
+        const outFrame = OutFrame.deserialize(this.html, this.svg, serialized[Def.KEY_OUT_FRAME]);
+        const outSize = outFrame.getXYWH();
+        this.outFrame.setXYWH(outSize.x, outSize.y, outSize.width, outSize.height);
+        this.changeOutFrameSize(outSize.width, outSize.height);
+        this.outFrame.relayout();
+      } );
+    }
+
+    const elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
+
+    // For partial JSON laod, update ALL UID here because
+    // UID in JSON must be conflict with existing element UID.
+    if (isPartial) {
+      let uid = this.genNewElementUid();
+      elements.forEach( (json: ElementJson) => {
+        json[Def.KEY_UID] = uid;
+        ++uid;
+      } );
+    }
 
     // Rendner each Element.
-    const elements: ElementJson[] = serialized[Def.KEY_ARCHITECTURE_MAP];
-    const elementPromises: Promise<void>[] = [];
+    const elementPromises: Promise<Element|null>[] = [];
+    const deserializedElements: Element[] = [];
     for (let i = 0; i < elements.length; ++i) {
       const element: ElementJson = elements[i];
 
-      const promise = Util.timeslice( () => {
+      const promise = Util.timeslice<Element|null>( (): Element|null => {
         let deserialized: Element;
         let json;
 
@@ -268,19 +295,23 @@ export class Context {
           default:
             TraceLog.e(TAG, `Unexpected Element:`);
             console.log(element);
-            return;
+            return null;
         }
 
         // Load as selected state.
         deserialized.select();
         this.onMultiSelected(deserialized);
 
+        return deserialized;
       } );
 
       elementPromises.push(promise);
     }
-    elementPromises.forEach( async (promise: Promise<void>) => {
-      await promise;
+    elementPromises.forEach( async (promise: Promise<Element|null>) => {
+      const elm = await promise;
+      if (elm !== null) {
+        deserializedElements.push(elm);
+      }
     } );
 
     await Util.timeslice( () => {
@@ -298,6 +329,7 @@ export class Context {
     } );
 
     if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `deserializeFromjson() : X`);
+    return deserializedElements;
   }
 
   private validateElementUid(element: Element) {
@@ -816,14 +848,6 @@ export class Context {
 
     const headJson: ArchitectureMapJson = this.serializeToJson();
 
-    // Check diff.
-    const baseStr = JSON.stringify(this.historyBaseJson);
-    const headStr = JSON.stringify(headJson);
-    if (baseStr === headStr) {
-      // Same as last.
-      return;
-    }
-
     const record: History.Record = new History.UpdateTotalJson(
         this,
         this.historyBaseJson as ArchitectureMapJson,
@@ -833,13 +857,17 @@ export class Context {
     this.finishRecordHistory();
   }
 
-  public recordAddNewElement(element: Element) {
+  public recordAddElement(element: Element) {
+    this.recordAddElements([element]);
+  }
+
+  public recordAddElements(elements: Element[]) {
     if (!this.isHistoryChanged()) {
       return;
     }
     this.prepareRecordHistory();
 
-    const record: History.Record = new History.AddNewElement(this, element);
+    const record: History.Record = new History.AddElements(this, elements);
     this.historyRecords.push(record);
 
     this.finishRecordHistory();
@@ -896,7 +924,7 @@ export class Context {
     }
     this.prepareRecordHistory();
 
-    const record: History.Record = new History.PasteElements(this, elements);
+    const record: History.Record = new History.AddElements(this, elements);
     this.historyRecords.push(record);
 
     this.finishRecordHistory();
@@ -904,12 +932,12 @@ export class Context {
 
   public async recoverJson(json: ArchitectureMapJson) {
     this.deleteAll();
-    await this.deserializeFromJson(json);
+    await this.deserializeFromJsonAll(json);
     this.resetAllState();
   }
 
   public async undo() {
-    if (this.historyRecords.length < 2) {
+    if (this.historyRecords.length === 0) {
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo() : NO History`);
       return;
     }
@@ -930,7 +958,7 @@ export class Context {
   }
 
   public async redo() {
-    if (this.historyRecords.length < 2) {
+    if (this.historyRecords.length === 0) {
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo() : NO Future`);
       return;
     }
@@ -1286,7 +1314,7 @@ class ArchModCallbackImpl implements ArchModCallback {
           if (nit == null) {
             // Add new connector.
             const newConnector = CONTEXT.addNewConnector(fromArchMod, toArchMod);
-            CONTEXT.recordAddNewElement(newConnector);
+            CONTEXT.recordAddElement(newConnector);
           }
         }
 
@@ -1595,7 +1623,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
   // Load JSON.
   if (defaultLoadJson != null) {
     const serialized: ArchitectureMapJson = JSON.parse(defaultLoadJson);
-    await CONTEXT.deserializeFromJson(serialized);
+    await CONTEXT.deserializeFromJsonAll(serialized);
     CONTEXT.resetAllState();
     CONTEXT.recordHistory();
   }
@@ -1896,7 +1924,7 @@ function prepareAddNewArchModMode() {
         DEFAULT_SIZE,
         DEFAULT_SIZE);
 
-    CONTEXT.recordAddNewElement(newArchMod);
+    CONTEXT.recordAddElement(newArchMod);
 
     finishAddNewArchModMode();
   } );
@@ -1928,7 +1956,7 @@ function prepareAddNewTextLabelMode() {
         DEFAULT_SIZE,
         DEFAULT_SIZE);
 
-    CONTEXT.recordAddNewElement(newTextLabel);
+    CONTEXT.recordAddElement(newTextLabel);
 
     finishAddNewTextLabelMode();
   } );
@@ -1955,7 +1983,7 @@ function prepareAddNewLineMode() {
 
     const newLine = CONTEXT.addNewLine(posX, posY);
 
-    CONTEXT.recordAddNewElement(newLine);
+    CONTEXT.recordAddElement(newLine);
 
     finishAddNewLineMode();
   } );
@@ -2038,9 +2066,14 @@ function getExportFileNameBase(): string {
       console.log(serialized);
     }
 
-    await CONTEXT.deserializeFromJson(serialized);
-
-    CONTEXT.recordHistory();
+    if (CONTEXT.allElements.length === 0) {
+      // 1st load, load ALL elements including OutFrame.
+      await CONTEXT.deserializeFromJsonAll(serialized);
+      CONTEXT.recordHistory();
+    } else {
+      const elements = await CONTEXT.deserializeFromJsonPartial(serialized);
+      CONTEXT.recordAddElements(elements);
+    }
   };
 
   reader.readAsText(file);
