@@ -112,6 +112,90 @@ export module History {
     }
   }
 
+  export class DeleteElements extends Record {
+    private readonly TAG = "DeleteElements";
+
+    private delElementUids: number[] = [];
+    private delElementUidVsJson: Map<number, ElementJson> = new Map();
+
+    constructor(context: Context, delElements: Element[]) {
+      super(context);
+
+      // Store primitive data (number and string) here because
+      // Object instance will be dead if total json history record is used.
+      delElements.forEach( (element: Element) => {
+        this.delElementUids.push(element.uid);
+        this.delElementUidVsJson.set(element.uid, element.serialize());
+      } );
+    }
+
+    // @Override
+    async undo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
+
+      const elementJsons: ElementJson[] = [];
+      this.delElementUids.forEach( (uid: number) => {
+        const json: ElementJson = this.delElementUidVsJson.get(uid) as ElementJson;
+        elementJsons.push(json);
+      } );
+
+      function compare(a: ElementJson, b: ElementJson): number {
+        const aZ: number = a[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+        const bZ: number = b[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+        return aZ - bZ;
+      }
+      const sortedElementJsons: ElementJson[] = elementJsons.sort(compare);
+
+      sortedElementJsons.forEach( (json: ElementJson) => {
+        let elm: Element;
+        switch (json[Def.KEY_CLASS]) {
+          case ArchMod.TAG:
+            elm = this.context.deserializeArchMod(json as ArchModJson);
+            break;
+
+          case TextLabel.TAG:
+            elm = this.context.deserializeTextLabel(json as TextLabelJson);
+            break;
+
+          case Line.TAG:
+            elm = this.context.deserializeLine(json as LineJson);
+            break;
+
+          case Connector.TAG:
+            elm = this.context.deserializeConnector(json as ConnectorJson);
+            break;
+
+          default:
+            TraceLog.e(TAG, `Unexpected Element:`);
+            console.log(json);
+            return;
+        }
+
+        // Top element Z-Order is equal to allElements.length.
+        const maxZ: number = this.context.allElements.length;
+        const diffZ: number = maxZ - elm.zOrder;
+        if (diffZ > 0) {
+          elm.moveDown(diffZ);
+        }
+
+      } );
+    }
+
+    // @Override
+    async redo() {
+      if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
+
+      this.context.resetAllState();
+
+      this.delElementUids.forEach( (uid: number) => {
+        const target = this.context.queryElementUid(uid);
+        this.context.onMultiSelected(target); // Use this only to select without callback.
+      } );
+
+      this.context.deleteSelected();
+    }
+  }
+
   export class MoveElements extends Record {
     private readonly TAG = "MoveElements";
 

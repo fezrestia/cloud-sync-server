@@ -873,6 +873,18 @@ export class Context {
     this.finishRecordHistory();
   }
 
+  public recordDeleteElements(elements: Element[]) {
+    if (!this.isHistoryChanged()) {
+      return;
+    }
+    this.prepareRecordHistory();
+
+    const record: History.Record = new History.DeleteElements(this, elements);
+    this.historyRecords.push(record);
+
+    this.finishRecordHistory();
+  }
+
   public recordMoveElements(elements: Element[], totalPlusX: number, totalPlusY: number) {
     if (!this.isHistoryChanged()) {
       return;
@@ -1712,8 +1724,9 @@ function registerGlobalCallbacks() {
           break;
 
         case "Delete":
+          const delElements: Element[] = CONTEXT.selectedElements.concat();
           CONTEXT.deleteSelected();
-          CONTEXT.recordHistory();
+          CONTEXT.recordDeleteElements(delElements);
           break;
 
         case "c":
