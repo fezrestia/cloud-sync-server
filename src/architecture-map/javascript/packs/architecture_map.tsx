@@ -839,8 +839,7 @@ export class Context {
     this.historyBaseJson = this.serializeToJson();
   }
 
-  // Total JSON history record.
-  public recordHistory() {
+  public recordLoadTotalJson() {
     if (!this.isHistoryChanged()) {
       return;
     }
@@ -925,18 +924,6 @@ export class Context {
     this.prepareRecordHistory();
 
     const record: History.Record = new History.ChangeElementJson(this, element);
-    this.historyRecords.push(record);
-
-    this.finishRecordHistory();
-  }
-
-  public recordPasteElements(elements: Element[]) {
-    if (!this.isHistoryChanged()) {
-      return;
-    }
-    this.prepareRecordHistory();
-
-    const record: History.Record = new History.AddElements(this, elements);
     this.historyRecords.push(record);
 
     this.finishRecordHistory();
@@ -1637,7 +1624,7 @@ class ConnectorCallbackImpl implements ConnectorCallback {
     const serialized: ArchitectureMapJson = JSON.parse(defaultLoadJson);
     await CONTEXT.deserializeFromJsonAll(serialized);
     CONTEXT.resetAllState();
-    CONTEXT.recordHistory();
+    CONTEXT.recordLoadTotalJson();
   }
 
   // Save the first history base.
@@ -1738,7 +1725,7 @@ function registerGlobalCallbacks() {
         case "v":
           if (event.ctrlKey) {
             const pastedElements: Element[] = CONTEXT.pasteFromClipBoard();
-            CONTEXT.recordPasteElements(pastedElements);
+            CONTEXT.recordAddElements(pastedElements);
           }
           break;
 
@@ -2082,7 +2069,7 @@ function getExportFileNameBase(): string {
     if (CONTEXT.allElements.length === 0) {
       // 1st load, load ALL elements including OutFrame.
       await CONTEXT.deserializeFromJsonAll(serialized);
-      CONTEXT.recordHistory();
+      CONTEXT.recordLoadTotalJson();
     } else {
       const elements = await CONTEXT.deserializeFromJsonPartial(serialized);
       CONTEXT.recordAddElements(elements);
