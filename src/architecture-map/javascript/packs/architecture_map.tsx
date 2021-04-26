@@ -643,16 +643,24 @@ export class Context {
     this.relayout();
   }
 
-  public moveUpElement(element: Element, steps: number) {
-    const index = this.allElements.indexOf(element);
+  public moveElementToTopOf(target: Element, topOf: Element) {
+    // Remove.
+    const index = this.allElements.indexOf(target);
     this.allElements.splice(index, 1);
-    this.allElements.splice(index + steps, 0, element);
+
+    // Insert.
+    const toIndex = this.allElements.indexOf(topOf);
+    this.allElements.splice(toIndex + 1, 0, target);
   }
 
-  public moveDownElement(element: Element, steps: number) {
-    const index = this.allElements.indexOf(element);
+  public moveElementToBottomOf(target: Element, bottomOf: Element) {
+    // Remove.
+    const index = this.allElements.indexOf(target);
     this.allElements.splice(index, 1);
-    this.allElements.splice(index - steps, 0, element);
+
+    // Insert.
+    const bottomIndex = this.allElements.indexOf(bottomOf);
+    this.allElements.splice(bottomIndex, 0, target);
   }
 
   public deleteSelected() {
@@ -804,6 +812,13 @@ export class Context {
 
     alert(`ERR: UID No hit on history base. uid=${uid}`);
     return {} as ElementJson;
+  }
+
+  public forEachAllHistoryElementJsons(callback: (json: ElementJson) => void) {
+    const elementJsons = (this.historyBaseJson as ArchitectureMapJson)[Def.KEY_ARCHITECTURE_MAP] as ElementJson[];
+    elementJsons.forEach( (json: ElementJson) => {
+      callback(json);
+    } );
   }
 
   private isHistoryChanged(): boolean {
@@ -1714,6 +1729,10 @@ function registerGlobalCallbacks() {
           const delElements: Element[] = CONTEXT.selectedElements.concat();
           CONTEXT.deleteSelected();
           CONTEXT.recordDeleteElements(delElements);
+
+          // Call relayout() here because recordDeleteElements uses Z-Order index before deletion.
+          // relayout() will update all Z-Order index so, call relayout() after history record.
+          CONTEXT.relayout();
           break;
 
         case "c":

@@ -129,7 +129,6 @@ export class OutFrame extends Element {
   }
 
   // Elements.
-  private root!: D3Node.G;
   private path!: D3Node.Path;
   private grip: D3Node.Circle|null = null;
 
@@ -225,7 +224,7 @@ export class OutFrame extends Element {
    * Render.
    */
   public render() {
-    this.root = this.svg.append("g")
+    this._root = this.svg.append("g")
         .attr("id", this.ROOT_ID);
 
     this.path = this.root.append("path")
@@ -424,12 +423,12 @@ export class OutFrame extends Element {
   }
 
   // @Override
-  public moveUp(steps: number) {
+  public moveToTopOf(element: Element) {
     alert("ERR: Unsupported Exception");
   }
 
   // @Override
-  public moveDown(steps: number) {
+  public moveToBottomOf(element: Element) {
     alert("ERR: Unsupported Exception");
   }
 

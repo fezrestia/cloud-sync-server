@@ -359,7 +359,6 @@ export class Connector extends Element {
   }
 
   // Elements.
-  private root!: D3Node.G;
   private path!: D3Node.Path;
   private editor: D3Node.G|null = null;
 
@@ -527,7 +526,7 @@ export class Connector extends Element {
    * Render.
    */
   public render() {
-    this.root = this.svg.append("g")
+    this._root = this.svg.append("g")
         .attr("id", `connector_${this._label}`)
         .datum(this);
 
@@ -927,15 +926,15 @@ export class Connector extends Element {
   }
 
   // @Override
-  public moveUp(steps: number) {
+  public moveToTopOf(element: Element) {
     const elm = svgz.element(this.root.node());
-    elm.moveUp(steps);
+    elm.moveUp(element.root.node());
   }
 
   // @Override
-  public moveDown(steps: number) {
+  public moveToBottomOf(element: Element) {
     const elm = svgz.element(this.root.node());
-    elm.moveDown(steps);
+    elm.moveDown(element.root.node());
   }
 
   /**

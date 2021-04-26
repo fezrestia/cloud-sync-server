@@ -117,6 +117,7 @@ export module History {
 
     private delElementUids: number[] = [];
     private delElementUidVsJson: Map<number, ElementJson> = new Map();
+    private delElementUidVsTopUid: Map<number, number|null> = new Map();
 
     constructor(context: Context, delElements: Element[]) {
       super(context);
@@ -125,7 +126,21 @@ export module History {
       // Object instance will be dead if total json history record is used.
       delElements.forEach( (element: Element) => {
         this.delElementUids.push(element.uid);
-        this.delElementUidVsJson.set(element.uid, element.serialize());
+
+        const json: ElementJson = element.serialize();
+        this.delElementUidVsJson.set(element.uid, json);
+
+        // Store Z-Order.
+        const z: number = json[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+        const topZ = z + 1;
+
+        let topUid: number|null = null;
+        this.context.forEachAllElements( (elm: Element) => {
+          if (elm.zOrder === topZ) {
+            topUid = elm.uid;
+          }
+        } );
+        this.delElementUidVsTopUid.set(element.uid, topUid);
       } );
     }
 
@@ -139,10 +154,11 @@ export module History {
         elementJsons.push(json);
       } );
 
+      // from Top to Bottom.
       function compare(a: ElementJson, b: ElementJson): number {
         const aZ: number = a[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
         const bZ: number = b[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
-        return aZ - bZ;
+        return bZ - aZ;
       }
       const sortedElementJsons: ElementJson[] = elementJsons.sort(compare);
 
@@ -171,14 +187,20 @@ export module History {
             return;
         }
 
-        // Top element Z-Order is equal to allElements.length.
-        const maxZ: number = this.context.allElements.length;
-        const diffZ: number = maxZ - elm.zOrder;
-        if (diffZ > 0) {
-          elm.moveDown(diffZ);
+        // Modify Z-Order.
+        const topUid: number|null|undefined = this.delElementUidVsTopUid.get(elm.uid);
+        if (topUid === undefined) {
+          TraceLog.e(TAG, `undo() : Unexpected elm.uid = ${elm.uid}`);
+        } else if (topUid === null) {
+          // NOP, this element is top element.
+        } else {
+          const topElm: Element = this.context.queryElementUid(topUid);
+          elm.moveToBottomOf(topElm);
+          this.context.moveElementToBottomOf(elm, topElm);
         }
-
       } );
+
+      this.context.relayout();
     }
 
     // @Override
@@ -193,6 +215,8 @@ export module History {
       } );
 
       this.context.deleteSelected();
+
+      this.context.relayout();
     }
   }
 
@@ -289,8 +313,17 @@ export module History {
     private readonly TAG = "ChangeElementJson";
 
     private uid: number;
-    private beforeJson: ElementJson;
+
     private afterJson: ElementJson;
+    private beforeJson: ElementJson;
+
+    private afterBottomUid: number = 0;
+    private afterTopUid: number = 0;
+
+    private beforeBottomUid: number = 0;
+    private beforeTopUid: number = 0;
+
+    // zDiff > 0 : raised, zDiff < 0 : lowered.
     private zDiff: number;
 
     constructor(context: Context, afterElement: Element) {
@@ -300,8 +333,45 @@ export module History {
       this.afterJson = afterElement.serialize();
       this.beforeJson = context.queryUidOnHistoryBaseJson(this.uid);
 
-      const afterZ = this.afterJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
-      const beforeZ = this.beforeJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+      // Store Z-Order.
+      const afterZ: number = this.afterJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+      const afterBottomZ = afterZ - 1;
+      const afterTopZ = afterZ + 1;
+      this.context.forEachAllElements( (elm: Element) => {
+        switch (elm.zOrder) {
+          case afterBottomZ:
+            this.afterBottomUid = elm.uid;
+            break;
+
+          case afterTopZ:
+            this.afterTopUid = elm.uid;
+            break;
+
+          default:
+            // NOP.
+            break;
+        }
+      } );
+
+      const beforeZ: number = this.beforeJson[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+      const beforeBottomZ = beforeZ - 1;
+      const beforeTopZ = beforeZ + 1;
+      this.context.forEachAllHistoryElementJsons( (json: ElementJson) => {
+        switch (json[Def.KEY_DIMENS][Def.KEY_Z_ORDER]) {
+          case beforeBottomZ:
+            this.beforeBottomUid = json[Def.KEY_UID];
+            break;
+
+          case beforeTopZ:
+            this.beforeTopUid = json[Def.KEY_UID];
+            break;
+
+          default:
+            // NOP.
+            break;
+        }
+      } );
+
       this.zDiff = afterZ - beforeZ;
     }
 
@@ -310,15 +380,20 @@ export module History {
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `undo()`);
 
       const target: Element = this.context.queryElementUid(this.uid);
-      const steps = Math.abs(this.zDiff);
 
       if (this.zDiff < 0) {
-        target.moveUp(steps);
-        this.context.moveUpElement(target, steps);
+        // Undo lowered. Move to top of before bottom element.
+
+        const beforeBottomElm: Element = this.context.queryElementUid(this.beforeBottomUid);
+        target.moveToTopOf(beforeBottomElm);
+        this.context.moveElementToTopOf(target, beforeBottomElm);
       }
       if (this.zDiff > 0) {
-        target.moveDown(steps);
-        this.context.moveDownElement(target, steps);
+        // Undo raised. Move to bottom of before top element.
+
+        const beforeTopElm: Element = this.context.queryElementUid(this.beforeTopUid);
+        target.moveToBottomOf(beforeTopElm);
+        this.context.moveElementToBottomOf(target, beforeTopElm);
       }
 
       target.deserialize(this.beforeJson);
@@ -335,15 +410,20 @@ export module History {
       if (TraceLog.IS_DEBUG) TraceLog.d(TAG, `redo()`);
 
       const target: Element = this.context.queryElementUid(this.uid);
-      const steps = Math.abs(this.zDiff);
 
       if (this.zDiff < 0) {
-        target.moveDown(steps);
-        this.context.moveDownElement(target, steps);
+        // Redo lowered. Move to bottom of after top element.
+
+        const afterTopElm: Element = this.context.queryElementUid(this.afterTopUid);
+        target.moveToBottomOf(afterTopElm);
+        this.context.moveElementToBottomOf(target, afterTopElm);
       }
       if (this.zDiff > 0) {
-        target.moveUp(steps);
-        this.context.moveUpElement(target, steps);
+        // Redo raised. Move to top of after bottom element.
+
+        const afterBottomElm: Element = this.context.queryElementUid(this.afterBottomUid);
+        target.moveToTopOf(afterBottomElm);
+        this.context.moveElementToTopOf(target, afterBottomElm);
       }
 
       target.deserialize(this.afterJson);
@@ -355,7 +435,6 @@ export module History {
       this.context.relayout();
     }
   }
-
 
 
 

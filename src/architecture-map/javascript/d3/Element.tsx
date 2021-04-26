@@ -32,6 +32,11 @@ export abstract class Element {
 
   abstract get label(): string;
 
+  protected _root!: D3Node.G;
+      public get root(): D3Node.G {
+        return this._root;
+      }
+
   private _zOrder: number = Def.INVALID_Z_ORDER;
       public get zOrder(): number {
         return this._zOrder;
@@ -94,18 +99,18 @@ export abstract class Element {
   abstract move(plusX: number, plusY: number): void;
 
   /**
-   * Move z-order up by steps.
+   * Move z-order to Top of element.
    *
-   * @param steps
+   * @param element
    */
-  abstract moveUp(steps: number): void;
+  abstract moveToTopOf(element: Element): void;
 
   /**
-   * Move z-order down by steps.
+   * Move z-order to Bottom of element.
    *
-   * @param steps
+   * @param element
    */
-  abstract moveDown(steps: number): void;
+  abstract moveToBottomOf(element: Element): void;
 
   /**
    * Delete this instance.
