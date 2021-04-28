@@ -253,18 +253,17 @@ export class Context {
     }
 
     // Rendner each Element.
-    const elementPromises: Promise<Element|null>[] = [];
     const deserializedElements: Element[] = [];
     for (let i = 0; i < elements.length; ++i) {
-      const element: ElementJson = elements[i];
+      const elementJson: ElementJson = elements[i];
 
-      const promise = Util.timeslice<Element|null>( (): Element|null => {
+      const element = await Util.timeslice<Element|null>( (): Element|null => {
         let deserialized: Element;
         let json;
 
-        switch (element[Def.KEY_CLASS]) {
+        switch (elementJson[Def.KEY_CLASS]) {
           case ArchMod.TAG:
-            json = element as ArchModJson;
+            json = elementJson as ArchModJson;
             deserialized = this.deserializeArchMod(json);
 
             // Update hierarchy depth here,
@@ -278,17 +277,17 @@ export class Context {
             break;
 
           case TextLabel.TAG:
-            json = element as TextLabelJson;
+            json = elementJson as TextLabelJson;
             deserialized = this.deserializeTextLabel(json);
             break;
 
           case Line.TAG:
-            json = element as LineJson;
+            json = elementJson as LineJson;
             deserialized = this.deserializeLine(json);
             break;
 
           case Connector.TAG:
-            json = element as ConnectorJson;
+            json = elementJson as ConnectorJson;
             deserialized = this.deserializeConnector(json);
             break;
 
@@ -305,14 +304,10 @@ export class Context {
         return deserialized;
       } );
 
-      elementPromises.push(promise);
-    }
-    elementPromises.forEach( async (promise: Promise<Element|null>) => {
-      const elm = await promise;
-      if (elm !== null) {
-        deserializedElements.push(elm);
+      if (element !== null) {
+        deserializedElements.push(element);
       }
-    } );
+    }
 
     await Util.timeslice( () => {
       this.resolveOverlappingArchMod();
