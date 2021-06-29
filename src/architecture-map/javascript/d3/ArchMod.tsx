@@ -1287,13 +1287,61 @@ export class ArchMod extends Element {
       case ClipArea.LEFT_TOP:
         switch (this.labelRotDeg) {
           case Def.DEG_HORIZONTAL:
-            labelX = centerX;
-            labelY = pinY + (bottom - pinY) / 2;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelX = left;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelX = centerX;
+                break;
+              case "right":
+                labelX = right;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelY = pinY + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelY = bottom - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelY = pinY + (bottom - pinY) / 2;
+                break;
+            }
             break;
 
           case Def.DEG_VERTICAL:
-            labelX = pinX + (right - pinX) / 2;
-            labelY = centerY;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelY = bottom;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelY = centerY;
+                break;
+              case "right":
+                labelY = top;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelX = pinX + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelX = right - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelX = pinX + (right - pinX) / 2;
+                break;
+            }
             break;
         }
         break;
@@ -1301,13 +1349,61 @@ export class ArchMod extends Element {
       case ClipArea.RIGHT_TOP:
         switch (this.labelRotDeg) {
           case Def.DEG_HORIZONTAL:
-            labelX = centerX;
-            labelY = pinY + (bottom - pinY) / 2;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelX = left;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelX = centerX;
+                break;
+              case "right":
+                labelX = right;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelY = pinY + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelY = bottom - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelY = pinY + (bottom - pinY) / 2;
+                break;
+            }
             break;
 
           case Def.DEG_VERTICAL:
-            labelX = left + (pinX - left) / 2;
-            labelY = centerY;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelY = bottom;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelY = centerY;
+                break;
+              case "right":
+                labelY = top;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelX = left + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelX = pinX - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelX = left + (pinX - left) / 2;
+                break;
+            }
             break;
         }
         break;
@@ -1315,13 +1411,61 @@ export class ArchMod extends Element {
       case ClipArea.LEFT_BOTTOM:
         switch (this.labelRotDeg) {
           case Def.DEG_HORIZONTAL:
-            labelX = centerX;
-            labelY = top + (pinY - top) / 2;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelX = left;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelX = centerX;
+                break;
+              case "right":
+                labelX = right;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelY = top + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelY = pinY - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelY = top + (pinY - top) / 2;
+                break;
+            }
             break;
 
           case Def.DEG_VERTICAL:
-            labelX = pinX + (right - pinX) / 2;
-            labelY = centerY;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelY = bottom;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelY = centerY;
+                break;
+              case "right":
+                labelY = top;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelX = pinX + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelX = right - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelX = pinX + (right - pinX) / 2;
+                break;
+            }
             break;
         }
         break;
@@ -1329,13 +1473,61 @@ export class ArchMod extends Element {
       case ClipArea.RIGHT_BOTTOM:
         switch (this.labelRotDeg) {
           case Def.DEG_HORIZONTAL:
-            labelX = centerX;
-            labelY = top + (pinY - top) / 2;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelX = left;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelX = centerX;
+                break;
+              case "right":
+                labelX = right;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelY = top + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelY = pinY - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelY = top + (pinY - top) / 2;
+                break;
+            }
             break;
 
           case Def.DEG_VERTICAL:
-            labelX = left + (pinX - left) / 2;
-            labelY = centerY;
+            switch (this.labelHorizontalAlign) {
+              case "left":
+                labelY = bottom;
+                break;
+              case "center":
+                // Fall-through.
+              default:
+                labelY = centerY;
+                break;
+              case "right":
+                labelY = top;
+                break
+            }
+            switch (this.labelVerticalAlign) {
+              case "top":
+                labelX = left + this.LABEL_ALIGN_MARGIN;
+                break;
+              case "bottom":
+                labelX = pinX - this.LABEL_ALIGN_MARGIN;
+                break;
+              case "middle":
+                // Fall-through.
+              default:
+                labelX = left + (pinX - left) / 2;
+                break;
+            }
             break;
         }
         break;
