@@ -84,6 +84,10 @@ export class Context {
   private currentHierarchyDepth = Def.TOP_LAYER_DEPTH;
   private maxHierarchyDepth = Def.TOP_LAYER_DEPTH;
 
+  // Layer related.
+  private currentDisplayLayer = Def.DEFAULT_LAYER_GROUP;
+  private maxDisplayLayer = Def.DEFAULT_LAYER_GROUP;
+
   // UNDO history.
   private historyBaseJson: ArchitectureMapJson|null = null;
   private readonly historyRecords: History.Record[] = [];
@@ -274,6 +278,14 @@ export class Context {
               this.maxHierarchyDepth = depth;
               this.currentHierarchyDepth = depth;
             }
+
+            // Update display layer here.
+            // because display layer change feature is valid only for viewer.
+            const layer = deserialized.layerGroup;
+            if (this.maxDisplayLayer < layer) {
+              this.maxDisplayLayer = layer;
+              this.currentDisplayLayer = layer;
+            }
             break;
 
           case TextLabel.TAG:
@@ -317,6 +329,9 @@ export class Context {
     // Update UI.
     await Util.timeslice( () => {
       this.updateDetailHierarchyUi();
+    } );
+    await Util.timeslice( () => {
+      this.updateDisplayLayerUi();
     } );
 
     await Util.timeslice( () => {
@@ -1280,6 +1295,42 @@ export class Context {
 
     $("#detail_level_indicator").text(`${this.currentHierarchyDepth}/${this.maxHierarchyDepth}`);
   }
+
+  public incLayer() {
+    if (this.currentDisplayLayer >= this.maxDisplayLayer) {
+      return;
+    }
+
+    this.currentDisplayLayer++;
+
+    this.updateDisplayLayer();
+    this.updateDisplayLayerUi();
+  }
+
+  public decLayer() {
+    if (this.currentDisplayLayer <= Def.DEFAULT_LAYER_GROUP) {
+      return;
+    }
+
+    this.currentDisplayLayer--;
+
+    this.updateDisplayLayer();
+    this.updateDisplayLayerUi();
+  }
+
+  private updateDisplayLayer() {
+    this.allElements.forEach ( (element: Element) => {
+      if (element.layerGroup <= this.currentDisplayLayer) {
+        element.show();
+      } else {
+        element.hide();
+      }
+    } );
+  }
+
+  private updateDisplayLayerUi() {
+    $("#visible_layer").text(this.currentDisplayLayer);
+  }
 }
 const CONTEXT = new Context();
 (window as any).getContext = () => { return CONTEXT };
@@ -2209,5 +2260,13 @@ function changeGlobalModeTo(mode: string) {
 
 (window as any).onLessDetailHierarchyClicked = () => {
   CONTEXT.lessDetailHierarchy();
+}
+
+(window as any).onIncLayerClicked = () => {
+  CONTEXT.incLayer();
+}
+
+(window as any).onDecLayerClicked = () => {
+  CONTEXT.decLayer();
 }
 

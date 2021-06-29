@@ -122,6 +122,20 @@ export abstract class Element {
   abstract moveToBottomOf(element: Element): void;
 
   /**
+   * Show this element.
+   */
+  public show() {
+    this.root.attr("display", "block");
+  }
+
+  /**
+   * Hide this element.
+   */
+  public hide() {
+    this.root.attr("display", "none");
+  }
+
+  /**
    * Delete this instance.
    */
   abstract delete(): void;
