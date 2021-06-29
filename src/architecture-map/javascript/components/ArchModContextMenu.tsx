@@ -1,7 +1,11 @@
 import * as React from "react";
 
 import { TraceLog } from "../util/TraceLog";
-import { ReactMouseEvent, ReactTextAreaChangeEvent, ReactKeyboardTextAreaEvent } from "../TypeDef";
+import { ReactMouseEvent,
+         ReactTextAreaChangeEvent,
+         ReactInputChangeEvent,
+         ReactKeyboardTextAreaEvent,
+         ReactKeyboardInputEvent } from "../TypeDef";
 import { Def, ClipArea, ColorSet } from "../Def";
 import { genColorSetClickButtons,
          genClipAreaClickButtons,
@@ -13,6 +17,7 @@ import { genColorSetClickButtons,
 interface Props {
   parentLabel: string,
   label: string,
+  layerGroup: number,
   callback: ArchModContextMenuCallback,
   leftPix: number,
   topPix: number,
@@ -21,6 +26,7 @@ interface Props {
 interface State {
   currentLabel: string,
   labelError: string|null,
+  currentLayerGroup: string,
 }
 
 export interface ArchModContextMenuCallback {
@@ -31,11 +37,11 @@ export interface ArchModContextMenuCallback {
   changeClipArea(clipArea: ClipArea): void;
   changeColorSet(colorSet: ColorSet): void;
   changeEdgeColorSet(edgeColorSet: ColorSet): void;
+  changeLayerGroup(layerGroup: number): void;
   moveToFrontEnd(): void;
   moveToBackEnd(): void;
   canChangeLabel(newLabel: string): boolean;
   onLabelChanged(oldLaebl: string, newLabel: string): void;
-
 }
 
 export class ArchModContextMenu extends React.Component<Props, State> {
@@ -47,6 +53,7 @@ export class ArchModContextMenu extends React.Component<Props, State> {
     this.state = {
         currentLabel: props.label,
         labelError: null,
+        currentLayerGroup: props.layerGroup.toString(),
     };
   }
 
@@ -113,7 +120,30 @@ export class ArchModContextMenu extends React.Component<Props, State> {
       } );
     };
 
-    const handleKeyDownUp = (e: ReactKeyboardTextAreaEvent) => {
+    const handleLayerGroupChanged = (e: ReactInputChangeEvent) => {
+      if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onLayerGroupChanged()");
+      e.stopPropagation();
+
+      const newLayerGroup = parseInt(e.target.value);
+
+      if ((typeof newLayerGroup === "number") && isFinite(newLayerGroup)) {
+        // OK.
+
+        if (this.props.layerGroup !== newLayerGroup) {
+          this.props.callback.changeLayerGroup(newLayerGroup);
+        }
+
+      } else {
+        if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, `newLayerGroup is not a Number : ${newLayerGroup}`);
+        // NOP.
+      }
+
+      this.setState( {
+          currentLayerGroup: e.target.value,
+      } );
+    }
+
+    const handleKeyDownUp = (e: ReactKeyboardTextAreaEvent|ReactKeyboardInputEvent) => {
       if (TraceLog.IS_DEBUG) TraceLog.d(this.TAG, "onKeyDown/Up()");
       e.stopPropagation();
     }
@@ -156,6 +186,19 @@ export class ArchModContextMenu extends React.Component<Props, State> {
                     onKeyUp={ handleKeyDownUp }
                 />
                 {this.state.labelError && <span className="error-msg" >{this.state.labelError}</span>}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Layer Group</td>
+              <td className="no-wrap" >
+                <input
+                    id="input_layer_group"
+                    width={4}
+                    value={this.state.currentLayerGroup}
+                    onChange={ handleLayerGroupChanged }
+                    onKeyDown={ handleKeyDownUp }
+                    onKeyUp={ handleKeyDownUp }
+                />
               </td>
             </tr>
             <tr>

@@ -160,6 +160,14 @@ export function convertJsonToLatest(serialized: any): any {
     } );
   }
 
+  // Add layer group.
+  if (ver < 15) {
+    outFrame[Def.KEY_LAYER_GROUP] = Def.LAYER_GROUP_OUT_FRAME;
+    elements.forEach( (json: ElementJson) => {
+      json[Def.KEY_LAYER_GROUP] = Def.DEFAULT_LAYER_GROUP;
+    } );
+  }
+
   return serialized;
 }
 /* tslint:enable:no-string-literal */

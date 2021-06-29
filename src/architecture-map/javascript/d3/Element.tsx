@@ -10,6 +10,7 @@ export interface ElementJson extends StringKeyObject {
   [Def.KEY_DIMENS]: {
       [Def.KEY_Z_ORDER]: number,
   },
+  [Def.KEY_LAYER_GROUP]: number,
 }
 
 /**
@@ -43,6 +44,14 @@ export abstract class Element {
       }
       public set zOrder(zOrder: number) {
         this._zOrder = zOrder;
+      }
+
+  private _layerGroup: number = Def.DEFAULT_LAYER_GROUP;
+      public get layerGroup(): number {
+        return this._layerGroup;
+      }
+      public set layerGroup(lg: number) {
+        this._layerGroup = lg;
       }
 
   /**

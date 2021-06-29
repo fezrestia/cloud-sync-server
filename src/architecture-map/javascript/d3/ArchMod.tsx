@@ -68,6 +68,7 @@ export interface ArchModJson {
   [Def.KEY_CLIP_AREA]: string,
   [Def.KEY_COLOR_SET]: string,
   [Def.KEY_EDGE_COLOR_SET]: string,
+  [Def.KEY_LAYER_GROUP]: number,
 }
 
 /**
@@ -247,6 +248,7 @@ export class ArchMod extends Element {
       }
       public set itxMode(mode: ElementItxMode) {
         this._itxMode = mode;
+        this.relayout();
       }
 
   private _parentUid: number|null = null;
@@ -292,6 +294,7 @@ export class ArchMod extends Element {
         [Def.KEY_CLIP_AREA]: this.clipArea,
         [Def.KEY_COLOR_SET]: this.colorSet,
         [Def.KEY_EDGE_COLOR_SET]: this.edgeColorSet,
+        [Def.KEY_LAYER_GROUP]: this.layerGroup,
     };
     return jsonObj;
   }
@@ -331,6 +334,8 @@ export class ArchMod extends Element {
 
     archMod.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
 
+    archMod.layerGroup = json[Def.KEY_LAYER_GROUP];
+
     return archMod;
   }
 
@@ -359,6 +364,8 @@ export class ArchMod extends Element {
 
     this.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
 
+    this.layerGroup = json[Def.KEY_LAYER_GROUP];
+
     this.relabel();
     this.relayout();
     this.recolor();
@@ -368,6 +375,7 @@ export class ArchMod extends Element {
   private polygon!: D3Node.Polygon;
   private text!: D3Node.Text;
   private editor: D3Node.G|null = null;
+  private layerIndicator!: D3Node.Text;
 
   // Position/Size.
   private x: number = 0;
@@ -652,6 +660,13 @@ export class ArchMod extends Element {
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
         .attr("font-size", this.fontSize)
+        .attr("pointer-events", "none");
+
+    // Layer indicator.
+    this.layerIndicator = this.root.append("text")
+        .attr("text-anchor", "start")
+        .attr("dominant-baseline", "hanging")
+        .attr("font-size", Def.INDICATOR_FONT_SIZE)
         .attr("pointer-events", "none");
 
     this.relabel();
@@ -1142,6 +1157,11 @@ export class ArchMod extends Element {
   }
 
   private relayout() {
+    if (this.root === undefined) {
+      // Not rendered yet.
+      return;
+    }
+
     // Common dimens.
     const left = this.x;
     const top = this.y;
@@ -1572,6 +1592,8 @@ export class ArchMod extends Element {
 
     this.text.attr("fill", this.colorResolver.text);
 
+    this.layerIndicator.attr("fill", this.colorResolver.text);
+
   }
 
   private relabel() {
@@ -1583,6 +1605,8 @@ export class ArchMod extends Element {
         .attr("id", Util.getElementId("text", this.label));
 
     this.updateLabelLayout();
+
+    this.layerIndicator.text(this.layerGroup);
 
   }
 
@@ -1642,6 +1666,17 @@ export class ArchMod extends Element {
           .text(line);
     } );
 
+    this.layerIndicator.attr("x", this.x + Def.SNAP_STEP_PIX / 2);
+    this.layerIndicator.attr("y", this.y + Def.SNAP_STEP_PIX / 2);
+    switch (this.itxMode) {
+      case ElementItxMode.EDITABLE:
+        this.layerIndicator.attr("display", "block");
+        break;
+
+      default:
+        this.layerIndicator.attr("display", "none");
+        break;
+    }
   }
 
   private ContextMenuCallbackImpl = class implements ArchModContextMenuCallback {
@@ -1691,6 +1726,11 @@ export class ArchMod extends Element {
       this.target.recolor();
     }
 
+    changeLayerGroup(layerGroup: number) {
+      this.target.layerGroup = layerGroup;
+      this.target.relabel();
+    }
+
     moveToFrontEnd() {
       this.target.moveToFrontEnd();
     }
@@ -1720,6 +1760,7 @@ export class ArchMod extends Element {
         <ArchModContextMenu
             parentLabel={parentLabel}
             label={this.label}
+            layerGroup={this.layerGroup}
             callback={new this.ContextMenuCallbackImpl(this)}
             leftPix={clickX}
             topPix={clickY}

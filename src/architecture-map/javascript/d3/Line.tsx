@@ -52,6 +52,7 @@ export interface LineJson {
   [Def.KEY_FROM_MARKER_TYPE]: string,
   [Def.KEY_TO_MARKER_TYPE]: string,
   [Def.KEY_COLOR_SET]: string,
+  [Def.KEY_LAYER_GROUP]: number,
 }
 
 /**
@@ -293,6 +294,7 @@ export class Line extends Element {
         [Def.KEY_FROM_MARKER_TYPE]: this.fromMarkerType,
         [Def.KEY_TO_MARKER_TYPE]: this.toMarkerType,
         [Def.KEY_COLOR_SET]: this.colorSet,
+        [Def.KEY_LAYER_GROUP]: this.layerGroup,
     };
     return jsonObj;
   }
@@ -309,6 +311,7 @@ export class Line extends Element {
     this.fromMarkerType = MarkerType.valueOf(json[Def.KEY_FROM_MARKER_TYPE]);
     this.toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
     this.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+    this.layerGroup = json[Def.KEY_LAYER_GROUP];
 
     this.relayout();
     this.recolor();
@@ -336,6 +339,8 @@ export class Line extends Element {
     line.fromMarkerType = MarkerType.valueOf(json[Def.KEY_FROM_MARKER_TYPE]);
     line.toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
     line.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+    line.layerGroup = json[Def.KEY_LAYER_GROUP];
+
     return line;
   }
 

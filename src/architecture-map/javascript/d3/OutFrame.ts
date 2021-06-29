@@ -27,6 +27,7 @@ export interface OutFrameJson extends StringKeyObject {
     [Def.KEY_HEIGHT]: number,
     [Def.KEY_Z_ORDER]: number,
   },
+  [Def.KEY_LAYER_GROUP]: number,
 }
 
 /**
@@ -58,6 +59,7 @@ export class OutFrame extends Element {
     super(uid, html, svg);
     this.colorResolver = ColorSet.resolve(this.colorSet);
     this.zOrder = Def.Z_ORDER_OUT_FRAME;
+    this.layerGroup = Def.LAYER_GROUP_OUT_FRAME;
   }
 
   /**
@@ -76,6 +78,7 @@ export class OutFrame extends Element {
         [Def.KEY_HEIGHT]: this.height,
         [Def.KEY_Z_ORDER]: this.zOrder,
       },
+      [Def.KEY_LAYER_GROUP]: this.layerGroup,
     };
   }
 
@@ -102,6 +105,8 @@ export class OutFrame extends Element {
         json[Def.KEY_DIMENS][Def.KEY_HEIGHT]);
 
     outFrame.zOrder = json[Def.KEY_DIMENS][Def.KEY_Z_ORDER];
+
+    outFrame.layerGroup = json[Def.KEY_LAYER_GROUP];
 
     return outFrame;
   }

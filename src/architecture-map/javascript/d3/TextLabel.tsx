@@ -53,6 +53,7 @@ export interface TextLabelJson extends StringKeyObject {
       [Def.KEY_Z_ORDER]: number,
   },
   [Def.KEY_COLOR_SET]: string,
+  [Def.KEY_LAYER_GROUP]: number,
 }
 
 /**
@@ -253,6 +254,7 @@ export class TextLabel extends Element {
             [Def.KEY_Z_ORDER]: this.zOrder,
         },
         [Def.KEY_COLOR_SET]: this.colorSet,
+        [Def.KEY_LAYER_GROUP]: this.layerGroup,
     };
     return jsonObj;
   }
@@ -272,6 +274,8 @@ export class TextLabel extends Element {
         json[Def.KEY_DIMENS][Def.KEY_Z_ORDER]);
 
     this.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    this.layerGroup = json[Def.KEY_LAYER_GROUP];
 
     this.relabel();
     this.relayout();
@@ -305,6 +309,8 @@ export class TextLabel extends Element {
         json[Def.KEY_DIMENS][Def.KEY_Z_ORDER]);
 
     textLabel.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    textLabel.layerGroup = json[Def.KEY_LAYER_GROUP];
 
     return textLabel;
   }

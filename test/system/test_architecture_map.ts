@@ -928,6 +928,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
           [Def.KEY_HEIGHT]: DEFAULT_OUT_FRAME_H,
           [Def.KEY_Z_ORDER]: 0,
         },
+        [Def.KEY_LAYER_GROUP]: -1,
       },
       [Def.KEY_ARCHITECTURE_MAP]: [
         {
@@ -951,6 +952,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
           [Def.KEY_CLIP_AREA]: "none",
           [Def.KEY_COLOR_SET]: "gray",
           [Def.KEY_EDGE_COLOR_SET]: "gray",
+          [Def.KEY_LAYER_GROUP]: 0,
         },
         {
           [Def.KEY_UID]: 2,
@@ -973,6 +975,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
           [Def.KEY_CLIP_AREA]: "none",
           [Def.KEY_COLOR_SET]: "gray",
           [Def.KEY_EDGE_COLOR_SET]: "gray",
+          [Def.KEY_LAYER_GROUP]: 0,
         },
         {
           [Def.KEY_UID]: 3,
@@ -989,6 +992,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
           [Def.KEY_FROM_MARKER_TYPE]: "none",
           [Def.KEY_TO_MARKER_TYPE]: "none",
           [Def.KEY_COLOR_SET]: "gray",
+          [Def.KEY_LAYER_GROUP]: 0,
         },
         {
           [Def.KEY_UID]: 4,
@@ -1006,6 +1010,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
           [Def.KEY_FROM_MARKER_TYPE]: "none",
           [Def.KEY_TO_MARKER_TYPE]: "none",
           [Def.KEY_COLOR_SET]: "gray",
+          [Def.KEY_LAYER_GROUP]: 0,
         },
         {
           [Def.KEY_UID]: 5,
@@ -1022,6 +1027,7 @@ describe("Test Architecture Map Web SPA Interaction", () => {
             [Def.KEY_Z_ORDER]: 5,
           },
           [Def.KEY_COLOR_SET]: "white",
+          [Def.KEY_LAYER_GROUP]: 0,
         },
       ],
     };

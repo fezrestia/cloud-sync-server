@@ -56,6 +56,7 @@ export interface ConnectorJson {
   [Def.KEY_FROM_MARKER_TYPE]: string,
   [Def.KEY_TO_MARKER_TYPE]: string,
   [Def.KEY_COLOR_SET]: string,
+  [Def.KEY_LAYER_GROUP]: number,
 }
 
 /**
@@ -293,6 +294,7 @@ export class Connector extends Element {
         [Def.KEY_FROM_MARKER_TYPE]: this.fromMarkerType,
         [Def.KEY_TO_MARKER_TYPE]: this.toMarkerType,
         [Def.KEY_COLOR_SET]: this.colorSet,
+        [Def.KEY_LAYER_GROUP]: this.layerGroup,
     };
     return jsonObj;
   }
@@ -317,6 +319,8 @@ export class Connector extends Element {
     this.toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
 
     this.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    this.layerGroup = json[Def.KEY_LAYER_GROUP];
 
     this.relayout();
     this.recolor();
@@ -354,6 +358,8 @@ export class Connector extends Element {
     (connector as any)._toMarkerType = MarkerType.valueOf(json[Def.KEY_TO_MARKER_TYPE]);
 
     connector.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
+
+    connector.layerGroup = json[Def.KEY_LAYER_GROUP];
 
     return connector;
   }

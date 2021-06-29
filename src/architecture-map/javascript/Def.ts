@@ -8,7 +8,7 @@ export class Def {
   public static readonly RADIAL_SNAP_STEP_RAD = Math.PI * 2 / 24; // 15 deg
 
   public static readonly KEY_VERSION = "version";
-  public static readonly VAL_VERSION = "14";
+  public static readonly VAL_VERSION = "15";
 
   public static readonly KEY_ARCHITECTURE_MAP = "architecture_map";
   public static readonly KEY_OUT_FRAME = "out_frame";
@@ -46,8 +46,12 @@ export class Def {
 
   public static readonly KEY_LINE_STYLE = "line_style";
 
+  public static readonly KEY_LAYER_GROUP = "layer_group";
+  public static readonly DEFAULT_LAYER_GROUP = 0;
+
   public static readonly DEFAULT_LABEL_HORIZONTAL_ALIGN = "center";
   public static readonly DEFAULT_LABEL_VERTICAL_ALIGN = "middle";
+  public static readonly LAYER_GROUP_OUT_FRAME = -1;
 
   public static readonly INVALID_Z_ORDER = -1;
   public static readonly START_OF_Z_ORDER = 1;
@@ -57,6 +61,7 @@ export class Def {
 
   public static readonly TOP_LAYER_DEPTH = 1;
 
+  public static readonly INDICATOR_FONT_SIZE = 12;
 }
 
 /**
