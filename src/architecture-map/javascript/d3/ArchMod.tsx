@@ -8,7 +8,7 @@ import { ColorResolver } from "./resolver/ColorResolver";
 import { Point, Util } from "./Util";
 import { TraceLog } from "../util/TraceLog";
 import { ArchModContextMenu, ArchModContextMenuCallback } from "../components/ArchModContextMenu";
-import { Def, ClipArea, ColorSet } from "../Def";
+import { Def, ClipArea, ColorSet, LineStyle } from "../Def";
 import { D3Node, D3Event, JQueryNode } from "../TypeDef";
 import { Element, ElementItxMode } from "./Element";
 import { KeyValuePopupMenu, KeyValuePopupMenuCallback } from "../components/KeyValuePopupMenu";
@@ -65,6 +65,7 @@ export interface ArchModJson {
       [Def.KEY_LABEL_VERTICAL_ALIGN]: string,
       [Def.KEY_Z_ORDER]: number,
   },
+  [Def.KEY_EDGE_LINE_STYLE]: string,
   [Def.KEY_CLIP_AREA]: string,
   [Def.KEY_COLOR_SET]: string,
   [Def.KEY_EDGE_COLOR_SET]: string,
@@ -109,6 +110,8 @@ class ArchModState {
 export class ArchMod extends Element {
   public static readonly TAG = "ArchMod";
   public readonly TAG = ArchMod.TAG;
+
+  private readonly STROKE_WIDTH = 2;
 
   private readonly EDIT_GRIP_RADIUS_PIX = 8;
   private readonly MIN_SIZE_PIX = 16;
@@ -291,6 +294,7 @@ export class ArchMod extends Element {
             [Def.KEY_LABEL_VERTICAL_ALIGN]: this.labelVerticalAlign,
             [Def.KEY_Z_ORDER]: this.zOrder,
         },
+        [Def.KEY_EDGE_LINE_STYLE]: this.edgeLineStyle,
         [Def.KEY_CLIP_AREA]: this.clipArea,
         [Def.KEY_COLOR_SET]: this.colorSet,
         [Def.KEY_EDGE_COLOR_SET]: this.edgeColorSet,
@@ -332,6 +336,8 @@ export class ArchMod extends Element {
     archMod.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
     archMod.edgeColorSet = ColorSet.valueOf(json[Def.KEY_EDGE_COLOR_SET]);
 
+    archMod.edgeLineStyle = LineStyle.valueOf(json[Def.KEY_EDGE_LINE_STYLE]);
+
     archMod.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
 
     archMod.layerGroup = json[Def.KEY_LAYER_GROUP];
@@ -362,6 +368,8 @@ export class ArchMod extends Element {
     this.colorSet = ColorSet.valueOf(json[Def.KEY_COLOR_SET]);
     this.edgeColorSet = ColorSet.valueOf(json[Def.KEY_EDGE_COLOR_SET]);
 
+    this.edgeLineStyle = LineStyle.valueOf(json[Def.KEY_EDGE_LINE_STYLE]);
+
     this.clipArea = ClipArea.valueOf(json[Def.KEY_CLIP_AREA]);
 
     this.layerGroup = json[Def.KEY_LAYER_GROUP];
@@ -387,6 +395,14 @@ export class ArchMod extends Element {
   private labelVerticalAlign: string = "middle";
   private pinX: number = 0;
   private pinY: number = 0;
+
+  private _edgeLineStyle = LineStyle.NORMAL;
+      public get edgeLineStyle(): LineStyle {
+        return this._edgeLineStyle;
+      }
+      public set edgeLineStyle(edgeLineStyle: LineStyle) {
+        this._edgeLineStyle = edgeLineStyle;
+      }
 
   private _clipArea = ClipArea.NONE;
       public get clipArea(): ClipArea {
@@ -653,7 +669,7 @@ export class ArchMod extends Element {
 
     // Polygon, normally Rect.
     this.polygon = this.root.append("polygon")
-        .attr("stroke-width", 2);
+        .attr("stroke-width", this.STROKE_WIDTH);
 
     // Text.
     this.text = this.root.append("text")
@@ -1237,6 +1253,9 @@ export class ArchMod extends Element {
         .map( (point: number[]): string => { return point.join(",") } )
         .join(" ");
     this.polygon.attr("points", polygonPoints);
+    this.polygon.attr(
+        "stroke-dasharray",
+        LineStyle.getStrokeDashArray(this.edgeLineStyle, this.STROKE_WIDTH));
 
     // Text label.
     let labelX: number = 0;
@@ -1702,6 +1721,11 @@ export class ArchMod extends Element {
 
     changeLabelVerticalAlign(align: string) {
       this.target.alignLabel(null, align);
+    }
+
+    changeEdgeLineStyle(edgeLineStyle: LineStyle) {
+      this.target.edgeLineStyle = edgeLineStyle;
+      this.target.relayout();
     }
 
     changeClipArea(clipArea: ClipArea) {

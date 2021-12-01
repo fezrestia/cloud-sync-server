@@ -62,6 +62,65 @@ export function genColorSetClickButtons(callback: (colorSet: ColorSet) => void):
   return buttons;
 }
 
+export function genEdgeLineStyleClickButtons(callback: (edgeLineStyle: LineStyle) => void): React.ReactElement[] {
+  class Param {
+    readonly id: string;
+    readonly edgeLineStyle: LineStyle;
+
+    constructor(id: string, edgeLineStyle: LineStyle) {
+      this.id = id;
+      this.edgeLineStyle = edgeLineStyle;
+    }
+  }
+
+  let buttonKey: number = 0;
+  function genClickButton(param: Param): React.ReactElement {
+    const SIZE = BUTTON_SIZE_PIX;
+    const POINTS: string = `0,${SIZE} ${SIZE},0`;
+
+    return (
+      <div
+          key={buttonKey++}
+          id={param.id}
+          className={"edge-line-style-selector"}
+          onClick={ (e: ReactMouseEvent) => {
+            callback(param.edgeLineStyle);
+            e.stopPropagation();
+          } }
+      >
+        <svg
+            width="100%"
+            height="100%"
+            overflow="visible"
+        >
+          <polyline
+              strokeWidth={2}
+              points={POINTS}
+              stroke={"darkgray"}
+              fill={"none"}
+              strokeDasharray={LineStyle.getStrokeDashArray(param.edgeLineStyle, 2)}
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  const params: Param[] = [
+      //        id,                       LineStyle,
+      new Param("edge_line_style_normal", LineStyle.NORMAL),
+      new Param("edge_line_style_broken", LineStyle.BROKEN),
+      new Param("edge_line_style_dotted", LineStyle.DOTTED),
+  ];
+
+  const buttons: React.ReactElement[] = [];
+
+  params.forEach( (param: Param) => {
+    buttons.push( genClickButton(param) );
+  } );
+
+  return buttons;
+}
+
 export function genClipAreaClickButtons(callback: (clipArea: ClipArea) => void): React.ReactElement[] {
   class Param {
     readonly id: string;

@@ -6,8 +6,9 @@ import { ReactMouseEvent,
          ReactInputChangeEvent,
          ReactKeyboardTextAreaEvent,
          ReactKeyboardInputEvent } from "../TypeDef";
-import { Def, ClipArea, ColorSet } from "../Def";
+import { Def, ClipArea, ColorSet, LineStyle } from "../Def";
 import { genColorSetClickButtons,
+         genEdgeLineStyleClickButtons,
          genClipAreaClickButtons,
          genLabelHorizontalAlignClickButtons,
          genLabelVerticalAlignClickButtons,
@@ -34,6 +35,7 @@ export interface ArchModContextMenuCallback {
   changeLabelRotDeg(rotDeg: number): void;
   changeLabelHorizontalAlign(align: string): void;
   changeLabelVerticalAlign(align: string): void;
+  changeEdgeLineStyle(edgeLineStyle: LineStyle): void;
   changeClipArea(clipArea: ClipArea): void;
   changeColorSet(colorSet: ColorSet): void;
   changeEdgeColorSet(edgeColorSet: ColorSet): void;
@@ -217,6 +219,12 @@ export class ArchModContextMenu extends React.Component<Props, State> {
               <td className="no-wrap" >Vertical Label Align</td>
               <td className="no-wrap" >
                 {genLabelVerticalAlignClickButtons( (labelAlign: string) => { callback.changeLabelVerticalAlign(labelAlign) } )}
+              </td>
+            </tr>
+            <tr>
+              <td className="no-wrap" >Edge Line Style</td>
+              <td className="no-wrap" >
+                {genEdgeLineStyleClickButtons( (edgeLineStyle: LineStyle) => { callback.changeEdgeLineStyle(edgeLineStyle) } )}
               </td>
             </tr>
             <tr>

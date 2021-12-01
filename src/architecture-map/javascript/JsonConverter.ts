@@ -1,5 +1,5 @@
 import { TraceLog } from "./util/TraceLog";
-import { Def, MarkerType } from "./Def";
+import { Def, MarkerType, LineStyle } from "./Def";
 import { Connector, ConnectorJson } from "./d3/Connector";
 import { Line, LineJson } from "./d3/Line";
 import { ElementJson } from "./d3/Element";
@@ -165,6 +165,16 @@ export function convertJsonToLatest(serialized: any): any {
     outFrame[Def.KEY_LAYER_GROUP] = Def.LAYER_GROUP_OUT_FRAME;
     elements.forEach( (json: ElementJson) => {
       json[Def.KEY_LAYER_GROUP] = Def.DEFAULT_LAYER_GROUP;
+    } );
+  }
+
+  // Add edge line style.
+  if (ver < 16) {
+    elements.forEach( (json: ElementJson) => {
+      if (json[Def.KEY_CLASS] === ArchMod.TAG) {
+        const archModJson = json as ArchModJson;
+        archModJson[Def.KEY_EDGE_LINE_STYLE] = LineStyle.NORMAL;
+      }
     } );
   }
 
