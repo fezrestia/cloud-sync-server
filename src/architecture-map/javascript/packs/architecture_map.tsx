@@ -46,6 +46,7 @@ export interface ArchitectureMapJson {
 
 export interface ContextCallback {
   onArchModSelected(archMod: ArchMod): void;
+  onDefaultLoadJsonLoaded(): void;
 }
 
 // Current interaction context.
@@ -1686,6 +1687,10 @@ class ConnectorCallbackImpl implements ConnectorCallback {
     await CONTEXT.deserializeFromJsonAll(serialized);
     CONTEXT.resetAllState();
     CONTEXT.recordLoadTotalJson();
+
+    if (CONTEXT.callback !== null) {
+      CONTEXT.callback.onDefaultLoadJsonLoaded();
+    }
   }
 
   // Save the first history base.
